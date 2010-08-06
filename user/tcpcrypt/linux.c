@@ -13,6 +13,10 @@
 #define __FAVOR_BSD
 #include <netinet/tcp.h>
 
+#undef _POSIX_SOURCE    
+#include <sys/capability.h>
+#include <sys/prctl.h>
+
 #include "divert.h"
 #include "tcpcryptd.h"
 
@@ -140,6 +144,8 @@ int divert_open(int port, divert_cb cb)
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
 		err(1, "fcntl()");
 
+	open_raw();
+
 	return fd;
 }
 
@@ -171,4 +177,41 @@ void divert_next_packet(int s)
 		errx(1, "EOF");
 
 	nfq_handle_packet(_h, buf, rc);
+}
+
+void linux_drop_privs(void)
+{
+	cap_t caps = cap_init();
+	int num = 2;
+
+	cap_value_t capList[] = { CAP_NET_ADMIN, CAP_SETUID };
+
+	cap_set_flag(caps, CAP_EFFECTIVE, num, capList, CAP_SET);
+        cap_set_flag(caps, CAP_INHERITABLE, num, capList, CAP_SET);
+        cap_set_flag(caps, CAP_PERMITTED, num, capList, CAP_SET);
+
+	if (cap_set_proc(caps))
+		err(1, "cap_set_flag()");
+
+	if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0))
+		err(1, "prctl()");
+
+	cap_free(caps);
+
+	if (setuid(666) == -1)
+		err(1, "setuid()");
+
+	caps = cap_init();
+	num  = 1;
+
+	cap_set_flag(caps, CAP_EFFECTIVE, num, capList, CAP_SET);
+        cap_set_flag(caps, CAP_INHERITABLE, num, capList, CAP_SET);
+        cap_set_flag(caps, CAP_PERMITTED, num, capList, CAP_SET);
+
+	if (cap_set_proc(caps))
+		err(1, "cap_set_proc()");	
+
+	cap_free(caps);
+
+	/* XXX this really sucks.  The guy can screw with our net =( */
 }

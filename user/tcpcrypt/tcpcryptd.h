@@ -52,7 +52,8 @@ extern void tcpcryptd(void);
 extern void set_packet_hook(int post, packet_hook hook);
 extern char *driver_param(int x);
 extern char *test_param(int x);
-extern void drop_privs();
+extern void drop_privs(void);
+extern void linux_drop_privs(void);
 
 extern uint64_t xbe64toh(uint64_t x);
 extern uint64_t xhtobe64(uint64_t x);

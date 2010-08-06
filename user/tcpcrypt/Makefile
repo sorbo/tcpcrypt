@@ -20,7 +20,7 @@ endif
 
 ifeq ($(OSNAME), Linux)
 	OBJS    += linux.o 
-	LDFLAGS += -lnetfilter_queue
+	LDFLAGS += -lnetfilter_queue -lcap
 endif
 
 ifeq ($(OSNAME), Cygwin)

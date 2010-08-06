@@ -16,5 +16,6 @@ extern void divert_next_packet(int s);
 extern void divert_close(void);
 extern void divert_inject(void *data, int len);
 extern void divert_cycle(void);
+extern void open_raw(void);
 
 #endif /* __TCPCRYPT_DIVERT_H__ */

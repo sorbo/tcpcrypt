@@ -34,6 +34,8 @@ int divert_open(int port, divert_cb cb)
 
         xprintf(XP_DEFAULT, "Divert packets using ipfw add divert %d\n", port);
 
+	open_raw();
+
 	return _s;
 }
 
