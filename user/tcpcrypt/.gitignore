@@ -1,0 +1,5 @@
+*.d
+*.o
+.*.swp
+core
+tcpcryptd
