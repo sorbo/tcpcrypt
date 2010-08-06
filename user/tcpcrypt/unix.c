@@ -18,7 +18,6 @@
 #include <netinet/tcp.h>
 #include <errno.h>
 #include <openssl/err.h>
-#include <platform.h>
 
 #include "tcpcrypt_ctl.h"
 #include "divert.h"
@@ -89,7 +88,7 @@ void drop_privs(void)
 	if (setgid(666) == -1)
 		err(1, "setgid()");
 
-#if defined(LINUX_OS)
+#if defined(__linux__)
 	linux_drop_privs();
 #else
 	if (setuid(666) == -1)
