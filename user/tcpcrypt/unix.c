@@ -87,7 +87,8 @@ void drop_privs(void)
 
 	if (setgid(666) == -1)
 		err(1, "setgid()");
-
+#if 0
 	if (setuid(666) == -1)
 		err(1, "setuid()");
+#endif
 }
