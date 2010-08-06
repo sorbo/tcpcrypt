@@ -243,3 +243,7 @@ void divert_cycle(void)
 
 	_outbound.p_next = NULL;
 }
+
+void drop_privs(void)
+{
+}

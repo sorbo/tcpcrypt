@@ -456,6 +456,8 @@ void tcpcryptd(void)
 
 	open_unix();
 
+	drop_privs();
+
 	printf("Running\n");
 
 	while (1)
