@@ -3,7 +3,7 @@ include ../common.mak
 NAME	 	= tcpcrypt
 TCPCRYPT 	= ../lib
 CONTRIB		= ../contrib
-OPENSSL		= ../../../../openssl
+OPENSSL		= ../../../openssl
 PPOLY1305AES 	= $(CONTRIB)/poly1305aes-20050218
 CFLAGS	       += -I. -I$(TCPCRYPT) -I../tcpcrypt -O3 \
 	   	  -I$(PPOLY1305AES) -I$(CONTRIB) \
