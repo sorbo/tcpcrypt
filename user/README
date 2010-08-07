@@ -5,6 +5,20 @@ http://www.netfilter.org/projects/libnetfilter_queue/files/libnetfilter_queue-0.
 
 http://cr.yp.to/mac/poly1305aes-20050218.tar.gz
 
+Mac OS X 10.6
+-------------
+
+The default Mac OS X 10.6 install comes with an old version of OpenSSL. To run
+tcpcrypt, you must install OpenSSL 1.0.0 or later and configure with:
+
+   ./Configure darwin64-x86_64-cc shared
+
+Then, running `make` will build libssl.dylib in openssl/. If you run `make
+install_sw`, you're finished. If you don't want to install the openssl libs
+globally, then before you run any of the tcpcrypt binaries you just built, set
+the env var DYLD_LIBRARY_PATH to the full path of the openssl/ dir containing
+the libssl.dylib you just built.
+
 Firewall setup
 ==============
 1. FreeBSD & Mac OS.  Linux users, read this too.
