@@ -1,4 +1,4 @@
-include ../../user/common.mak
+include ../common.mak
 
 NAME	 	= tcpcrypt
 TCPCRYPT 	= ../lib
@@ -20,7 +20,7 @@ LDFLAGS	 	= -L$(TCPCRYPT) \
 		  -L$(OPENSSL) \
 		  -ltcpcrypt -lpthread -lssl -lcrypto -lz -ldl
 
-ifneq ($(OSNAME), Cygwin)
+ifneq ($(OSNAME), Darwin)
 	LDFLAGS += -lrt
 endif
 

@@ -1814,7 +1814,14 @@ static void do_signer(void)
 
 			if (!first) {
 				printf("Fuck calling clock\n");
+#if _POSIX_TIMERS > 0
 				clock_gettime(CLOCK_REALTIME, &ts);
+#else
+				struct timeval tv;
+				gettimeofday(&tv, NULL);
+				ts.tv_sec = tv.tv_sec;
+				ts.tv_nsec = tv.tv_usec*1000;
+#endif
 				ts.tv_sec += 5;
 				t = &ts;
 			} else
