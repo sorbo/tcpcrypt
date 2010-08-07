@@ -19,6 +19,10 @@
 
 #define TCP_CRYPT 15
 
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+
 enum {
 	IMP_UNKNOWN = 0,
 	IMP_USER,
