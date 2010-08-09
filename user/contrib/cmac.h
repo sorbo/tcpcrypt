@@ -68,7 +68,6 @@ CMAC_CTX *CMAC_CTX_new(void);
 void CMAC_CTX_cleanup(CMAC_CTX *ctx);
 void CMAC_CTX_free(CMAC_CTX *ctx);
 EVP_CIPHER_CTX *CMAC_CTX_get0_cipher_ctx(CMAC_CTX *ctx);
-int CMAC_CTX_copy(CMAC_CTX *out, const CMAC_CTX *in);
 
 int CMAC_Init(CMAC_CTX *ctx, const void *key, size_t keylen, 
 			const EVP_CIPHER *cipher, ENGINE *impl);

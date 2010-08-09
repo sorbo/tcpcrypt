@@ -120,23 +120,7 @@ void CMAC_CTX_free(CMAC_CTX *ctx)
 	CMAC_CTX_cleanup(ctx);
 	OPENSSL_free(ctx);
 	}
-#if 0
-int CMAC_CTX_copy(CMAC_CTX *out, const CMAC_CTX *in)
-	{
-	int bl;
-	if (in->nlast_block == -1)
-		return 0;
-	if (!EVP_CIPHER_CTX_copy(&out->cctx, &in->cctx))
-		return 0;
-	bl = EVP_CIPHER_CTX_block_size(&in->cctx);
-	memcpy(out->k1, in->k1, bl);
-	memcpy(out->k2, in->k2, bl);
-	memcpy(out->tbl, in->tbl, bl);
-	memcpy(out->last_block, in->last_block, bl);
-	out->nlast_block = in->nlast_block;
-	return 1;
-	}
-#endif
+
 int CMAC_Init(CMAC_CTX *ctx, const void *key, size_t keylen, 
 			const EVP_CIPHER *cipher, ENGINE *impl)
 	{
