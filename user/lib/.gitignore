@@ -3,3 +3,4 @@
 .*.swp
 *.so
 *.a
+Makefile
