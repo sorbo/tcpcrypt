@@ -87,21 +87,6 @@ unable to make it work.
 iptables firewall setup
 =======================
 
-The goal is to try and make linux look like freebsd =D. There are two
-challenges:
-
-   1. In FreeBSD, after a packet is diverted, the divert daemon can drop the
-      packet, or accept it. In the latter case, firewall processing continues
-      from the next rule. So basically natd will get a chance to run, and other
-      firewall rules. It's a pipeline. On Linux, you can either accept or drop
-      the packet, which ignores the rest of the firewall.
-
-   2. In FreeBSD, you can easily order tcpcryptd, then natd, because they're
-      both in userland, and both use divert, and the whole firewall is a
-      pipeline. On Linux natd is IP connection tracking in the kernel, which is
-      used for stateful firewalls too. We gotta make tcpcryptd run BEFORE
-      conntrack.
-
 The naive way to use tcpcryptd:
 
 iptables -A OUTPUT -p tcp -j NFQUEUE --queue-num 666
@@ -115,6 +100,20 @@ For testing on your local machine, you can restrict tcpcrypt to the loopback int
 
 iptables -A OUTPUT -p tcp -o lo -j NFQUEUE --queue-num 666
 iptables -A INPUT -p tcp -i lo -j NFQUEUE --queue-num 666
+
+Linux firewall setup is more challenging than on FreeBSD for two reasons.
+
+   1. In FreeBSD, after a packet is diverted, the divert daemon can drop the
+      packet, or accept it. In the latter case, firewall processing continues
+      from the next rule. So basically natd will get a chance to run, and other
+      firewall rules. It's a pipeline. On Linux, you can either accept or drop
+      the packet, which ignores the rest of the firewall.
+
+   2. In FreeBSD, you can easily order tcpcryptd, then natd, because they're
+      both in userland, and both use divert, and the whole firewall is a
+      pipeline. On Linux natd is IP connection tracking in the kernel, which is
+      used for stateful firewalls too. We gotta make tcpcryptd run BEFORE
+      conntrack.
 
 To make tcpcrypt work the "proper" way, making sure that nat and stateful
 firewalls (e.g., -m state --state ESTABLISHED) work:
