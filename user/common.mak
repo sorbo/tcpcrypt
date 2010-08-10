@@ -33,6 +33,10 @@ ifeq ($(OSNAME), Cygwin)
 	NO_ASM = 1
 endif
 
+ifeq ($(shell uname -m), x86_64)
+        NO_ASM = 1
+endif
+
 ifdef NO_ASM
         CFLAGS  += -DNO_ASM
 endif
