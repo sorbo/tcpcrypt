@@ -24,6 +24,12 @@ linux_unset_iptables() {
     exit
 }
 
+if [ `whoami` != "root" ]
+then
+    echo "must be root"
+    exit 1
+fi
+
 case "$OSNAME" in
     Linux)
         linux_set_iptables
