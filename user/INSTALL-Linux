@@ -35,7 +35,9 @@ Running
 Try it out
 ----------
 
-The included launch_tcpcryptd.sh script will set up firewall rules and start tcpcryptd so that all of your Web traffic is encrypted with tcpcrypt. When you run it, you should see something like:
+The included launch_tcpcryptd.sh script will set up firewall rules and start
+tcpcryptd so that all of your Web traffic is encrypted with tcpcrypt. When you
+run it, you should see something like:
 
    $ sudo ./launch_tcpcryptd.sh 
    Setting iptables rules...
@@ -60,7 +62,10 @@ While tcpcryptd is running, you can still browse non-tcpcrypted sites as
 before. Tcpcrypt is backwards compatible; it only encrypts traffic to and from
 other tcpcrypt-enabled hosts.
 
-{TODO: move the bits that are common to linux and bsd to README-unix. Make a page at http://tcpcrypt.org/test.php that either redirects to the hall of fame (if tcpcrypt is working) or else shows troubleshooting info (if tcpcrypt is not working).}
+{TODO: move the bits that are common to linux and bsd to README-unix. Make a
+page at http://tcpcrypt.org/test.php that either redirects to the hall of fame
+(if tcpcrypt is working) or else shows troubleshooting info (if tcpcrypt is not
+working).}
 
 Troubleshooting
 ---------------
