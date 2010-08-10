@@ -2,24 +2,25 @@
 
 OSNAME=`uname -s`
 OPTS=$1
+ENCRYPT_PORT=6666
 
 TCPCRYPTD=`dirname $0`/tcpcrypt/tcpcryptd
 TCPCRYPTD_DIVERT_PORT=666
 
 start_tcpcryptd() {
-    $TCPCRYPTD $OPTS -p $TCPCRYPTD_DIVERT_PORT
+    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $TCPCRYPTD_DIVERT_PORT
 }
 
 linux_set_iptables() {
     echo Setting iptables rules...
-    iptables -I INPUT -p tcp --dport 80 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -I OUTPUT -p tcp --sport 80 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -I INPUT -p tcp --sport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -I OUTPUT -p tcp --dport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
 }
 
 linux_unset_iptables() {
     echo Removing iptables rules...
-    iptables -D INPUT -p tcp --dport 80 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -D OUTPUT -p tcp --sport 80 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -D INPUT -p tcp --sport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -D OUTPUT -p tcp --dport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
     exit
 }
 
