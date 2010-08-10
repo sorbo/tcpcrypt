@@ -18,10 +18,14 @@ OBJS	 	= tcpcrypt.o ../tcpcrypt/profile.o \
 
 LDFLAGS	 	= -L$(TCPCRYPT) \
 		  -L$(OPENSSL) \
-		  -ltcpcrypt -lpthread -lssl -lcrypto -lz -ldl
+		  -ltcpcrypt -lpthread -lssl -lcrypto -lz
 
 ifneq ($(OSNAME), Cygwin)
 	LDFLAGS += -lrt
+endif
+
+ifneq ($(OSNAME), FreeBSD)
+	LDFLAGS += -ldl
 endif
 
 ifdef HAVE_NI
