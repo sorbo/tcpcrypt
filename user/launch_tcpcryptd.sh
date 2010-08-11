@@ -58,6 +58,20 @@ check_root() {
     fi
 }
 
+check_ssh() {
+    if [ -n "$SSH_CONNECTION" ]
+    then
+        read -p 'Command may disrupt existing ssh connections. Proceed? [y/N] ' C
+        if [ "$C" != "y" ]
+        then
+            exit 1
+        fi
+    fi
+}
+
+
+check_ssh
+
 case "$OSNAME" in
     Linux)
         check_root
