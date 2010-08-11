@@ -82,8 +82,10 @@ void divert_cycle(void)
 
 void drop_privs(void)
 {
+#ifdef __linux__
 	if (chroot("/tmp") == -1)
 		err(1, "chroot()");
+#endif
 
 	if (setgid(666) == -1)
 		err(1, "setgid()");
