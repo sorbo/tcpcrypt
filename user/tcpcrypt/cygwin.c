@@ -51,7 +51,7 @@ int divert_open(int port, divert_cb cb)
 	for (i = 0; i < 6; i++)
 		_mac[i] = (unsigned char) mac[i];
 
-	xprintf(XP_ALWAYS, "Mac %x:%x:%x:%x:%x:%x\n",
+	xprintf(XP_ALWAYS, "MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
 	       _mac[0], _mac[1], _mac[2], _mac[3], _mac[4], _mac[5]);
 
 	if ((_s = open("\\\\.\\PassThru", O_RDWR)) == -1)
@@ -103,7 +103,8 @@ static void arp_cache(unsigned char *buf, int in)
 	_arp.a_next = a;
 
 	xprintf(XP_DEBUG,
-		"Added ARP entry for %s [%x:%x:%x:%x:%x:%x] table size %d\n",
+		"Added ARP entry for %s [%02x:%02x:%02x:%02x:%02x:%02x]"
+                " table size %d\n",
 		inet_ntoa(*i),
 		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
 		num);
