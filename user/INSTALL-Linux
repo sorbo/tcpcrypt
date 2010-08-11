@@ -25,7 +25,6 @@ Compiling
 
 In the tcpcrypt/user directory, run:
 
-   ./configure
    make
 
 
