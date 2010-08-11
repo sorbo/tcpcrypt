@@ -69,8 +69,21 @@ check_ssh() {
     fi
 }
 
+check_existing_tcpcryptd() {
+    P=`ps axo pid,comm | grep tcpcryptd`
+    if [ $? -eq 0 ]
+    then
+        read -p "tcpcryptd already running with pid$P. Proceed? [y/N] " C
+        if [ "$C" != "y" ]
+        then
+            exit 1
+        fi
+    fi
+}
+
 
 check_ssh
+check_existing_tcpcryptd
 
 case "$OSNAME" in
     Linux)
