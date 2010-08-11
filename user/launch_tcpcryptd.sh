@@ -1,8 +1,7 @@
 #!/bin/sh
 
 OSNAME=`uname -s`
-OPTS=$1
-ENCRYPT_PORT=6666
+ENCRYPT_PORT=80
 
 TCPCRYPTD=`dirname $0`/tcpcrypt/tcpcryptd
 TCPCRYPTD_DIVERT_PORT=666
@@ -11,16 +10,25 @@ start_tcpcryptd() {
     LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $TCPCRYPTD_DIVERT_PORT
 }
 
+ee() {
+    echo $*
+    eval $*
+}
+
 linux_set_iptables() {
-    echo Setting iptables rules...
-    iptables -I INPUT -p tcp --sport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -I OUTPUT -p tcp --dport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    echo Tcpcrypting port 80 and all local traffic...
+    ee iptables -I INPUT -p tcp --sport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    ee iptables -I OUTPUT -p tcp --dport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    ee iptables -I INPUT -p tcp -i lo -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    ee iptables -I OUTPUT -p tcp -o lo -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
 }
 
 linux_unset_iptables() {
-    echo Removing iptables rules...
+    echo Removing iptables rules and quitting tcpcryptd...
     iptables -D INPUT -p tcp --sport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
     iptables -D OUTPUT -p tcp --dport $ENCRYPT_PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -D INPUT -p tcp -i lo -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -D OUTPUT -p tcp -o lo $ENCRYPT_PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
     exit
 }
 
