@@ -5,5 +5,8 @@ SUBDIRS	= contrib tcpcrypt lib test
 all:
 	@for dir in $(SUBDIRS); do $(MAKE) -C $$dir $(@); done
 
+install: lib/libtcpcrypt.$(SO)
+	ln -s $(shell pwd)/lib/libtcpcrypt.$(SO) /usr/lib/libtcpcrypt.$(SO)
+
 clean:
 	@for dir in $(SUBDIRS); do $(MAKE) -C $$dir $(@); done
