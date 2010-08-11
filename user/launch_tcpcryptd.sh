@@ -16,6 +16,7 @@ ee() {
 }
 
 linux_set_iptables() {
+    echo Tcpcrypting port 80 and all local traffic...
     ee iptables -I INPUT  -p tcp --sport $PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
     ee iptables -I OUTPUT -p tcp --dport $PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
     ee iptables -I INPUT  -p tcp -i lo         -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
@@ -32,6 +33,7 @@ linux_unset_iptables() {
 }
 
 bsd_set_ipfw() {
+    echo Tcpcrypting port 80 and all local traffic...
     ipfw -q 01 add divert $TCPCRYPTD_DIVERT_PORT tcp from any 80 to any
     ipfw -q 02 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any 80
     ipfw -q 03 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any via lo0
@@ -42,25 +44,37 @@ bsd_unset_ipfw() {
     ipfw delete 01 02 03
 }
 
-if [ `whoami` != "root" ]
-then
-    echo "must be root"
-    exit 1
-fi
+win_start_tcpcryptd() {
+    MAC_ADDR=`ipconfig /all | grep 'Physical Address'| head -n 1 | sed 's/\s*Physical Address\(\. \)*: \(.*\)/\2/' | sed 's/-/:/g'`
+    echo Using MAC address $MAC_ADDR...
+    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $TCPCRYPTD_DIVERT_PORT -x $MAC_ADDR
+}
 
-echo Tcpcrypting port 80 and all local traffic...
+check_root() {
+    if [ `whoami` != "root" ]
+    then
+        echo "must be root"
+        exit 1
+    fi
+}
 
 case "$OSNAME" in
     Linux)
+        check_root
         linux_set_iptables
         trap linux_unset_iptables 2 # trap SIGINT to remove iptables rules before exit
         start_tcpcryptd
         linux_unset_iptables
         ;;
     FreeBSD|Darwin)
+        check_root
         bsd_set_ipfw
         trap bsd_unset_ipfw 2
         start_tcpcryptd
         bsd_unset_ipfw
+        ;;
+    [Cc][Yy][Gg][Ww][Ii][Nn]*)
+        win_start_tcpcryptd
+        ;;
 esac
 
