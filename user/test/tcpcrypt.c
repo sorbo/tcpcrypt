@@ -3345,6 +3345,7 @@ int main(int argc, char *argv[])
 	_conf.cf_ports		= 1;
 
 	inet_aton("127.0.0.1", &_conf.cf_dstip);
+        umask(0);
 
 	while ((ch = getopt(argc, argv, "hu:lp:vt:o:cx:snS:d:NC:b:a:DAP:kBL"))
 		!= -1) {
