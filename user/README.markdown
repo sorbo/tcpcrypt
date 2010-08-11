@@ -23,9 +23,9 @@ Test drive
     sudo killall tcpcryptd tcpdump
 
 You can also go to [http://tcpcrypt.org/fame.php](http://tcpcrypt.org/fame.php)
-while tcpcryptd is running. You'll see a text box where you can post a
-message to the tcpcrypt Hall of Fame, and your tcpcrypt session ID is displayed
-at the bottom of the page.
+while tcpcryptd is running. You'll see a text box where you can post a message
+to the tcpcrypt Hall of Fame, and your tcpcrypt session ID is displayed at the
+bottom of the page.
 
 More info
 ---------
