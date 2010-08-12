@@ -5,10 +5,10 @@ PORT=${1:-80}
 PORT2=${2:-7777}
 
 TCPCRYPTD=`dirname $0`/tcpcrypt/tcpcryptd
-TCPCRYPTD_DIVERT_PORT=666
+DIVERT_PORT=666
 
 start_tcpcryptd() {
-    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $TCPCRYPTD_DIVERT_PORT
+    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $DIVERT_PORT
 }
 
 ee() {
@@ -18,29 +18,29 @@ ee() {
 
 linux_set_iptables() {
     echo Tcpcrypting port 80 and local traffic on port 7777...
-    ee iptables -I INPUT  -p tcp --sport $PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    ee iptables -I OUTPUT -p tcp --dport $PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    ee iptables -I INPUT  -p tcp --dport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    ee iptables -I INPUT  -p tcp --sport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    ee iptables -I OUTPUT -p tcp --dport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    ee iptables -I OUTPUT -p tcp --sport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    ee iptables -I INPUT  -p tcp --sport $PORT -j NFQUEUE --queue-num $DIVERT_PORT
+    ee iptables -I OUTPUT -p tcp --dport $PORT -j NFQUEUE --queue-num $DIVERT_PORT
+    ee iptables -I INPUT  -p tcp --dport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
+    ee iptables -I INPUT  -p tcp --sport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
+    ee iptables -I OUTPUT -p tcp --dport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
+    ee iptables -I OUTPUT -p tcp --sport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
 }
 
 linux_unset_iptables() {
     echo Removing iptables rules and quitting tcpcryptd...
-    iptables -D INPUT  -p tcp --sport $PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -D OUTPUT -p tcp --dport $PORT -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -D INPUT  -p tcp --dport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -D INPUT  -p tcp --sport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -D OUTPUT -p tcp --dport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
-    iptables -D OUTPUT -p tcp --sport $PORT2 -j NFQUEUE --queue-num $TCPCRYPTD_DIVERT_PORT
+    iptables -D INPUT  -p tcp --sport $PORT -j NFQUEUE --queue-num $DIVERT_PORT
+    iptables -D OUTPUT -p tcp --dport $PORT -j NFQUEUE --queue-num $DIVERT_PORT
+    iptables -D INPUT  -p tcp --dport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
+    iptables -D INPUT  -p tcp --sport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
+    iptables -D OUTPUT -p tcp --dport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
+    iptables -D OUTPUT -p tcp --sport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
     exit
 }
 
 bsd_set_ipfw() {
     echo Tcpcrypting port 80 and local traffic on port 7777...
-    ipfw 02 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any $PORT out
-    ipfw 04 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any $PORT2 in via lo0
+    ipfw 02 add divert $DIVERT_PORT tcp from any to any $PORT out
+    ipfw 04 add divert $DIVERT_PORT tcp from any to any $PORT2 in via lo0
 }
 
 bsd_unset_ipfw() {
@@ -52,7 +52,7 @@ bsd_unset_ipfw() {
 win_start_tcpcryptd() {
     MAC_ADDR=`ipconfig /all | grep 'Physical Address'| head -n 1 | sed 's/\s*Physical Address\(\. \)*: \(.*\)/\2/' | sed 's/-/:/g'`
     echo Using MAC address $MAC_ADDR...
-    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $TCPCRYPTD_DIVERT_PORT -x $MAC_ADDR
+    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $DIVERT_PORT -x $MAC_ADDR
 }
 
 check_root() {
