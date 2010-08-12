@@ -57,4 +57,4 @@ More info
 
 The INSTALL-* files have more detailed installation and firewall setup instructions. See [tcpcrypt.org](http://tcpcrypt.org) for general info, including the [protocol specification](http://tcpcrypt.org/docs.php).
 
-The code repository lives at [http://github.com/sorbo/tcpcrypt](http://github.com/sorbo/tcpcrypt].
+The code repository lives at [http://github.com/sorbo/tcpcrypt](http://github.com/sorbo/tcpcrypt).
