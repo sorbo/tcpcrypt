@@ -3071,7 +3071,7 @@ int tcpcrypt_packet(void *packet, int len, int flags)
 			return DIVERT_ACCEPT;
 
 		if (tcp->th_flags != TH_SYN) {
-			xprintf(XP_NOISY, "Ignoring estabished connection: ");
+			xprintf(XP_NOISY, "Ignoring established connection: ");
 			print_packet(ip, tcp, flags, tc);
 
 			return DIVERT_ACCEPT;
