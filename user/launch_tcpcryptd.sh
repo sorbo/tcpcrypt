@@ -34,14 +34,15 @@ linux_unset_iptables() {
 
 bsd_set_ipfw() {
     echo Tcpcrypting port 80 and all local traffic...
-    ipfw -q 01 add divert $TCPCRYPTD_DIVERT_PORT tcp from any 80 to any
-    ipfw -q 02 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any 80
-    ipfw -q 03 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any via lo0
+    ee ipfw -q 01 add divert $TCPCRYPTD_DIVERT_PORT tcp from any 80 to any
+    ee ipfw -q 02 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any 80
+    ee ipfw -q 03 add divert $TCPCRYPTD_DIVERT_PORT tcp from any to any via lo0
 }
 
 bsd_unset_ipfw() {
     echo Removing ipfw rules and quitting tcpcryptd...
     ipfw delete 01 02 03
+    exit
 }
 
 win_start_tcpcryptd() {
