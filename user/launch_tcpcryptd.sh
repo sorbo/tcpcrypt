@@ -83,10 +83,10 @@ check_existing_tcpcryptd() {
 
 
 check_ssh
-check_existing_tcpcryptd
 
 case "$OSNAME" in
     Linux)
+        check_existing_tcpcryptd
         check_root
         linux_set_iptables
         trap linux_unset_iptables 2 # trap SIGINT to remove iptables rules before exit
@@ -94,6 +94,7 @@ case "$OSNAME" in
         linux_unset_iptables
         ;;
     FreeBSD|Darwin)
+        check_existing_tcpcryptd
         check_root
         bsd_set_ipfw
         trap bsd_unset_ipfw 2
