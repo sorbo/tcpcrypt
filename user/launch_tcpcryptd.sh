@@ -82,7 +82,7 @@ check_existing_tcpcryptd() {
 }
 
 
-check_ssh
+#check_ssh
 
 case "$OSNAME" in
     Linux)
