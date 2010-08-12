@@ -3340,6 +3340,7 @@ static int tcpcrypt_netstat(void *val, unsigned int *len)
 	void **cmap;
 	struct conn *c;
 	int copied = 0;
+	unsigned char *v = val;
 
 	for (i = 0; i < num; i++) {
 		cmap = _connection_map[i];
@@ -3349,8 +3350,10 @@ static int tcpcrypt_netstat(void *val, unsigned int *len)
 
 		for (j = 0; j < num; j++) {
 			c = cmap[j];
-			if (c)
-				copied += do_tcpcrypt_netstat(c->c_next, val, len);
+			if (c) {
+				copied += do_tcpcrypt_netstat(c->c_next,
+							      &v[copied], len);
+			}
 		}
 	}
 
