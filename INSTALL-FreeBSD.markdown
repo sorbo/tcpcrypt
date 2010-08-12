@@ -4,13 +4,13 @@ Installing tcpcrypt on FreeBSD
 Dependencies
 ------------
 
-Enable `ipfw` and divert sockets, if you haven't already:
+Enable `ipfw` and divert sockets, if you haven't already (reboot required):
 
     echo 'firewall_enable="YES"' >> /etc/rc.conf
     echo 'firewall_type="open"' >> /etc/rc.conf
-
     echo 'ipfw_load="YES"' >> /boot/loader.conf
     echo 'ipdivert_load="YES"' >> /boot/loader.conf
+    reboot
 
 Tcpcrypt also requires OpenSSL >= 0.9.8, which is provided by the
 `security/openssl` port.
