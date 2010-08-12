@@ -65,7 +65,7 @@ If it's not working, the most likely causes are the following.
      browser, wait 30 seconds, or use a different browser to retrieve the
      tcpcrypt.org URL.
 
-Visit http://wiki.github.com/sorbo/tcpcrypt/troubleshooting if you're still
+Visit [http://wiki.github.com/sorbo/tcpcrypt/troubleshooting](http://wiki.github.com/sorbo/tcpcrypt/troubleshooting) if you're still
 unable to make it work.
 
 
