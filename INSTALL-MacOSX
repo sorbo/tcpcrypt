@@ -9,7 +9,7 @@ Tcpcrypt does not depend on non-standard libs on Mac OS X, so just run:
     cd tcpcrypt/user
     make
 
-Running `make install` will install `libtcpcrypt.dylib` in `/usr/lib`.
+Optional: running `make install` will install `libtcpcrypt.dylib` in `/usr/lib`.
 
 Running
 -------
@@ -25,8 +25,8 @@ With tcpcryptd running, open
 More info
 ----------
 
-See the included `README.markdown` file for ways to try out tcpcrypt and for
-troubleshooting help.
+See the included `README.markdown` file for more ways to try out tcpcrypt and
+for troubleshooting help.
 
 See `INSTALL-FreeBSD` for firewall setup instructions. (FreeBSD and Mac OS X use
 the same firewall, `ipfw`.)
