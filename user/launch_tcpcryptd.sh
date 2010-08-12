@@ -74,7 +74,7 @@ check_existing_tcpcryptd() {
     P=`ps axo pid,comm | grep tcpcryptd`
     if [ $? -eq 0 ]
     then
-        read -p "tcpcryptd already running with pid$P. Proceed? [y/N] " C
+        read -p "tcpcryptd already running with pid $P. Proceed? [y/N] " C
         if [ "$C" != "y" ]
         then
             exit 1
