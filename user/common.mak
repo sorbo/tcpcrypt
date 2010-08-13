@@ -20,7 +20,7 @@ ifndef OSNAME
 	OSNAME	= $(shell uname -s)
 endif
 
-ifneq ($(findstring $(shell uname -o),"Cygwin"),)
+ifneq ($(shell uname -a | fgrep -i cygwin),)
 	OSNAME = Cygwin
 endif
 
