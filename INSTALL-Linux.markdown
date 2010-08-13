@@ -12,18 +12,37 @@ Dependencies
  * libnfnetlink >= 0.0.40
  * libnetfilter_queue >= 0.0.16
  * libcap
+ * Kernel divert socket support (NFQUEUE)
+
 
 Ubuntu and Debian packages
----------------
+--------------------------
     apt-get install iptables libcap-dev libssl-dev \
                     libnfnetlink-dev libnetfilter-queue-dev
+
+
+Kernel divert sockets (NFQUEUE)
+-------------------------------
+
+Installing your distribution's libnfnetfilter_queue package most likely handles this for you. If not, then you need to enable the following in `make menuconfig`:
+
+* Networking -> Networking options -> Network packet filtering framework (Netfilter) and the following suboptions
+* Core Netfilter Configuration -> Netfilter NFQUEUE over NFNETLINK interface
+* Core Netfilter Configuration -> Netfilter Xtables support -> "NFQUEUE" target Support
+
+The `.config` options for these are:
+
+    CONFIG_NETFILTER_NETLINK
+    CONFIG_NETFILTER_NETLINK_QUEUE
+    CONFIG_NETFILTER_XT_TARGET_NFQUEUE
+
 
 Compiling
 ---------
 
 In the `tcpcrypt/user` directory, run:
 
-    make
+   make
 
 Optional: running `make install` will install `libtcpcrypt.so` in `/usr/lib`.
 
