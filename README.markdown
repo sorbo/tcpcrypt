@@ -18,7 +18,7 @@ Installing tcpcrypt
     git clone git://github.com/sorbo/tcpcrypt.git
     cd tcpcrypt/user
     make
-    ./launch_tcpcryptd.sh
+    sudo ./launch_tcpcryptd.sh
 
 The launch script starts tcpcryptd and adds firewall rules to divert Web and
 local port 7777 traffic to tcpcryptd. When the script exits (on Ctrl-C or
