@@ -35,7 +35,11 @@ else
 endif
 
 ifdef STATIC
-	LDFLAGS += -static
+	ifeq ($(OSNAME), Darwin)
+		OBJS += ../lib/libtcpcrypt.a
+	else
+		LDFLAGS += -static
+	endif
 endif
 
 ifndef NO_ASM
