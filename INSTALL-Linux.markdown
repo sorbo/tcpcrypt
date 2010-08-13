@@ -24,7 +24,9 @@ Ubuntu and Debian packages
 Kernel divert sockets (NFQUEUE)
 -------------------------------
 
-Installing your distribution's libnfnetfilter_queue package most likely handles this for you. If not, then you need to enable the following in `make menuconfig`:
+Installing your distribution's libnfnetfilter_queue package most likely handles
+this for you. If not, then you need to enable the following in `make
+menuconfig`:
 
 * Networking -> Networking options -> Network packet filtering framework (Netfilter) and the following suboptions
 * Core Netfilter Configuration -> Netfilter NFQUEUE over NFNETLINK interface
