@@ -23,7 +23,7 @@ Compiling
 
 In the `tcpcrypt/user` directory, run:
 
-   make
+    make
 
 Optional: running `make install` will install `libtcpcrypt.so` in `/usr/lib`.
 
