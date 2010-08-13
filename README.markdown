@@ -10,7 +10,7 @@ clear-text TCP.
 
 Tcpcrypt supports Linux, Mac OS X, Windows, and FreeBSD.
 
-For more information, see the [tcpcrypt.org](http://tcpcrypt.org).
+For more information, see [tcpcrypt.org](http://tcpcrypt.org).
 
 Installing tcpcrypt
 -------------------
@@ -21,7 +21,7 @@ Installing tcpcrypt
     sudo ./launch_tcpcryptd.sh
 
 The launch script starts tcpcryptd and adds firewall rules to divert Web and
-local port 7777 traffic to tcpcryptd. When the script exits (on Ctrl-C or
+local port 7777 (arbitrarily chosen) traffic to tcpcryptd. When the script exits (on Ctrl-C or
 `kill`), it restores your firewall config to its former state--**no permanent
 changes are made**.
 
