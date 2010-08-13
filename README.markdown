@@ -60,13 +60,13 @@ Troubleshooting
 
 If it's not working, the most likely causes are the following.
 
-   * There's a conflict with your existing iptables firewall rules. See the
-     "Firewall setup" section below.
-
    * Your browser already had an open, non-tcpcrypted TCP connection to
      tcpcrypt.org before you ran the launch script. Quit and reopen your
      browser, wait 30 seconds, or use a different browser to retrieve the
      tcpcrypt.org URL.
+
+   * There's a conflict with your existing firewall rules. See the
+     firewall setup section in the install guide for your platform.
 
 Visit [http://wiki.github.com/sorbo/tcpcrypt/troubleshooting](http://wiki.github.com/sorbo/tcpcrypt/troubleshooting) if you're still
 unable to make it work.
@@ -75,6 +75,6 @@ unable to make it work.
 More info
 ---------
 
-The INSTALL-* files have more detailed installation and firewall setup instructions. See [tcpcrypt.org](http://tcpcrypt.org) for general info, including the [protocol specification](http://tcpcrypt.org/docs.php).
+The `INSTALL-*` files have more detailed installation and firewall setup instructions. See [tcpcrypt.org](http://tcpcrypt.org) for general info, including the [protocol specification](http://tcpcrypt.org/docs.php) and the [tcpcrypt paper, "The case for ubiquitous transport-level encryption"](http://tcpcrypt.org/tcpcrypt.pdf), presented at USENIX Security 2010.
 
 The code repository lives at [http://github.com/sorbo/tcpcrypt](http://github.com/sorbo/tcpcrypt).
