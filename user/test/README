@@ -39,7 +39,7 @@ Example
 -------
 
 Launch the `-l` listen command first, and then launch the connect command in a
-separate window. In this example, after the connection was established, "hello!"
+separate window. In this example, after the connection was established, "hello!\n"
 was typed, followed by Ctrl-C to exit.
 
     $ test/tcpcrypt -v -l 127.0.0.1 7777
