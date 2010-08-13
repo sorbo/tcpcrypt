@@ -14,6 +14,6 @@ $(NAME): $(OBJS)
 	$(RANLIB) $(N).a
 
 clean:
-	rm -f *.o *.d core $(NAME)
+	rm -f *.o *.a *.d core $(NAME)
 
 -include *.d
