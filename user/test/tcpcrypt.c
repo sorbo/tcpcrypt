@@ -77,7 +77,6 @@ static struct conf {
 	char		*cf_ssl_cipher;
 	int		cf_notcpcrypt;
 	int		cf_discard;
-	int		cf_netstat;
 	int		cf_port_spacing;
 	int		cf_backlog;
 	int		cf_stats_amortize;
@@ -979,46 +978,10 @@ static void do_client(void)
 	client_handle(s);
 }
 
-static void do_netstat(void)
-{
-	unsigned char buf[2048];
-	unsigned int len = sizeof(buf);
-	int s, sl, i;
-	struct tc_netstat *n = (struct tc_netstat*) buf;
-	char src[64];
-	char dst[64];
-
-	s = open_socket();
-	xgetsockopt(s, TCP_CRYPT_NETSTAT, buf, &len);
-
-	printf("Local address\t\tForeign address\t\tSID\n");
-
-	while (len > sizeof(*n)) {
-		sl = ntohs(n->tn_len);
-
-		assert(len >= sizeof(*n) + sl);
-
-		sprintf(src, "%s:%d", inet_ntoa(n->tn_sip), ntohs(n->tn_sport));
-		sprintf(dst, "%s:%d", inet_ntoa(n->tn_dip), ntohs(n->tn_dport));
-		printf("%-21s\t%-21s\t", src, dst);
-
-		for (i = 0; i < sl; i++)
-			printf("%.2X", n->tn_sid[i]);
-
-		printf("\n");
-
-		sl  += sizeof(*n);
-		n    = (struct tc_netstat*) ((unsigned long) n + sl);
-		len -= sl;
-	}
-	assert(len == 0);
-}
 
 static void pwn(void)
 {
-	if (_conf.cf_netstat)
-		do_netstat();
-	else if (_conf.cf_listen)
+	if (_conf.cf_listen)
 		do_server();
 	else
 		do_client();
@@ -3302,7 +3265,6 @@ static void usage(char *progname)
 	       "-C\t<SSL cipher suite>\n"
 	       "-n\tnotcpcrypt\n"
 	       "-d\t<samples to discard>\n"
-	       "-N\tnetstat\n"
 	       "-b\t<backlog>\n"
 	       "-a\t<stats amortize>\n"
 	       "-D\tdata collector\n"
@@ -3389,10 +3351,6 @@ int main(int argc, char *argv[])
 
 		case 'C':
 			_conf.cf_ssl_cipher = optarg;
-			break;
-
-		case 'N':
-			_conf.cf_netstat = 1;
 			break;
 
 		case 'd':
