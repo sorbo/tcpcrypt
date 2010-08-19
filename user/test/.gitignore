@@ -2,4 +2,3 @@
 *.o
 .*.swp
 tcpcrypt
-Makefile
