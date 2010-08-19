@@ -1,6 +1,6 @@
 include common.mak
 
-SUBDIRS	= contrib tcpcrypt lib test
+SUBDIRS	= contrib tcpcrypt lib test util
 
 all:
 	@for dir in $(SUBDIRS); do $(MAKE) -C $$dir $(@); done
