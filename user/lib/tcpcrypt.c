@@ -42,6 +42,13 @@ static struct conf _conf = {
 	.cf_path = TCPCRYPT_CTLPATH,
 };
 
+union sockaddr_u {
+  struct sockaddr addr;
+  struct sockaddr_in in;
+  struct sockaddr_in6 in6;
+  struct sockaddr_storage storage;
+};
+
 static void set_addr()
 {
 	struct sockaddr_un *addr = &_conf.cf_sun;
@@ -95,15 +102,45 @@ static void open_socket(void)
 	bind_local();
 }
 
+/* Sets fields in `struct tcpcrypt_ctl` given in the pointers `ctl_addr` and
+   `ctl_port` from the sockaddr in `ss`. If `ss` is IPv6, attempts a
+   rudimentary IPv6->IPv4 "conversion" for IPv4-compatible/mapped
+   addresses. This will fail on real (non-IPv4-compatible/mapped) IPv6
+   addresses. Currently, tcpcrypt is *not* IPv6 compatible. */
+static void set_ctl_sockaddr(union sockaddr_u *ss,
+			     in_addr_t *ctl_addr,
+			     uint16_t *ctl_port)
+{
+	if (ss->storage.ss_family == AF_INET) {
+		*ctl_addr = ss->in.sin_addr.s_addr;
+		*ctl_port = ss->in.sin_port;
+	} else { // AF_INET6
+		if (IN6_IS_ADDR_V4COMPAT(&ss->in6.sin6_addr) ||
+		    IN6_IS_ADDR_V4MAPPED(&ss->in6.sin6_addr)) {
+			*ctl_addr = ss->in6.sin6_addr.s6_addr32[3];
+			*ctl_port = ss->in6.sin6_port;
+		} else {
+			/* TODO: add IPv6 support */
+			warn("Non-IPv4-compatible IPv6 addresses not supported."
+			     "Behavior of get/set_sockopt call is unreliable.");
+	    }
+	}
+
+#ifdef DEBUG_IPV6
+	fprintf(stderr, "* set_ctl_sockaddr: %s:%d\n",
+		inet_ntoa(*ctl_addr), ntohs(*ctl_port));
+#endif
+}
+
 static int do_sockopt(uint32_t flags, int s, int level, int optname,
 		      void *optval, socklen_t *optlen)
 {
 	struct tcpcrypt_ctl ctl;
-	struct sockaddr_in s_in;
-	socklen_t sl;
+	union sockaddr_u ss;
+	socklen_t sl = sizeof ss;
 	struct iovec iov[2];
 	struct msghdr mh;
-	int rc, len, i;
+	int rc, len, i, port;
 	unsigned char buf[2048];
 	int set = flags & TCC_SET;
 
@@ -122,38 +159,38 @@ static int do_sockopt(uint32_t flags, int s, int level, int optname,
 	ctl.tcc_seq = _conf.cf_seq++;
 
 	for (i = 0; i < 2; i++) {
-		memset(&s_in, 0, sizeof(s_in));
-		sl = sizeof(s_in);
+		memset(&ss, 0, sizeof(ss));
 
-		if (getsockname(s, (struct sockaddr*) &s_in, &sl) == -1)
+		if (getsockname(s, (struct sockaddr*) &ss, &sl) == -1)
 			err(1, "getsockname()");
 
+                if (ss.storage.ss_family == AF_INET)
+                        port = ntohs(ss.in.sin_port);
+                else
+                        port = ntohs(ss.in6.sin6_port);
+
 		if (i == 1) {
-			printf("forced bind to %d\n", ntohs(s_in.sin_port));
+			printf("forced bind to %d\n", port);
 			break;
 		}
 
-		if (s_in.sin_port)
+		if (port)
 			break;
 
 		/* let's just home the app doesn't call bind again */
+		ss.in.sin_family      = PF_INET;
+		ss.in.sin_port        = 0;
+		ss.in.sin_addr.s_addr = INADDR_ANY;
 
-		s_in.sin_family      = PF_INET;
-		s_in.sin_port        = 0;
-		s_in.sin_addr.s_addr = INADDR_ANY;
-
-		if (bind(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
+		if (bind(s, &ss.addr, sizeof(ss)) == -1)
 			err(1, "bind()");
 	}
 
-	ctl.tcc_src.s_addr = s_in.sin_addr.s_addr;
-	ctl.tcc_sport      = s_in.sin_port;
+	set_ctl_sockaddr(&ss, &ctl.tcc_src.s_addr, &ctl.tcc_sport);
 
-	memset(&s_in, 0, sizeof(s_in));
-	sl = sizeof(s_in);
-	if (getpeername(s, (struct sockaddr*) &s_in, &sl) == 0) {
-		ctl.tcc_dst.s_addr = s_in.sin_addr.s_addr;
-		ctl.tcc_dport	   = s_in.sin_port;
+	memset(&ss, 0, sl);
+	if (getpeername(s, (struct sockaddr*) &ss, &sl) == 0) {
+		set_ctl_sockaddr(&ss, &ctl.tcc_dst.s_addr, &ctl.tcc_dport);
 	}
 
 	ctl.tcc_flags = flags;
