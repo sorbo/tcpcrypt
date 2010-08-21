@@ -10,9 +10,10 @@ BUILDDIR=/tmp/tcbuild
 SSH="ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i $PRIVATE_KEY root@$HOST"
 
 echo creating buildbot $NAME on $HOST
-$SSH rm -rf $BUILDDIR
+$SSH rm -rf $BUILDDIR/buildbot.tac
+$SSH mkdir -p $BUILDDIR/build/$NAME
 $SSH buildbot create-slave $BUILDDIR $MASTER $NAME $SECRET && \
 $SSH eval "uname -a > $BUILDDIR/info/host" && \
 (echo `git config --get user.name` "<"`git config --get user.email`">" | $SSH eval "cat > $BUILDDIR/info/admin") && \
-$SSH eval "cd $BUILDDIR && buildbot restart" && \
+$SSH eval "cd $BUILDDIR && buildbot restart $BUILDDIR" && \
 echo buildbot $NAME started on $HOST
