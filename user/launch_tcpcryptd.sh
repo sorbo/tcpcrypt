@@ -6,9 +6,12 @@ PORT2=${2:-7777}
 
 TCPCRYPTD=`dirname $0`/tcpcrypt/tcpcryptd
 DIVERT_PORT=666
+TCPCRYPTD_PID=-1
 
 start_tcpcryptd() {
-    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $DIVERT_PORT
+    LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $DIVERT_PORT &
+    echo $! > /tmp/tcpcrypt.pid
+    wait $!
 }
 
 ee() {
@@ -55,6 +58,7 @@ win_start_tcpcryptd() {
     MAC_ADDR=`ipconfig /all | grep 'Physical Address'| head -n 1 | sed 's/\s*Physical Address\(\. \)*: \(.*\)/\2/' | sed 's/-/:/g'`
     echo Using MAC address $MAC_ADDR...
     LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $DIVERT_PORT -x $MAC_ADDR
+    TCPCRYPTD_PID=$!
 }
 
 check_root() {
