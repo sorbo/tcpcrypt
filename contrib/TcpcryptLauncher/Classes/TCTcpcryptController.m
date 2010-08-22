@@ -83,6 +83,7 @@
 	NSAssert(![self daemonIsRunning], @"tcpcryptd already started");
 	
 	[self checkPermissions];
+	usleep(50000); /* file perms weren't getting set? */
 	_daemon = [[NSTask launchedTaskWithLaunchPath:_wrapperPath 
 									   arguments:[NSArray arrayWithObject:@"start"]] retain];
 	NSLog(@"started tcpcryptd, pid %u", [_daemon processIdentifier]);
