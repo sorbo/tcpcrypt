@@ -1,0 +1,431 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		58B394F8121B3C5300EE7796 /* TCTcpcryptController.m in Sources */ = {isa = PBXBuildFile; fileRef = 58B394F7121B3C5300EE7796 /* TCTcpcryptController.m */; };
+		58B39525121B404300EE7796 /* tcpcryptd in Resources */ = {isa = PBXBuildFile; fileRef = 58B39524121B404300EE7796 /* tcpcryptd */; };
+		58B39615121B538200EE7796 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B39614121B538200EE7796 /* Security.framework */; };
+		58B396A3121B7BA400EE7796 /* tcpcryptd_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 58B396A2121B7BA400EE7796 /* tcpcryptd_wrapper.c */; };
+		58C9293F121B3242002FE941 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C9293E121B3242002FE941 /* Cocoa.framework */; };
+		58C92944121B3242002FE941 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 58C92942121B3242002FE941 /* InfoPlist.strings */; };
+		58C92946121B3242002FE941 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 58C92945121B3242002FE941 /* main.m */; };
+		58C92949121B3242002FE941 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 58C92947121B3242002FE941 /* MainMenu.xib */; };
+		58C9294C121B3242002FE941 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 58C9294A121B3242002FE941 /* Credits.rtf */; };
+		58C9294F121B3242002FE941 /* TcpcryptLauncherAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 58C9294E121B3242002FE941 /* TcpcryptLauncherAppDelegate.m */; };
+		58EDEADC1220A1A100AA7A7F /* tcpcryptd_wrapper in Resources */ = {isa = PBXBuildFile; fileRef = 58EDEA3912208C3900AA7A7F /* tcpcryptd_wrapper */; };
+		58EDEBB31220B2A900AA7A7F /* TcpcryptLauncher.icns in Resources */ = {isa = PBXBuildFile; fileRef = 58EDEBB21220B2A900AA7A7F /* TcpcryptLauncher.icns */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		58DCC39B121C65E600E65AEC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 58C9292E121B3241002FE941 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58B3969A121B7B8600EE7796;
+			remoteInfo = launch_tcpcryptd;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		58B394F6121B3C5300EE7796 /* TCTcpcryptController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TCTcpcryptController.h; sourceTree = "<group>"; };
+		58B394F7121B3C5300EE7796 /* TCTcpcryptController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TCTcpcryptController.m; sourceTree = "<group>"; };
+		58B39524121B404300EE7796 /* tcpcryptd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = tcpcryptd; path = ../../user/tcpcrypt/tcpcryptd; sourceTree = SOURCE_ROOT; };
+		58B39614121B538200EE7796 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		58B396A2121B7BA400EE7796 /* tcpcryptd_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tcpcryptd_wrapper.c; sourceTree = "<group>"; };
+		58C9293B121B3242002FE941 /* TcpcryptLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TcpcryptLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		58C9293E121B3242002FE941 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		58C92940121B3242002FE941 /* TcpcryptLauncher-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TcpcryptLauncher-Info.plist"; sourceTree = "<group>"; };
+		58C92941121B3242002FE941 /* TcpcryptLauncher_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TcpcryptLauncher_Prefix.pch; sourceTree = "<group>"; };
+		58C92943121B3242002FE941 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		58C92945121B3242002FE941 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		58C92948121B3242002FE941 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		58C9294B121B3242002FE941 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
+		58C9294D121B3242002FE941 /* TcpcryptLauncherAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TcpcryptLauncherAppDelegate.h; sourceTree = "<group>"; };
+		58C9294E121B3242002FE941 /* TcpcryptLauncherAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TcpcryptLauncherAppDelegate.m; sourceTree = "<group>"; };
+		58EDEA3912208C3900AA7A7F /* tcpcryptd_wrapper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tcpcryptd_wrapper; sourceTree = BUILT_PRODUCTS_DIR; };
+		58EDEBB21220B2A900AA7A7F /* TcpcryptLauncher.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = TcpcryptLauncher.icns; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		58B39699121B7B8600EE7796 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		58C92938121B3242002FE941 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58C9293F121B3242002FE941 /* Cocoa.framework in Frameworks */,
+				58B39615121B538200EE7796 /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		58B394FB121B3EF700EE7796 /* External Products */ = {
+			isa = PBXGroup;
+			children = (
+				58B39524121B404300EE7796 /* tcpcryptd */,
+			);
+			name = "External Products";
+			sourceTree = "<group>";
+		};
+		58B3969F121B7B9100EE7796 /* tcpcryptd_wrapper */ = {
+			isa = PBXGroup;
+			children = (
+				58B396A2121B7BA400EE7796 /* tcpcryptd_wrapper.c */,
+			);
+			name = tcpcryptd_wrapper;
+			sourceTree = "<group>";
+		};
+		58C9292C121B3241002FE941 = {
+			isa = PBXGroup;
+			children = (
+				58B3969F121B7B9100EE7796 /* tcpcryptd_wrapper */,
+				58B394FB121B3EF700EE7796 /* External Products */,
+				58C92933121B3241002FE941 /* Classes */,
+				58C92934121B3242002FE941 /* Other Sources */,
+				58C92935121B3242002FE941 /* Resources */,
+				58C92936121B3242002FE941 /* Frameworks */,
+				58C9293C121B3242002FE941 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		58C92933121B3241002FE941 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				58C9294D121B3242002FE941 /* TcpcryptLauncherAppDelegate.h */,
+				58C9294E121B3242002FE941 /* TcpcryptLauncherAppDelegate.m */,
+				58B394F6121B3C5300EE7796 /* TCTcpcryptController.h */,
+				58B394F7121B3C5300EE7796 /* TCTcpcryptController.m */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		58C92934121B3242002FE941 /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				58C92941121B3242002FE941 /* TcpcryptLauncher_Prefix.pch */,
+				58C92945121B3242002FE941 /* main.m */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		58C92935121B3242002FE941 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				58EDEBB21220B2A900AA7A7F /* TcpcryptLauncher.icns */,
+				58C92940121B3242002FE941 /* TcpcryptLauncher-Info.plist */,
+				58C92942121B3242002FE941 /* InfoPlist.strings */,
+				58C92947121B3242002FE941 /* MainMenu.xib */,
+				58C9294A121B3242002FE941 /* Credits.rtf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		58C92936121B3242002FE941 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				58B39614121B538200EE7796 /* Security.framework */,
+				58C9293E121B3242002FE941 /* Cocoa.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		58C9293C121B3242002FE941 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				58C9293B121B3242002FE941 /* TcpcryptLauncher.app */,
+				58EDEA3912208C3900AA7A7F /* tcpcryptd_wrapper */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		58B3969A121B7B8600EE7796 /* tcpcryptd_wrapper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 58B396A0121B7B9100EE7796 /* Build configuration list for PBXNativeTarget "tcpcryptd_wrapper" */;
+			buildPhases = (
+				58B39698121B7B8600EE7796 /* Sources */,
+				58B39699121B7B8600EE7796 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tcpcryptd_wrapper;
+			productName = launch_tcpcryptd;
+			productReference = 58EDEA3912208C3900AA7A7F /* tcpcryptd_wrapper */;
+			productType = "com.apple.product-type.tool";
+		};
+		58C9293A121B3242002FE941 /* TcpcryptLauncher */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 58C92952121B3242002FE941 /* Build configuration list for PBXNativeTarget "TcpcryptLauncher" */;
+			buildPhases = (
+				58B394FD121B3F2800EE7796 /* make tcpcryptd */,
+				58C92937121B3242002FE941 /* Sources */,
+				58C92938121B3242002FE941 /* Frameworks */,
+				58C92939121B3242002FE941 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				58DCC39C121C65E600E65AEC /* PBXTargetDependency */,
+			);
+			name = TcpcryptLauncher;
+			productName = TcpcryptLauncher;
+			productReference = 58C9293B121B3242002FE941 /* TcpcryptLauncher.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		58C9292E121B3241002FE941 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 58C92931121B3241002FE941 /* Build configuration list for PBXProject "TcpcryptLauncher" */;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 58C9292C121B3241002FE941;
+			productRefGroup = 58C9293C121B3242002FE941 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				58C9293A121B3242002FE941 /* TcpcryptLauncher */,
+				58B3969A121B7B8600EE7796 /* tcpcryptd_wrapper */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		58C92939121B3242002FE941 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58B39525121B404300EE7796 /* tcpcryptd in Resources */,
+				58C92944121B3242002FE941 /* InfoPlist.strings in Resources */,
+				58C92949121B3242002FE941 /* MainMenu.xib in Resources */,
+				58C9294C121B3242002FE941 /* Credits.rtf in Resources */,
+				58EDEADC1220A1A100AA7A7F /* tcpcryptd_wrapper in Resources */,
+				58EDEBB31220B2A900AA7A7F /* TcpcryptLauncher.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		58B394FD121B3F2800EE7796 /* make tcpcryptd */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "make tcpcryptd";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd ../../user/\nmake STATIC=1";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		58B39698121B7B8600EE7796 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58B396A3121B7BA400EE7796 /* tcpcryptd_wrapper.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		58C92937121B3242002FE941 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				58C92946121B3242002FE941 /* main.m in Sources */,
+				58C9294F121B3242002FE941 /* TcpcryptLauncherAppDelegate.m in Sources */,
+				58B394F8121B3C5300EE7796 /* TCTcpcryptController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		58DCC39C121C65E600E65AEC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 58B3969A121B7B8600EE7796 /* tcpcryptd_wrapper */;
+			targetProxy = 58DCC39B121C65E600E65AEC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		58C92942121B3242002FE941 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				58C92943121B3242002FE941 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		58C92947121B3242002FE941 /* MainMenu.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				58C92948121B3242002FE941 /* en */,
+			);
+			name = MainMenu.xib;
+			sourceTree = "<group>";
+		};
+		58C9294A121B3242002FE941 /* Credits.rtf */ = {
+			isa = PBXVariantGroup;
+			children = (
+				58C9294B121B3242002FE941 /* en */,
+			);
+			name = Credits.rtf;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		58B3969D121B7B8600EE7796 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = tcpcryptd_wrapper;
+			};
+			name = Debug;
+		};
+		58B3969E121B7B8600EE7796 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = launch_tcpcryptd;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		58C92950121B3242002FE941 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Debug;
+		};
+		58C92951121B3242002FE941 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				PREBINDING = NO;
+				SDKROOT = macosx10.6;
+			};
+			name = Release;
+		};
+		58C92953121B3242002FE941 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = TcpcryptLauncher_Prefix.pch;
+				INFOPLIST_FILE = "TcpcryptLauncher-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				PRODUCT_NAME = TcpcryptLauncher;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		58C92954121B3242002FE941 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = TcpcryptLauncher_Prefix.pch;
+				INFOPLIST_FILE = "TcpcryptLauncher-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				PRODUCT_NAME = TcpcryptLauncher;
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		58B396A0121B7B9100EE7796 /* Build configuration list for PBXNativeTarget "tcpcryptd_wrapper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58B3969D121B7B8600EE7796 /* Debug */,
+				58B3969E121B7B8600EE7796 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		58C92931121B3241002FE941 /* Build configuration list for PBXProject "TcpcryptLauncher" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58C92950121B3242002FE941 /* Debug */,
+				58C92951121B3242002FE941 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		58C92952121B3242002FE941 /* Build configuration list for PBXNativeTarget "TcpcryptLauncher" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58C92953121B3242002FE941 /* Debug */,
+				58C92954121B3242002FE941 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 58C9292E121B3241002FE941 /* Project object */;
+}
