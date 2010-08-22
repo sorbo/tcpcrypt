@@ -24,12 +24,17 @@
 }
 
 - (void)dealloc {
-	if ([self daemonIsRunning]) {
-		[self stopDaemon:nil];
-	}
+	[self stopDaemon:nil];
 	[_wrapperPath release];
 	[_tcpcryptdPath release];
 	[super dealloc];
+}
+
+#pragma mark NSWindowDelegate
+
+- (void)windowWillClose:(NSNotification *)notification {
+	[self stopDaemon:nil];
+	[[NSApplication sharedApplication] terminate:nil];
 }
 
 #pragma mark -
@@ -100,8 +105,10 @@
 	[stopper waitUntilExit];
 	NSLog(@"stopped tcpcryptd");
 	NSAssert(![self daemonIsRunning], @"failed to stop tcpcryptd");
-	[_daemon release];
-	_daemon = nil;
+	if (_daemon) {
+		[_daemon release];
+		_daemon = nil;
+	}
 	[self refreshDaemonStatus];
 }
 
