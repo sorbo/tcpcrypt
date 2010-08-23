@@ -2,7 +2,7 @@ include ../common.mak
 
 PRODUCTS	= tcnetstat
 TCPCRYPT 	= ../lib
-CFLAGS	       += -I. -I$(TCPCRYPT) -I../tcpcrypt -O3
+CFLAGS	       += -I. -I$(TCPCRYPT) -I.. -O3
 LDFLAGS	 	= -L$(TCPCRYPT) -ltcpcrypt
 
 all: $(PRODUCTS)

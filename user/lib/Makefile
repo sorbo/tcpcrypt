@@ -2,7 +2,7 @@ include ../common.mak
 
 N	= libtcpcrypt
 NAME	= $(N).$(SO)
-CFLAGS += -fPIC -I. -I.. -I../tcpcrypt -O3
+CFLAGS += -fPIC -I. -I.. -O3
 OBJS	= tcpcrypt.o
 LDFLAGS	= $(SHARED)
 

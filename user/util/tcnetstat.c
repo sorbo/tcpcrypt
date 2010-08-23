@@ -10,7 +10,6 @@
 #include <netinet/in.h>
 
 #include <tcpcrypt.h>
-#include <tcpcrypt_ctl.h>
 
 int open_socket()
 {

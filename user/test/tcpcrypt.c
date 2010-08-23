@@ -26,13 +26,13 @@
 #include <openssl/hmac.h>
 #include <openssl/err.h>
 #include <openssl/engine.h>
-#include <tcpcrypt.h>
-#include <profile.h>
+#include "tcpcrypt.h"
+#include <tcpcrypt/profile.h>
 #include <ctype.h>
 
 struct tc;
 #include "umac.h"
-#include "checksum.h"
+#include "tcpcrypt/checksum.h"
 #include "pake.h"
 #include "ocb.h"
 #include "cmac.h"

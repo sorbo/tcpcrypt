@@ -1,6 +1,8 @@
 #ifndef __TCPCRYPT_TCPCRYPT_CTL_H__
 #define __TCPCRYPT_TCPCRYPT_CTL_H__
 
+#include <netinet/in.h>
+
 #define TCPCRYPT_CTLPATH "/tmp/tcpcrypt"
 
 #define TCC_IN	0x00000001
