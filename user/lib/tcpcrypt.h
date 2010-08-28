@@ -1,7 +1,7 @@
 #ifndef __TCPCRYPT_TCPCRYPT_H__
 #define __TCPCRYPT_TCPCRYPT_H__
 
-#include <tcpcrypt/tcpcrypt_ctl.h>
+#include "tcpcrypt_ctl.h"
 
 #ifdef __cplusplus
 extern "C" {

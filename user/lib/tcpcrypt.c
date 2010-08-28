@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include <sys/uio.h>
 
-#include "tcpcrypt/tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 
 #define MAX_LEN	1200

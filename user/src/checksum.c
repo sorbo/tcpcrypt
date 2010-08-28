@@ -10,7 +10,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-#include "tcpcrypt_ctl.h"
+#include "lib/tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "checksum.h"
