@@ -11,6 +11,7 @@ aclocal.m4
 config.log
 config.status
 config.h
+config.log
 autom4te.cache
 stamp-h1
 libtool
