@@ -52,10 +52,10 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_tcnetstat_OBJECTS = tcnetstat-tcnetstat.$(OBJEXT)
 tcnetstat_OBJECTS = $(am_tcnetstat_OBJECTS)
-tcnetstat_DEPENDENCIES = $(top_builddir)/lib/libtcpcrypt.a
+tcnetstat_DEPENDENCIES = $(top_builddir)/lib/libtcpcrypt.la
 tcnetstat_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcnetstat_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CFLAGS) $(tcnetstat_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -191,8 +191,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 tcnetstat_SOURCES = tcnetstat.c
-tcnetstat_LDADD = $(top_builddir)/lib/libtcpcrypt.a $(AM_LDFLAGS)
+tcnetstat_LDADD = $(top_builddir)/lib/libtcpcrypt.la $(AM_LDFLAGS)
 tcnetstat_CFLAGS = -I$(top_srcdir)/include/
+tcnetstat_LDFLAGS = --all-static
 all: all-am
 
 .SUFFIXES:
