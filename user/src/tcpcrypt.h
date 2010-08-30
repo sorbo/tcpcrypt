@@ -1,6 +1,7 @@
-#ifndef __TCPCRYPT_TCPCRYPT_H__
-#define __TCPCRYPT_TCPCRYPT_H__
+#ifndef __SRC_TCPCRYPT_H__
+#define __SRC_TCPCRYPT_H__
 
+#include <tcpcrypt/tcpcrypt.h>
 #include "tcpcrypt_ctl.h"
 
 #define TC_DUMMY	0x69
@@ -300,11 +301,11 @@ struct tc_init2 {
 };
 
 extern int  tcpcrypt_packet(void *packet, int len, int flags);
-extern int  tcpcrypt_setsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
+extern int  tcpcryptd_setsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
 			        unsigned int len);
-extern int  tcpcrypt_getsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
+extern int  tcpcryptd_getsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
 			        unsigned int *len);
 extern void tcpcrypt_register_cipher(struct crypt_ops *ops);
 extern void tcpcrypt_init(void);
 
-#endif /* __TCPCRYPT_TCPCRYPT_H__ */
+#endif /* __SRC_TCPCRYPT_H__ */

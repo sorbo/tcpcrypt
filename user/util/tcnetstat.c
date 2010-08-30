@@ -9,7 +9,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#include "lib/tcpcrypt.h"
+#include <tcpcrypt/tcpcrypt.h>
+#include "src/tcpcrypt_ctl.h"
 
 int open_socket()
 {

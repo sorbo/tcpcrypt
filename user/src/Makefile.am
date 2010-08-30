@@ -1,10 +1,11 @@
-bin_PROGRAMS = tcpcryptd
+bin_PROGRAMS      = tcpcryptd
 tcpcryptd_SOURCES = \
 	tcpcryptd.c tcpcrypt.c crypto.c crypto_rsa.c crypto_aes.c \
 	crypto_hmac.c crypto_dummy.c profile.c checksum.c test.c  \
-	crypto_rc4.c crypto_umac.c $(top_builddir)/contrib/umac.c \
-	$(top_builddir)/contrib/rijndael-alg-fst.c
-tcpcryptd_LDADD = -lcrypto
+	crypto_rc4.c crypto_umac.c $(top_srcdir)/contrib/umac.c \
+	$(top_srcdir)/contrib/rijndael-alg-fst.c
+tcpcryptd_CFLAGS = -I$(top_srcdir)/include/
+tcpcryptd_LDADD  = -lcrypto
 
 if OS_BSD
 tcpcryptd_SOURCES += freebsd.c

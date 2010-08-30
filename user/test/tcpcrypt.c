@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 struct tc;
-#include "lib/tcpcrypt.h"
+#include <tcpcrypt/tcpcrypt.h>
 #include "src/profile.h"
 #include "src/checksum.h"
 #include "contrib/umac.h"

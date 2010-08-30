@@ -3266,8 +3266,8 @@ static int do_sockopt(int set, struct tc *tc, int opt, void *val,
 	return 0;
 }
 
-int tcpcrypt_setsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
-			unsigned int len)
+int tcpcryptd_setsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
+			 unsigned int len)
 {
 	struct tc *tc;
 
@@ -3361,8 +3361,8 @@ static int tcpcrypt_netstat(void *val, unsigned int *len)
 	return 0;
 }
 
-int tcpcrypt_getsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
-			unsigned int *len)
+int tcpcryptd_getsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
+			 unsigned int *len)
 {
 	struct tc *tc;
 

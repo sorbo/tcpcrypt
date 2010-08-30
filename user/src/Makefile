@@ -59,24 +59,30 @@ PROGRAMS = $(bin_PROGRAMS)
 am__tcpcryptd_SOURCES_DIST = tcpcryptd.c tcpcrypt.c crypto.c \
 	crypto_rsa.c crypto_aes.c crypto_hmac.c crypto_dummy.c \
 	profile.c checksum.c test.c crypto_rc4.c crypto_umac.c \
-	$(top_builddir)/contrib/umac.c \
-	$(top_builddir)/contrib/rijndael-alg-fst.c freebsd.c linux.c \
+	$(top_srcdir)/contrib/umac.c \
+	$(top_srcdir)/contrib/rijndael-alg-fst.c freebsd.c linux.c \
 	cygwin.c unix.c checksum_32.S
-#am__objects_1 = freebsd.$(OBJEXT)
-am__objects_2 = linux.$(OBJEXT)
-#am__objects_3 = cygwin.$(OBJEXT)
-am__objects_4 = unix.$(OBJEXT)
+#am__objects_1 = tcpcryptd-freebsd.$(OBJEXT)
+am__objects_2 = tcpcryptd-linux.$(OBJEXT)
+#am__objects_3 = tcpcryptd-cygwin.$(OBJEXT)
+am__objects_4 = tcpcryptd-unix.$(OBJEXT)
 am__objects_5 = checksum_32.$(OBJEXT)
-am_tcpcryptd_OBJECTS = tcpcryptd.$(OBJEXT) tcpcrypt.$(OBJEXT) \
-	crypto.$(OBJEXT) crypto_rsa.$(OBJEXT) crypto_aes.$(OBJEXT) \
-	crypto_hmac.$(OBJEXT) crypto_dummy.$(OBJEXT) profile.$(OBJEXT) \
-	checksum.$(OBJEXT) test.$(OBJEXT) crypto_rc4.$(OBJEXT) \
-	crypto_umac.$(OBJEXT) umac.$(OBJEXT) \
-	rijndael-alg-fst.$(OBJEXT) $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3) $(am__objects_4) $(am__objects_5)
+am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
+	tcpcryptd-tcpcrypt.$(OBJEXT) tcpcryptd-crypto.$(OBJEXT) \
+	tcpcryptd-crypto_rsa.$(OBJEXT) tcpcryptd-crypto_aes.$(OBJEXT) \
+	tcpcryptd-crypto_hmac.$(OBJEXT) \
+	tcpcryptd-crypto_dummy.$(OBJEXT) tcpcryptd-profile.$(OBJEXT) \
+	tcpcryptd-checksum.$(OBJEXT) tcpcryptd-test.$(OBJEXT) \
+	tcpcryptd-crypto_rc4.$(OBJEXT) tcpcryptd-crypto_umac.$(OBJEXT) \
+	tcpcryptd-umac.$(OBJEXT) tcpcryptd-rijndael-alg-fst.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5)
 tcpcryptd_OBJECTS = $(am_tcpcryptd_OBJECTS)
 am__DEPENDENCIES_1 =
 tcpcryptd_DEPENDENCIES = $(am__DEPENDENCIES_1)
+tcpcryptd_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcpcryptd_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I. -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -218,11 +224,11 @@ top_builddir = ..
 top_srcdir = ..
 tcpcryptd_SOURCES = tcpcryptd.c tcpcrypt.c crypto.c crypto_rsa.c \
 	crypto_aes.c crypto_hmac.c crypto_dummy.c profile.c checksum.c \
-	test.c crypto_rc4.c crypto_umac.c \
-	$(top_builddir)/contrib/umac.c \
-	$(top_builddir)/contrib/rijndael-alg-fst.c $(am__append_1) \
+	test.c crypto_rc4.c crypto_umac.c $(top_srcdir)/contrib/umac.c \
+	$(top_srcdir)/contrib/rijndael-alg-fst.c $(am__append_1) \
 	$(am__append_2) $(am__append_4) $(am__append_5) \
 	$(am__append_6)
+tcpcryptd_CFLAGS = -I$(top_srcdir)/include/
 tcpcryptd_LDADD = -lcrypto $(am__append_3)
 all: all-am
 
@@ -303,7 +309,7 @@ clean-binPROGRAMS:
 	rm -f $$list
 tcpcryptd$(EXEEXT): $(tcpcryptd_OBJECTS) $(tcpcryptd_DEPENDENCIES) 
 	@rm -f tcpcryptd$(EXEEXT)
-	$(LINK) $(tcpcryptd_OBJECTS) $(tcpcryptd_LDADD) $(LIBS)
+	$(tcpcryptd_LINK) $(tcpcryptd_OBJECTS) $(tcpcryptd_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -311,25 +317,25 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/checksum.Po
 include ./$(DEPDIR)/checksum_32.Po
-include ./$(DEPDIR)/crypto.Po
-include ./$(DEPDIR)/crypto_aes.Po
-include ./$(DEPDIR)/crypto_dummy.Po
-include ./$(DEPDIR)/crypto_hmac.Po
-include ./$(DEPDIR)/crypto_rc4.Po
-include ./$(DEPDIR)/crypto_rsa.Po
-include ./$(DEPDIR)/crypto_umac.Po
-include ./$(DEPDIR)/cygwin.Po
-include ./$(DEPDIR)/freebsd.Po
-include ./$(DEPDIR)/linux.Po
-include ./$(DEPDIR)/profile.Po
-include ./$(DEPDIR)/rijndael-alg-fst.Po
-include ./$(DEPDIR)/tcpcrypt.Po
-include ./$(DEPDIR)/tcpcryptd.Po
-include ./$(DEPDIR)/test.Po
-include ./$(DEPDIR)/umac.Po
-include ./$(DEPDIR)/unix.Po
+include ./$(DEPDIR)/tcpcryptd-checksum.Po
+include ./$(DEPDIR)/tcpcryptd-crypto.Po
+include ./$(DEPDIR)/tcpcryptd-crypto_aes.Po
+include ./$(DEPDIR)/tcpcryptd-crypto_dummy.Po
+include ./$(DEPDIR)/tcpcryptd-crypto_hmac.Po
+include ./$(DEPDIR)/tcpcryptd-crypto_rc4.Po
+include ./$(DEPDIR)/tcpcryptd-crypto_rsa.Po
+include ./$(DEPDIR)/tcpcryptd-crypto_umac.Po
+include ./$(DEPDIR)/tcpcryptd-cygwin.Po
+include ./$(DEPDIR)/tcpcryptd-freebsd.Po
+include ./$(DEPDIR)/tcpcryptd-linux.Po
+include ./$(DEPDIR)/tcpcryptd-profile.Po
+include ./$(DEPDIR)/tcpcryptd-rijndael-alg-fst.Po
+include ./$(DEPDIR)/tcpcryptd-tcpcrypt.Po
+include ./$(DEPDIR)/tcpcryptd-tcpcryptd.Po
+include ./$(DEPDIR)/tcpcryptd-test.Po
+include ./$(DEPDIR)/tcpcryptd-umac.Po
+include ./$(DEPDIR)/tcpcryptd-unix.Po
 
 .S.o:
 	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -373,33 +379,257 @@ include ./$(DEPDIR)/unix.Po
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(LTCOMPILE) -c -o $@ $<
 
-umac.o: $(top_builddir)/contrib/umac.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT umac.o -MD -MP -MF $(DEPDIR)/umac.Tpo -c -o umac.o `test -f '$(top_builddir)/contrib/umac.c' || echo '$(srcdir)/'`$(top_builddir)/contrib/umac.c
-	$(am__mv) $(DEPDIR)/umac.Tpo $(DEPDIR)/umac.Po
-#	source='$(top_builddir)/contrib/umac.c' object='umac.o' libtool=no \
+tcpcryptd-tcpcryptd.o: tcpcryptd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-tcpcryptd.o -MD -MP -MF $(DEPDIR)/tcpcryptd-tcpcryptd.Tpo -c -o tcpcryptd-tcpcryptd.o `test -f 'tcpcryptd.c' || echo '$(srcdir)/'`tcpcryptd.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-tcpcryptd.Tpo $(DEPDIR)/tcpcryptd-tcpcryptd.Po
+#	source='tcpcryptd.c' object='tcpcryptd-tcpcryptd.o' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o umac.o `test -f '$(top_builddir)/contrib/umac.c' || echo '$(srcdir)/'`$(top_builddir)/contrib/umac.c
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-tcpcryptd.o `test -f 'tcpcryptd.c' || echo '$(srcdir)/'`tcpcryptd.c
 
-umac.obj: $(top_builddir)/contrib/umac.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT umac.obj -MD -MP -MF $(DEPDIR)/umac.Tpo -c -o umac.obj `if test -f '$(top_builddir)/contrib/umac.c'; then $(CYGPATH_W) '$(top_builddir)/contrib/umac.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/contrib/umac.c'; fi`
-	$(am__mv) $(DEPDIR)/umac.Tpo $(DEPDIR)/umac.Po
-#	source='$(top_builddir)/contrib/umac.c' object='umac.obj' libtool=no \
+tcpcryptd-tcpcryptd.obj: tcpcryptd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-tcpcryptd.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-tcpcryptd.Tpo -c -o tcpcryptd-tcpcryptd.obj `if test -f 'tcpcryptd.c'; then $(CYGPATH_W) 'tcpcryptd.c'; else $(CYGPATH_W) '$(srcdir)/tcpcryptd.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-tcpcryptd.Tpo $(DEPDIR)/tcpcryptd-tcpcryptd.Po
+#	source='tcpcryptd.c' object='tcpcryptd-tcpcryptd.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o umac.obj `if test -f '$(top_builddir)/contrib/umac.c'; then $(CYGPATH_W) '$(top_builddir)/contrib/umac.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/contrib/umac.c'; fi`
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-tcpcryptd.obj `if test -f 'tcpcryptd.c'; then $(CYGPATH_W) 'tcpcryptd.c'; else $(CYGPATH_W) '$(srcdir)/tcpcryptd.c'; fi`
 
-rijndael-alg-fst.o: $(top_builddir)/contrib/rijndael-alg-fst.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rijndael-alg-fst.o -MD -MP -MF $(DEPDIR)/rijndael-alg-fst.Tpo -c -o rijndael-alg-fst.o `test -f '$(top_builddir)/contrib/rijndael-alg-fst.c' || echo '$(srcdir)/'`$(top_builddir)/contrib/rijndael-alg-fst.c
-	$(am__mv) $(DEPDIR)/rijndael-alg-fst.Tpo $(DEPDIR)/rijndael-alg-fst.Po
-#	source='$(top_builddir)/contrib/rijndael-alg-fst.c' object='rijndael-alg-fst.o' libtool=no \
+tcpcryptd-tcpcrypt.o: tcpcrypt.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-tcpcrypt.o -MD -MP -MF $(DEPDIR)/tcpcryptd-tcpcrypt.Tpo -c -o tcpcryptd-tcpcrypt.o `test -f 'tcpcrypt.c' || echo '$(srcdir)/'`tcpcrypt.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-tcpcrypt.Tpo $(DEPDIR)/tcpcryptd-tcpcrypt.Po
+#	source='tcpcrypt.c' object='tcpcryptd-tcpcrypt.o' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rijndael-alg-fst.o `test -f '$(top_builddir)/contrib/rijndael-alg-fst.c' || echo '$(srcdir)/'`$(top_builddir)/contrib/rijndael-alg-fst.c
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-tcpcrypt.o `test -f 'tcpcrypt.c' || echo '$(srcdir)/'`tcpcrypt.c
 
-rijndael-alg-fst.obj: $(top_builddir)/contrib/rijndael-alg-fst.c
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT rijndael-alg-fst.obj -MD -MP -MF $(DEPDIR)/rijndael-alg-fst.Tpo -c -o rijndael-alg-fst.obj `if test -f '$(top_builddir)/contrib/rijndael-alg-fst.c'; then $(CYGPATH_W) '$(top_builddir)/contrib/rijndael-alg-fst.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/contrib/rijndael-alg-fst.c'; fi`
-	$(am__mv) $(DEPDIR)/rijndael-alg-fst.Tpo $(DEPDIR)/rijndael-alg-fst.Po
-#	source='$(top_builddir)/contrib/rijndael-alg-fst.c' object='rijndael-alg-fst.obj' libtool=no \
+tcpcryptd-tcpcrypt.obj: tcpcrypt.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-tcpcrypt.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-tcpcrypt.Tpo -c -o tcpcryptd-tcpcrypt.obj `if test -f 'tcpcrypt.c'; then $(CYGPATH_W) 'tcpcrypt.c'; else $(CYGPATH_W) '$(srcdir)/tcpcrypt.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-tcpcrypt.Tpo $(DEPDIR)/tcpcryptd-tcpcrypt.Po
+#	source='tcpcrypt.c' object='tcpcryptd-tcpcrypt.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o rijndael-alg-fst.obj `if test -f '$(top_builddir)/contrib/rijndael-alg-fst.c'; then $(CYGPATH_W) '$(top_builddir)/contrib/rijndael-alg-fst.c'; else $(CYGPATH_W) '$(srcdir)/$(top_builddir)/contrib/rijndael-alg-fst.c'; fi`
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-tcpcrypt.obj `if test -f 'tcpcrypt.c'; then $(CYGPATH_W) 'tcpcrypt.c'; else $(CYGPATH_W) '$(srcdir)/tcpcrypt.c'; fi`
+
+tcpcryptd-crypto.o: crypto.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto.Tpo -c -o tcpcryptd-crypto.o `test -f 'crypto.c' || echo '$(srcdir)/'`crypto.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto.Tpo $(DEPDIR)/tcpcryptd-crypto.Po
+#	source='crypto.c' object='tcpcryptd-crypto.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto.o `test -f 'crypto.c' || echo '$(srcdir)/'`crypto.c
+
+tcpcryptd-crypto.obj: crypto.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto.Tpo -c -o tcpcryptd-crypto.obj `if test -f 'crypto.c'; then $(CYGPATH_W) 'crypto.c'; else $(CYGPATH_W) '$(srcdir)/crypto.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto.Tpo $(DEPDIR)/tcpcryptd-crypto.Po
+#	source='crypto.c' object='tcpcryptd-crypto.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto.obj `if test -f 'crypto.c'; then $(CYGPATH_W) 'crypto.c'; else $(CYGPATH_W) '$(srcdir)/crypto.c'; fi`
+
+tcpcryptd-crypto_rsa.o: crypto_rsa.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_rsa.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_rsa.Tpo -c -o tcpcryptd-crypto_rsa.o `test -f 'crypto_rsa.c' || echo '$(srcdir)/'`crypto_rsa.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_rsa.Tpo $(DEPDIR)/tcpcryptd-crypto_rsa.Po
+#	source='crypto_rsa.c' object='tcpcryptd-crypto_rsa.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_rsa.o `test -f 'crypto_rsa.c' || echo '$(srcdir)/'`crypto_rsa.c
+
+tcpcryptd-crypto_rsa.obj: crypto_rsa.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_rsa.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_rsa.Tpo -c -o tcpcryptd-crypto_rsa.obj `if test -f 'crypto_rsa.c'; then $(CYGPATH_W) 'crypto_rsa.c'; else $(CYGPATH_W) '$(srcdir)/crypto_rsa.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_rsa.Tpo $(DEPDIR)/tcpcryptd-crypto_rsa.Po
+#	source='crypto_rsa.c' object='tcpcryptd-crypto_rsa.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_rsa.obj `if test -f 'crypto_rsa.c'; then $(CYGPATH_W) 'crypto_rsa.c'; else $(CYGPATH_W) '$(srcdir)/crypto_rsa.c'; fi`
+
+tcpcryptd-crypto_aes.o: crypto_aes.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_aes.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_aes.Tpo -c -o tcpcryptd-crypto_aes.o `test -f 'crypto_aes.c' || echo '$(srcdir)/'`crypto_aes.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_aes.Tpo $(DEPDIR)/tcpcryptd-crypto_aes.Po
+#	source='crypto_aes.c' object='tcpcryptd-crypto_aes.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_aes.o `test -f 'crypto_aes.c' || echo '$(srcdir)/'`crypto_aes.c
+
+tcpcryptd-crypto_aes.obj: crypto_aes.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_aes.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_aes.Tpo -c -o tcpcryptd-crypto_aes.obj `if test -f 'crypto_aes.c'; then $(CYGPATH_W) 'crypto_aes.c'; else $(CYGPATH_W) '$(srcdir)/crypto_aes.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_aes.Tpo $(DEPDIR)/tcpcryptd-crypto_aes.Po
+#	source='crypto_aes.c' object='tcpcryptd-crypto_aes.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_aes.obj `if test -f 'crypto_aes.c'; then $(CYGPATH_W) 'crypto_aes.c'; else $(CYGPATH_W) '$(srcdir)/crypto_aes.c'; fi`
+
+tcpcryptd-crypto_hmac.o: crypto_hmac.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_hmac.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_hmac.Tpo -c -o tcpcryptd-crypto_hmac.o `test -f 'crypto_hmac.c' || echo '$(srcdir)/'`crypto_hmac.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_hmac.Tpo $(DEPDIR)/tcpcryptd-crypto_hmac.Po
+#	source='crypto_hmac.c' object='tcpcryptd-crypto_hmac.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_hmac.o `test -f 'crypto_hmac.c' || echo '$(srcdir)/'`crypto_hmac.c
+
+tcpcryptd-crypto_hmac.obj: crypto_hmac.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_hmac.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_hmac.Tpo -c -o tcpcryptd-crypto_hmac.obj `if test -f 'crypto_hmac.c'; then $(CYGPATH_W) 'crypto_hmac.c'; else $(CYGPATH_W) '$(srcdir)/crypto_hmac.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_hmac.Tpo $(DEPDIR)/tcpcryptd-crypto_hmac.Po
+#	source='crypto_hmac.c' object='tcpcryptd-crypto_hmac.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_hmac.obj `if test -f 'crypto_hmac.c'; then $(CYGPATH_W) 'crypto_hmac.c'; else $(CYGPATH_W) '$(srcdir)/crypto_hmac.c'; fi`
+
+tcpcryptd-crypto_dummy.o: crypto_dummy.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_dummy.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_dummy.Tpo -c -o tcpcryptd-crypto_dummy.o `test -f 'crypto_dummy.c' || echo '$(srcdir)/'`crypto_dummy.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_dummy.Tpo $(DEPDIR)/tcpcryptd-crypto_dummy.Po
+#	source='crypto_dummy.c' object='tcpcryptd-crypto_dummy.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_dummy.o `test -f 'crypto_dummy.c' || echo '$(srcdir)/'`crypto_dummy.c
+
+tcpcryptd-crypto_dummy.obj: crypto_dummy.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_dummy.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_dummy.Tpo -c -o tcpcryptd-crypto_dummy.obj `if test -f 'crypto_dummy.c'; then $(CYGPATH_W) 'crypto_dummy.c'; else $(CYGPATH_W) '$(srcdir)/crypto_dummy.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_dummy.Tpo $(DEPDIR)/tcpcryptd-crypto_dummy.Po
+#	source='crypto_dummy.c' object='tcpcryptd-crypto_dummy.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_dummy.obj `if test -f 'crypto_dummy.c'; then $(CYGPATH_W) 'crypto_dummy.c'; else $(CYGPATH_W) '$(srcdir)/crypto_dummy.c'; fi`
+
+tcpcryptd-profile.o: profile.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-profile.o -MD -MP -MF $(DEPDIR)/tcpcryptd-profile.Tpo -c -o tcpcryptd-profile.o `test -f 'profile.c' || echo '$(srcdir)/'`profile.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-profile.Tpo $(DEPDIR)/tcpcryptd-profile.Po
+#	source='profile.c' object='tcpcryptd-profile.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-profile.o `test -f 'profile.c' || echo '$(srcdir)/'`profile.c
+
+tcpcryptd-profile.obj: profile.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-profile.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-profile.Tpo -c -o tcpcryptd-profile.obj `if test -f 'profile.c'; then $(CYGPATH_W) 'profile.c'; else $(CYGPATH_W) '$(srcdir)/profile.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-profile.Tpo $(DEPDIR)/tcpcryptd-profile.Po
+#	source='profile.c' object='tcpcryptd-profile.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-profile.obj `if test -f 'profile.c'; then $(CYGPATH_W) 'profile.c'; else $(CYGPATH_W) '$(srcdir)/profile.c'; fi`
+
+tcpcryptd-checksum.o: checksum.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-checksum.o -MD -MP -MF $(DEPDIR)/tcpcryptd-checksum.Tpo -c -o tcpcryptd-checksum.o `test -f 'checksum.c' || echo '$(srcdir)/'`checksum.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-checksum.Tpo $(DEPDIR)/tcpcryptd-checksum.Po
+#	source='checksum.c' object='tcpcryptd-checksum.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-checksum.o `test -f 'checksum.c' || echo '$(srcdir)/'`checksum.c
+
+tcpcryptd-checksum.obj: checksum.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-checksum.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-checksum.Tpo -c -o tcpcryptd-checksum.obj `if test -f 'checksum.c'; then $(CYGPATH_W) 'checksum.c'; else $(CYGPATH_W) '$(srcdir)/checksum.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-checksum.Tpo $(DEPDIR)/tcpcryptd-checksum.Po
+#	source='checksum.c' object='tcpcryptd-checksum.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-checksum.obj `if test -f 'checksum.c'; then $(CYGPATH_W) 'checksum.c'; else $(CYGPATH_W) '$(srcdir)/checksum.c'; fi`
+
+tcpcryptd-test.o: test.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-test.o -MD -MP -MF $(DEPDIR)/tcpcryptd-test.Tpo -c -o tcpcryptd-test.o `test -f 'test.c' || echo '$(srcdir)/'`test.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-test.Tpo $(DEPDIR)/tcpcryptd-test.Po
+#	source='test.c' object='tcpcryptd-test.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-test.o `test -f 'test.c' || echo '$(srcdir)/'`test.c
+
+tcpcryptd-test.obj: test.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-test.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-test.Tpo -c -o tcpcryptd-test.obj `if test -f 'test.c'; then $(CYGPATH_W) 'test.c'; else $(CYGPATH_W) '$(srcdir)/test.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-test.Tpo $(DEPDIR)/tcpcryptd-test.Po
+#	source='test.c' object='tcpcryptd-test.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-test.obj `if test -f 'test.c'; then $(CYGPATH_W) 'test.c'; else $(CYGPATH_W) '$(srcdir)/test.c'; fi`
+
+tcpcryptd-crypto_rc4.o: crypto_rc4.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_rc4.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo -c -o tcpcryptd-crypto_rc4.o `test -f 'crypto_rc4.c' || echo '$(srcdir)/'`crypto_rc4.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo $(DEPDIR)/tcpcryptd-crypto_rc4.Po
+#	source='crypto_rc4.c' object='tcpcryptd-crypto_rc4.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_rc4.o `test -f 'crypto_rc4.c' || echo '$(srcdir)/'`crypto_rc4.c
+
+tcpcryptd-crypto_rc4.obj: crypto_rc4.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_rc4.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo -c -o tcpcryptd-crypto_rc4.obj `if test -f 'crypto_rc4.c'; then $(CYGPATH_W) 'crypto_rc4.c'; else $(CYGPATH_W) '$(srcdir)/crypto_rc4.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo $(DEPDIR)/tcpcryptd-crypto_rc4.Po
+#	source='crypto_rc4.c' object='tcpcryptd-crypto_rc4.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_rc4.obj `if test -f 'crypto_rc4.c'; then $(CYGPATH_W) 'crypto_rc4.c'; else $(CYGPATH_W) '$(srcdir)/crypto_rc4.c'; fi`
+
+tcpcryptd-crypto_umac.o: crypto_umac.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_umac.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_umac.Tpo -c -o tcpcryptd-crypto_umac.o `test -f 'crypto_umac.c' || echo '$(srcdir)/'`crypto_umac.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_umac.Tpo $(DEPDIR)/tcpcryptd-crypto_umac.Po
+#	source='crypto_umac.c' object='tcpcryptd-crypto_umac.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_umac.o `test -f 'crypto_umac.c' || echo '$(srcdir)/'`crypto_umac.c
+
+tcpcryptd-crypto_umac.obj: crypto_umac.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_umac.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_umac.Tpo -c -o tcpcryptd-crypto_umac.obj `if test -f 'crypto_umac.c'; then $(CYGPATH_W) 'crypto_umac.c'; else $(CYGPATH_W) '$(srcdir)/crypto_umac.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-crypto_umac.Tpo $(DEPDIR)/tcpcryptd-crypto_umac.Po
+#	source='crypto_umac.c' object='tcpcryptd-crypto_umac.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_umac.obj `if test -f 'crypto_umac.c'; then $(CYGPATH_W) 'crypto_umac.c'; else $(CYGPATH_W) '$(srcdir)/crypto_umac.c'; fi`
+
+tcpcryptd-umac.o: $(top_srcdir)/contrib/umac.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-umac.o -MD -MP -MF $(DEPDIR)/tcpcryptd-umac.Tpo -c -o tcpcryptd-umac.o `test -f '$(top_srcdir)/contrib/umac.c' || echo '$(srcdir)/'`$(top_srcdir)/contrib/umac.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-umac.Tpo $(DEPDIR)/tcpcryptd-umac.Po
+#	source='$(top_srcdir)/contrib/umac.c' object='tcpcryptd-umac.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-umac.o `test -f '$(top_srcdir)/contrib/umac.c' || echo '$(srcdir)/'`$(top_srcdir)/contrib/umac.c
+
+tcpcryptd-umac.obj: $(top_srcdir)/contrib/umac.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-umac.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-umac.Tpo -c -o tcpcryptd-umac.obj `if test -f '$(top_srcdir)/contrib/umac.c'; then $(CYGPATH_W) '$(top_srcdir)/contrib/umac.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/contrib/umac.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-umac.Tpo $(DEPDIR)/tcpcryptd-umac.Po
+#	source='$(top_srcdir)/contrib/umac.c' object='tcpcryptd-umac.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-umac.obj `if test -f '$(top_srcdir)/contrib/umac.c'; then $(CYGPATH_W) '$(top_srcdir)/contrib/umac.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/contrib/umac.c'; fi`
+
+tcpcryptd-rijndael-alg-fst.o: $(top_srcdir)/contrib/rijndael-alg-fst.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-rijndael-alg-fst.o -MD -MP -MF $(DEPDIR)/tcpcryptd-rijndael-alg-fst.Tpo -c -o tcpcryptd-rijndael-alg-fst.o `test -f '$(top_srcdir)/contrib/rijndael-alg-fst.c' || echo '$(srcdir)/'`$(top_srcdir)/contrib/rijndael-alg-fst.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-rijndael-alg-fst.Tpo $(DEPDIR)/tcpcryptd-rijndael-alg-fst.Po
+#	source='$(top_srcdir)/contrib/rijndael-alg-fst.c' object='tcpcryptd-rijndael-alg-fst.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-rijndael-alg-fst.o `test -f '$(top_srcdir)/contrib/rijndael-alg-fst.c' || echo '$(srcdir)/'`$(top_srcdir)/contrib/rijndael-alg-fst.c
+
+tcpcryptd-rijndael-alg-fst.obj: $(top_srcdir)/contrib/rijndael-alg-fst.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-rijndael-alg-fst.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-rijndael-alg-fst.Tpo -c -o tcpcryptd-rijndael-alg-fst.obj `if test -f '$(top_srcdir)/contrib/rijndael-alg-fst.c'; then $(CYGPATH_W) '$(top_srcdir)/contrib/rijndael-alg-fst.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/contrib/rijndael-alg-fst.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-rijndael-alg-fst.Tpo $(DEPDIR)/tcpcryptd-rijndael-alg-fst.Po
+#	source='$(top_srcdir)/contrib/rijndael-alg-fst.c' object='tcpcryptd-rijndael-alg-fst.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-rijndael-alg-fst.obj `if test -f '$(top_srcdir)/contrib/rijndael-alg-fst.c'; then $(CYGPATH_W) '$(top_srcdir)/contrib/rijndael-alg-fst.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/contrib/rijndael-alg-fst.c'; fi`
+
+tcpcryptd-freebsd.o: freebsd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-freebsd.o -MD -MP -MF $(DEPDIR)/tcpcryptd-freebsd.Tpo -c -o tcpcryptd-freebsd.o `test -f 'freebsd.c' || echo '$(srcdir)/'`freebsd.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-freebsd.Tpo $(DEPDIR)/tcpcryptd-freebsd.Po
+#	source='freebsd.c' object='tcpcryptd-freebsd.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-freebsd.o `test -f 'freebsd.c' || echo '$(srcdir)/'`freebsd.c
+
+tcpcryptd-freebsd.obj: freebsd.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-freebsd.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-freebsd.Tpo -c -o tcpcryptd-freebsd.obj `if test -f 'freebsd.c'; then $(CYGPATH_W) 'freebsd.c'; else $(CYGPATH_W) '$(srcdir)/freebsd.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-freebsd.Tpo $(DEPDIR)/tcpcryptd-freebsd.Po
+#	source='freebsd.c' object='tcpcryptd-freebsd.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-freebsd.obj `if test -f 'freebsd.c'; then $(CYGPATH_W) 'freebsd.c'; else $(CYGPATH_W) '$(srcdir)/freebsd.c'; fi`
+
+tcpcryptd-linux.o: linux.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-linux.o -MD -MP -MF $(DEPDIR)/tcpcryptd-linux.Tpo -c -o tcpcryptd-linux.o `test -f 'linux.c' || echo '$(srcdir)/'`linux.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-linux.Tpo $(DEPDIR)/tcpcryptd-linux.Po
+#	source='linux.c' object='tcpcryptd-linux.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-linux.o `test -f 'linux.c' || echo '$(srcdir)/'`linux.c
+
+tcpcryptd-linux.obj: linux.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-linux.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-linux.Tpo -c -o tcpcryptd-linux.obj `if test -f 'linux.c'; then $(CYGPATH_W) 'linux.c'; else $(CYGPATH_W) '$(srcdir)/linux.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-linux.Tpo $(DEPDIR)/tcpcryptd-linux.Po
+#	source='linux.c' object='tcpcryptd-linux.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-linux.obj `if test -f 'linux.c'; then $(CYGPATH_W) 'linux.c'; else $(CYGPATH_W) '$(srcdir)/linux.c'; fi`
+
+tcpcryptd-cygwin.o: cygwin.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-cygwin.o -MD -MP -MF $(DEPDIR)/tcpcryptd-cygwin.Tpo -c -o tcpcryptd-cygwin.o `test -f 'cygwin.c' || echo '$(srcdir)/'`cygwin.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-cygwin.Tpo $(DEPDIR)/tcpcryptd-cygwin.Po
+#	source='cygwin.c' object='tcpcryptd-cygwin.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-cygwin.o `test -f 'cygwin.c' || echo '$(srcdir)/'`cygwin.c
+
+tcpcryptd-cygwin.obj: cygwin.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-cygwin.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-cygwin.Tpo -c -o tcpcryptd-cygwin.obj `if test -f 'cygwin.c'; then $(CYGPATH_W) 'cygwin.c'; else $(CYGPATH_W) '$(srcdir)/cygwin.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-cygwin.Tpo $(DEPDIR)/tcpcryptd-cygwin.Po
+#	source='cygwin.c' object='tcpcryptd-cygwin.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-cygwin.obj `if test -f 'cygwin.c'; then $(CYGPATH_W) 'cygwin.c'; else $(CYGPATH_W) '$(srcdir)/cygwin.c'; fi`
+
+tcpcryptd-unix.o: unix.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-unix.o -MD -MP -MF $(DEPDIR)/tcpcryptd-unix.Tpo -c -o tcpcryptd-unix.o `test -f 'unix.c' || echo '$(srcdir)/'`unix.c
+	$(am__mv) $(DEPDIR)/tcpcryptd-unix.Tpo $(DEPDIR)/tcpcryptd-unix.Po
+#	source='unix.c' object='tcpcryptd-unix.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-unix.o `test -f 'unix.c' || echo '$(srcdir)/'`unix.c
+
+tcpcryptd-unix.obj: unix.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-unix.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-unix.Tpo -c -o tcpcryptd-unix.obj `if test -f 'unix.c'; then $(CYGPATH_W) 'unix.c'; else $(CYGPATH_W) '$(srcdir)/unix.c'; fi`
+	$(am__mv) $(DEPDIR)/tcpcryptd-unix.Tpo $(DEPDIR)/tcpcryptd-unix.Po
+#	source='unix.c' object='tcpcryptd-unix.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-unix.obj `if test -f 'unix.c'; then $(CYGPATH_W) 'unix.c'; else $(CYGPATH_W) '$(srcdir)/unix.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

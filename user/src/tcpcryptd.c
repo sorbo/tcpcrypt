@@ -270,11 +270,11 @@ static int do_handle_ctl(struct tcpcrypt_ctl *c, struct sockaddr_un *s_un)
 	int l, rc;
 
 	if (c->tcc_flags & TCC_SET)
-		c->tcc_err = tcpcrypt_setsockopt(c, c->tcc_opt, c->tcc_data,
-					 	 c->tcc_dlen);
+		c->tcc_err = tcpcryptd_setsockopt(c, c->tcc_opt, c->tcc_data,
+					 	  c->tcc_dlen);
 	else
-		c->tcc_err = tcpcrypt_getsockopt(c, c->tcc_opt, c->tcc_data,
-						 &c->tcc_dlen);
+		c->tcc_err = tcpcryptd_getsockopt(c, c->tcc_opt, c->tcc_data,
+						  &c->tcc_dlen);
 
 	/* we can either have client retry, or we queue things up.  The latter
 	 * is more efficient but more painful to implement.  I'll go for the

@@ -8,20 +8,6 @@
 #define TCC_IN	0x00000001
 #define TCC_SET	0x00000002
 
-enum {
-        TCP_CRYPT_ENABLE	= 0,
-        TCP_CRYPT_CMODE,
-	TCP_CRYPT_SESSID,
-	TCP_CRYPT_RSA_KEY	= 3,
-
-	TCP_CRYPT_APP_SUPPORT	= 15,
-
-	/* non standard options */
-	TCP_CRYPT_RESET		= 100,
-	TCP_CRYPT_NOCACHE,
-	TCP_CRYPT_NETSTAT,
-};
-
 struct tc_netstat {
 	struct in_addr	tn_sip;
 	uint16_t	tn_sport;
