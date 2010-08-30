@@ -4,7 +4,7 @@ OSNAME=`uname -s`
 PORT=${1:-80}
 PORT2=${2:-7777}
 
-TCPCRYPTD=`dirname $0`/tcpcrypt/tcpcryptd
+TCPCRYPTD=`dirname $0`/src/tcpcryptd
 DIVERT_PORT=666
 PIDFILE=/tmp/tcpcrypt.pid
 
