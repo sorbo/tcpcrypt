@@ -13,6 +13,7 @@
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "checksum.h"
+#include "config.h"
 
 typedef __signed__ char __s8;
 typedef unsigned char __u8;

@@ -22,7 +22,7 @@ else
 tcpcryptd_SOURCES += unix.c
 endif
 
-if NO_ASM
+if !NO_ASM
 tcpcryptd_SOURCES += checksum_32.S
 endif
 

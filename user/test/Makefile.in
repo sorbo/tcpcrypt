@@ -36,7 +36,7 @@ host_triplet = @host@
 check_PROGRAMS = test_tcpcrypt$(EXEEXT)
 @HAVE_NI_TRUE@am__append_1 = $(top_srcdir)/contrib/rijndael-alg-fst-ni.c
 @HAVE_NI_FALSE@am__append_2 = $(top_srcdir)/contrib/rijndael-alg-fst.c
-@NO_ASM_TRUE@am__append_3 = $(top_srcdir)/src/checksum_32.S
+@NO_ASM_FALSE@am__append_3 = $(top_srcdir)/src/checksum_32.S
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -61,7 +61,7 @@ am__test_tcpcrypt_SOURCES_DIST = tcpcrypt.c pake.c \
 @HAVE_NI_TRUE@	test_tcpcrypt-rijndael-alg-fst-ni.$(OBJEXT)
 @HAVE_NI_FALSE@am__objects_2 =  \
 @HAVE_NI_FALSE@	test_tcpcrypt-rijndael-alg-fst.$(OBJEXT)
-@NO_ASM_TRUE@am__objects_3 = checksum_32.$(OBJEXT)
+@NO_ASM_FALSE@am__objects_3 = checksum_32.$(OBJEXT)
 am_test_tcpcrypt_OBJECTS = test_tcpcrypt-tcpcrypt.$(OBJEXT) \
 	test_tcpcrypt-pake.$(OBJEXT) test_tcpcrypt-profile.$(OBJEXT) \
 	test_tcpcrypt-checksum.$(OBJEXT) test_tcpcrypt-umac.$(OBJEXT) \

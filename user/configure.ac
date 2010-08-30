@@ -47,6 +47,7 @@ if test "${enable_asm}" = yes; then
    AC_MSG_RESULT(yes)
 else
    AC_MSG_RESULT(no)
+   AC_DEFINE(NO_ASM, 1, [No asm?])
 fi
 AM_CONDITIONAL(NO_ASM, test x$enable_asm = xno)
 

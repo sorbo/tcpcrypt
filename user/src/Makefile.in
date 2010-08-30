@@ -40,7 +40,7 @@ bin_PROGRAMS = tcpcryptd$(EXEEXT)
 @OS_LINUX_TRUE@am__append_3 = -lnetfilter_queue -lnfnetlink -lcap
 @OS_WINDOWS_TRUE@am__append_4 = cygwin.c
 @OS_WINDOWS_FALSE@am__append_5 = unix.c
-@NO_ASM_TRUE@am__append_6 = checksum_32.S
+@NO_ASM_FALSE@am__append_6 = checksum_32.S
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -66,7 +66,7 @@ am__tcpcryptd_SOURCES_DIST = tcpcryptd.c tcpcrypt.c crypto.c \
 @OS_LINUX_TRUE@am__objects_2 = tcpcryptd-linux.$(OBJEXT)
 @OS_WINDOWS_TRUE@am__objects_3 = tcpcryptd-cygwin.$(OBJEXT)
 @OS_WINDOWS_FALSE@am__objects_4 = tcpcryptd-unix.$(OBJEXT)
-@NO_ASM_TRUE@am__objects_5 = checksum_32.$(OBJEXT)
+@NO_ASM_FALSE@am__objects_5 = checksum_32.$(OBJEXT)
 am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
 	tcpcryptd-tcpcrypt.$(OBJEXT) tcpcryptd-crypto.$(OBJEXT) \
 	tcpcryptd-crypto_rsa.$(OBJEXT) tcpcryptd-crypto_aes.$(OBJEXT) \

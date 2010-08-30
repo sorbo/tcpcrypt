@@ -15,6 +15,6 @@ else
 test_tcpcrypt_SOURCES += $(top_srcdir)/contrib/rijndael-alg-fst.c
 endif
 
-if NO_ASM
+if !NO_ASM
 test_tcpcrypt_SOURCES += $(top_srcdir)/src/checksum_32.S
 endif

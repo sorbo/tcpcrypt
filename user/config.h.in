@@ -150,6 +150,9 @@
    */
 #undef LT_OBJDIR
 
+/* No asm? */
+#undef NO_ASM
+
 /* Name of package */
 #undef PACKAGE
 
