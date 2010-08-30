@@ -15,7 +15,6 @@
 #include <errno.h>
 #include <time.h>
 
-#include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "divert.h"
 #include "tcpcryptd.h"

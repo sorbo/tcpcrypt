@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <openssl/err.h>
 
-#include "lib/tcpcrypt_ctl.h"
+#include "tcpcrypt_ctl.h"
 #include "divert.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"

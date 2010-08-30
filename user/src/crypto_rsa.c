@@ -9,7 +9,6 @@
 #include <openssl/rsa.h>
 #include <openssl/err.h>
 
-#include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "crypto.h"

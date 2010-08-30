@@ -9,7 +9,6 @@
 #include <assert.h>
 #include <netinet/in.h>
 
-#include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "crypto.h"

@@ -7,9 +7,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-#include <umac.h>
 
-#include "tcpcrypt_ctl.h"
+#include "contrib/umac.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "crypto.h"

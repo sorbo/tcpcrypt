@@ -12,7 +12,6 @@
 #include <err.h>
 #include <string.h>
 
-#include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "crypto.h"

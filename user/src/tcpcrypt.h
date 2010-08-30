@@ -1,6 +1,8 @@
 #ifndef __TCPCRYPT_TCPCRYPT_H__
 #define __TCPCRYPT_TCPCRYPT_H__
 
+#include "tcpcrypt_ctl.h"
+
 #define TC_DUMMY	0x69
 
 enum {
