@@ -9,15 +9,12 @@
 Makefile
 Makefile.in
 aclocal.m4
-config.guess
 config.log
 config.status
-config.sub
 configure
 config.h
 autom4te.cache
 stamp-h1
-m4
 libtool
 autoscan.log
 configure.scan
