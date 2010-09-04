@@ -20,9 +20,11 @@ Compiling
 ---------
 
     cd tcpcrypt/user
+    ./configure
     make
 
-Optional: running `make install` will install `libtcpcrypt.so` in `/usr/lib`.
+Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
+headers, for building apps that use tcpcrypt's session ID.
 
 Running
 -------

@@ -17,6 +17,7 @@ Installing tcpcrypt
 
     git clone git://github.com/sorbo/tcpcrypt.git
     cd tcpcrypt/user
+    ./configure
     make
     sudo ./launch_tcpcryptd.sh
 
@@ -26,6 +27,9 @@ local port 7777 (an arbitrarily chosen port number) traffic to tcpcryptd. When t
 changes are made**.
 
 On Linux, you must first install libnfnetlink, libnetfilter_queue, and libcap.
+
+Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
+headers, for building apps that use tcpcrypt's session ID.
 
 Try it out
 ---------- 

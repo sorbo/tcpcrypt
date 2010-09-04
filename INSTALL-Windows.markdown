@@ -15,7 +15,15 @@ You need Cygwin and the following packages to compile tcpcrypt:
 * gcc
 * make (GNU make)
 
-To compile, run `make` from the tcpcrypt/user directory.
+To compile:
+
+    cd tcpcrypt/user
+    ./configure
+    make
+
+Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
+headers, for building apps that use tcpcrypt's session ID.
+
 
 Installing
 ==========

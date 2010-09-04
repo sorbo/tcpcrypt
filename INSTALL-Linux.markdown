@@ -42,11 +42,14 @@ The `.config` options for these are:
 Compiling
 ---------
 
-In the `tcpcrypt/user` directory, run:
+Run:
 
-   make
+    cd tcpcrypt/user
+    ./configure
+    make
 
-Optional: running `make install` will install `libtcpcrypt.so` in `/usr/lib`.
+Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
+headers, for building apps that use tcpcrypt's session ID.
 
 
 Try it out

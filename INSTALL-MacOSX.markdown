@@ -7,9 +7,11 @@ Compiling
 Tcpcrypt does not depend on non-standard libs on Mac OS X, so just run:
 
     cd tcpcrypt/user
+    ./configure
     make
 
-Optional: running `make install` will install `libtcpcrypt.dylib` in `/usr/lib`.
+Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
+headers, for building apps that use tcpcrypt's session ID.
 
 Running
 -------
