@@ -61,7 +61,9 @@ See the included `README.markdown` file for ways to try out tcpcrypt.
 iptables firewall setup
 =======================
 
-The included `launch_tcpcryptd.sh` script adds iptable rules to divert Web and local port 7777 traffic to tcpcryptd. Read on only for more complex firewall setups.
+The included `launch_tcpcryptd.sh` script adds iptable rules to divert Web and
+local port 7777 traffic to tcpcryptd. Read on only for more complex firewall
+setups.
 
 The naive way to use tcpcryptd:
 
@@ -76,6 +78,16 @@ For testing on your local machine, you can restrict tcpcrypt to the loopback int
 
     iptables -A OUTPUT -p tcp -o lo -j NFQUEUE --queue-num 666
     iptables -A INPUT -p tcp -i lo -j NFQUEUE --queue-num 666
+
+Or, to run tcpcrypt only on port 80, use this (taken from launch_tcpcryptd.sh):
+    
+    iptables -A OUTPUT -p tcp -m tcp --dport 80 -j NFQUEUE --queue-num 666
+    iptables -A INPUT -p tcp -m tcp --sport 80 -j NFQUEUE --queue-num 666    
+
+To restore your iptables rules to their previous state, you can remove rules by
+replacing `-A` (append) with `-D` (delete) in the above commands.
+
+The following instructions apply to using tcpcrypt on firewall/gateway boxes.
 
 Linux firewall setup is more challenging than on FreeBSD for two reasons.
 
