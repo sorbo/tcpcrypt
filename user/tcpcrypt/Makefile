@@ -1,14 +1,15 @@
 include ../common.mak
 
-NAME	 = tcpcryptd
+NAME	 = tcpcryptd$(SUFFIX)
 CONTRIB  = ../contrib
 CFLAGS	+= -I$(CONTRIB)
 LDFLAGS	 = -lcrypto
 
 OBJS	= tcpcryptd.o tcpcrypt.o crypto.o crypto_rsa.o crypto_aes.o \
 	  crypto_hmac.o crypto_dummy.o profile.o checksum.o \
-	  test.o crypto_rc4.o crypto_umac.o \
-	  $(CONTRIB)/umac.o $(CONTRIB)/rijndael-alg-fst.o
+	  test.o crypto_rc4.o \
+	  crypto_umac.o $(CONTRIB)/umac.o \
+	  $(CONTRIB)/rijndael-alg-fst.o
 
 ifeq ($(OSNAME), FreeBSD)
 	OBJS    += freebsd.o
@@ -23,10 +24,15 @@ ifeq ($(OSNAME), Linux)
 	LDFLAGS += -lnetfilter_queue -lnfnetlink -lcap
 endif
 
-ifeq ($(OSNAME), Cygwin)
-	OBJS    += cygwin.o 
-else
+ifneq (,$(filter $(OSNAME),Cygwin Mingw))
+	OBJS    += cygwin.o
+else 
 	OBJS	+= unix.o
+endif
+
+ifeq ($(OSNAME), Mingw)
+	OBJS	+= mingw.o
+	LDFLAGS += -lwsock32
 endif
 
 ifndef NO_ASM

@@ -37,6 +37,11 @@ ifeq ($(OSNAME), Cygwin)
 	NO_ASM = 1
 endif
 
+ifeq ($(OSNAME), Mingw)
+	NO_ASM = 1
+	SUFFIX = .exe
+endif
+
 ifeq ($(shell uname -m), x86_64)
         NO_ASM = 1
 endif

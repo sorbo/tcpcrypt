@@ -1,16 +1,10 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
 #include <stdlib.h>
 #include <string.h>
-#include <err.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 
+#include "inc.h"
 #include "divert.h"
 #include "tcpcryptd.h"
 
@@ -31,6 +25,36 @@ struct arp {
 	unsigned char a_mac[6];
 	struct arp    *a_next;
 } _arp;
+
+#ifdef __WIN32__
+extern int do_divert_open(char *dev);
+extern int do_divert_read(int s, void *buf, int len);
+extern int do_divert_write(int s, void *buf, int len);
+extern void do_divert_close(int s);
+#else
+static int do_divert_open(char *dev)
+{
+	if ((_s = open(dev, O_RDWR)) == -1)
+		err(1, "open()");
+
+	return _s;
+}
+
+static int do_divert_read(int s, void *buf, int len)
+{
+	return read(s, buf, len);
+}
+
+static int do_divert_write(int s, void *buf, int len)
+{
+	return write(s, buf, len);
+}
+
+static void do_divert_close(int s)
+{
+	close(s);
+}
+#endif
 
 int divert_open(int port, divert_cb cb)
 {
@@ -54,8 +78,7 @@ int divert_open(int port, divert_cb cb)
 	xprintf(XP_ALWAYS, "MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
 	       _mac[0], _mac[1], _mac[2], _mac[3], _mac[4], _mac[5]);
 
-	if ((_s = open("\\\\.\\PassThru", O_RDWR)) == -1)
-		err(1, "open()");
+	_s = do_divert_open("\\\\.\\PassThru");
 
 	_cb = cb;
 
@@ -64,7 +87,7 @@ int divert_open(int port, divert_cb cb)
 
 void divert_close(void)
 {
-	close(_s);
+	do_divert_close(_s);
 }
 
 static void arp_cache(unsigned char *buf, int in)
@@ -141,7 +164,7 @@ static void do_divert_next_packet(unsigned char *buf, int rc)
 		rc = ntohs(iph->ip_len) + MAC_SIZE;
 		/* fallthrough */
 	case DIVERT_ACCEPT:
-		flags = write(_s, buf, rc);
+		flags = do_divert_write(_s, buf, rc);
 		if (flags == -1)
 			err(1, "write()");
 
@@ -163,7 +186,7 @@ void divert_next_packet(int s)
 	unsigned char buf[2048];
 	int rc;
 
-	rc = read(_s, buf, sizeof(buf));
+	rc = do_divert_read(_s, buf, sizeof(buf));
 	if (rc == -1)
 		err(1, "read()");
 

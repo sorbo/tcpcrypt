@@ -1,5 +1,3 @@
-#include <sys/uio.h>
-#include <netinet/in.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -9,6 +7,7 @@
 #include <assert.h>
 #include <openssl/evp.h>
 
+#include "inc.h"
 #include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"

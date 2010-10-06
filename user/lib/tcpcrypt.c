@@ -1,18 +1,13 @@
 #include <stdint.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-#include <err.h>
 #include <errno.h>
 #include <unistd.h>
-#include <sys/uio.h>
 
+#include "tcpcrypt/inc.h"
 #include "tcpcrypt/tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 
@@ -31,10 +26,10 @@ enum {
 };
 
 struct conf {
-	char			*cf_path;
+	int			cf_path;
 	int			cf_s;
 	uint32_t		cf_seq;
-	struct sockaddr_un	cf_sun;
+	struct sockaddr_in	cf_sun;
 	int			cf_imp;
 };
 
@@ -51,18 +46,19 @@ union sockaddr_u {
 
 static void set_addr()
 {
-	struct sockaddr_un *addr = &_conf.cf_sun;
+	struct sockaddr_in *addr = &_conf.cf_sun;
 	memset(addr, 0, sizeof(*addr));
 
-	addr->sun_family = PF_UNIX;
-	snprintf(addr->sun_path, sizeof(addr->sun_path), "%s", _conf.cf_path);
+	addr->sin_family      = PF_INET;
+	addr->sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr->sin_port	      = htons(_conf.cf_path);
 }
 
 void tcpcrypt_setparam(int param, void *val)
 {
 	switch (param) {
 	case TCPCRYPT_PARAM_CTLPATH:
-		_conf.cf_path = strdup(val);
+		_conf.cf_path = atoi(val);
 		set_addr();
 		break;
 
@@ -72,34 +68,16 @@ void tcpcrypt_setparam(int param, void *val)
 	}
 }
 
-static void bind_local(void)
-{
-	struct sockaddr_un s_un;
-
-	memset(&s_un, 0, sizeof(s_un));
-	s_un.sun_family = PF_UNIX;
-
-	snprintf(s_un.sun_path, sizeof(s_un.sun_path), "/tmp/%d", getpid());
-#ifdef linux
-	s_un.sun_path[0] = 0;
-#endif
-
-	if (bind(_conf.cf_s, (struct sockaddr*) &s_un, sizeof(s_un)) == -1)
-		err(1, "bind()");
-}
-
 static void open_socket(void)
 {
 	if (_conf.cf_s)
 		return;
 
-	_conf.cf_s = socket(PF_UNIX, SOCK_DGRAM, 0);
+	_conf.cf_s = socket(PF_INET, SOCK_DGRAM, 0);
 	if (_conf.cf_s == -1)
 		err(1, "socket()");
 
 	set_addr();
-
-	bind_local();
 }
 
 /* Sets fields in `struct tcpcrypt_ctl` given in the pointers `ctl_addr` and
@@ -124,8 +102,8 @@ static void set_ctl_sockaddr(union sockaddr_u *ss,
 			*ctl_port = ss->in6.sin6_port;
 		} else {
 			/* TODO: add IPv6 support */
-			warn("Non-IPv4-compatible IPv6 addresses not supported."
-			     "Behavior of get/set_sockopt call is unreliable.");
+			printf("Non-IPv4-compatible IPv6 addresses not supported."
+			       "Behavior of get/set_sockopt call is unreliable.\n");
 	    }
 	}
 
@@ -138,13 +116,13 @@ static void set_ctl_sockaddr(union sockaddr_u *ss,
 static int do_sockopt(uint32_t flags, int s, int level, int optname,
 		      void *optval, socklen_t *optlen)
 {
-	struct tcpcrypt_ctl ctl;
+	unsigned char *crap;
+	struct tcpcrypt_ctl *ctl;
 	union sockaddr_u ss;
 	socklen_t sl = sizeof ss;
 	struct iovec iov[2];
 	struct msghdr mh;
 	int rc, len, i, port;
-	unsigned char buf[2048];
 	int set = flags & TCC_SET;
 
 	if (level != IPPROTO_TCP)
@@ -158,8 +136,12 @@ static int do_sockopt(uint32_t flags, int s, int level, int optname,
 		*optlen = MAX_LEN;
 	}
 
-	memset(&ctl, 0, sizeof(ctl));
-	ctl.tcc_seq = _conf.cf_seq++;
+	ctl = crap = alloca(sizeof(*ctl) + (*optlen));
+	if (!crap)
+		return -1;
+
+	memset(ctl, 0, sizeof(*ctl));
+	ctl->tcc_seq = _conf.cf_seq++;
 
 	for (i = 0; i < 2; i++) {
 		memset(&ss, 0, sizeof(ss));
@@ -189,72 +171,55 @@ static int do_sockopt(uint32_t flags, int s, int level, int optname,
 			err(1, "bind()");
 	}
 
-	set_ctl_sockaddr(&ss, &ctl.tcc_src.s_addr, &ctl.tcc_sport);
+	set_ctl_sockaddr(&ss, &ctl->tcc_src.s_addr, &ctl->tcc_sport);
 
 	memset(&ss, 0, sl);
 	if (getpeername(s, (struct sockaddr*) &ss, &sl) == 0) {
-		set_ctl_sockaddr(&ss, &ctl.tcc_dst.s_addr, &ctl.tcc_dport);
+		set_ctl_sockaddr(&ss, &ctl->tcc_dst.s_addr, &ctl->tcc_dport);
 	}
 
-	ctl.tcc_flags = flags;
-	ctl.tcc_opt   = optname;
-	ctl.tcc_dlen  = *optlen;
+	ctl->tcc_flags = flags;
+	ctl->tcc_opt   = optname;
+	ctl->tcc_dlen  = *optlen;
 
-	iov[0].iov_base = &ctl;
-	iov[0].iov_len  = sizeof(ctl);
-	iov[1].iov_base = optval;
-	iov[1].iov_len  = *optlen;
+	len = sizeof(*ctl);
 
-	memset(&mh, 0, sizeof(mh));
-	mh.msg_name    = &_conf.cf_sun;
-	mh.msg_namelen = sizeof(_conf.cf_sun);
-	mh.msg_iov     = iov;
-	mh.msg_iovlen  = *optlen ? 2 : 1;
-
-	len = 0;
-	for (i = 0; i < mh.msg_iovlen; i++)
-		len += mh.msg_iov[i].iov_len;
+	if (*optlen) {
+		memcpy(crap + len, optval, *optlen);
+		len += *optlen;
+	}
 
 	open_socket();
 
-#if defined(__CYGWIN__)
-	if (connect(_conf.cf_s, (struct sockaddr*) &_conf.cf_sun,
-		    sizeof(&_conf.cf_sun)) == -1)
-		err(1, "connect()");
-
-	if ((rc = writev(_conf.cf_s, iov, 2)) == -1)
+	rc = sendto(_conf.cf_s, crap, len, 0,
+		    (struct sockaddr*) &_conf.cf_sun, sizeof(_conf.cf_sun));
+	if (rc == -1)
 		return -1;
-#else
-	if ((rc = sendmsg(_conf.cf_s, &mh, 0)) == -1)
-		return -1;
-#endif
 
 	if (rc != len)
 		errx(1, "short write %d/%d", rc, len);
 
-	if (set) {
-		iov[1].iov_base = buf;
-		assert(sizeof(buf) >= iov[1].iov_len);
-	}
-
-	rc = recvmsg(_conf.cf_s, &mh, 0);
+	rc = recv(_conf.cf_s, crap, len, 0);
 	if (rc == -1)
 		err(1, "recvmsg()");
 
 	if (rc == 0)
 		errx(1, "EOF");
 
-	if (rc < sizeof(ctl) || (rc != sizeof(ctl) + ctl.tcc_dlen))
+	if (rc < sizeof(*ctl) || (rc != sizeof(*ctl) + ctl->tcc_dlen))
 		errx(1, "short read");
 
-	*optlen = ctl.tcc_dlen;
+	*optlen = ctl->tcc_dlen;
 
-	if (ctl.tcc_err) {
-		errno = ctl.tcc_err;
-		ctl.tcc_err = -1;
+	if (!set)
+		memcpy(optval, crap + sizeof(*ctl), *optlen);
+
+	if (ctl->tcc_err) {
+		errno = ctl->tcc_err;
+		ctl->tcc_err = -1;
 	}
 
-	return ctl.tcc_err;
+	return ctl->tcc_err;
 }
 
 static void probe_imp()
@@ -273,9 +238,9 @@ static void probe_imp()
 		_conf.cf_imp = IMP_KERNEL;
 	else
 		_conf.cf_imp = IMP_USER;
-
+#if 0
 	printf("Using %d implementation\n", _conf.cf_imp);
-
+#endif
 	close(s);
 }
 

@@ -1,15 +1,10 @@
 #include <sys/types.h> 
-#include <arpa/inet.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#define __FAVOR_BSD
-#include <netinet/tcp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 
+#include "inc.h"
 #include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"

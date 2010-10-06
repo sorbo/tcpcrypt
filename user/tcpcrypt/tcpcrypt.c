@@ -1,20 +1,12 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#define __FAVOR_BSD
-#include <netinet/tcp.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <err.h>
 #include <assert.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
 #include <errno.h>
 #include <time.h>
 
+#include "inc.h"
 #include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "divert.h"
@@ -1215,7 +1207,7 @@ static void do_random(void *p, int len)
 	uint8_t *x = p;
 
 	while (len--)
-		*x++ = random() & 0xff;
+		*x++ = rand() & 0xff;
 }
 
 static void generate_nonce(struct tc *tc)
@@ -1998,7 +1990,7 @@ static int do_input_closed(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	return tc->tc_verdict;
 }
 
-static int min(int a, int b)
+static int do_min(int a, int b)
 {
 	if (a < b)
 		return a;
@@ -2006,7 +1998,7 @@ static int min(int a, int b)
 	return b;
 }
 
-static int max(int a, int b)
+static int do_max(int a, int b)
 {
 	if (a > b)
 		return a;
@@ -2030,10 +2022,10 @@ static int negotiate_cipher(struct tc *tc, struct tc_cipher_spec *a, int an)
 			    && a->tcs_key_max >= b->tcs_key_min) {
 
 				out->tcs_algo    = a->tcs_algo;
-				out->tcs_key_min = max(a->tcs_key_min,
-						       b->tcs_key_min);
-				out->tcs_key_max = min(a->tcs_key_max,
-						       b->tcs_key_max);
+				out->tcs_key_min = do_max(a->tcs_key_min,
+						          b->tcs_key_min);
+				out->tcs_key_max = do_min(a->tcs_key_max,
+						          b->tcs_key_max);
 
 				return 1;
 			}

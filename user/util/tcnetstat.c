@@ -3,12 +3,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include <err.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 
+#include "../tcpcrypt/inc.h"
 #include <tcpcrypt.h>
 #include <tcpcrypt_ctl.h>
 
@@ -16,7 +12,12 @@ int open_socket()
 {
     int s;
     struct sockaddr_in s_in;
-    
+#ifdef __WIN32__
+    WSADATA wsadata;
+    if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR)
+	errx(1, "WSAStartup()");
+#endif  
+
     memset(&s_in, 0, sizeof(s_in));
     s_in.sin_family = PF_INET;
     s_in.sin_port = 0;

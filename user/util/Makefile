@@ -1,13 +1,18 @@
 include ../common.mak
 
-PRODUCTS	= tcnetstat
+PRODUCTS	= tcnetstat$(SUFFIX)
 TCPCRYPT 	= ../lib
-CFLAGS	       += -I. -I$(TCPCRYPT) -I../tcpcrypt -O3
+CFLAGS	       += -I. -I$(TCPCRYPT) -I../tcpcrypt -I../contrib -O3
 LDFLAGS	 	= -L$(TCPCRYPT) -ltcpcrypt
+
+ifeq ($(OSNAME), Mingw)
+	LDFLAGS += -lwsock32
+endif
+
 
 all: $(PRODUCTS)
 
-tcnetstat: tcnetstat.o
+tcnetstat$(SUFFIX): tcnetstat.o
 	$(CC) $(CFLAGS) -o $(@) $(<) $(LDFLAGS) 
 
 clean:
