@@ -2,7 +2,7 @@ include ../common.mak
 
 NAME	 = tcpcryptd
 CONTRIB  = ../contrib
-CFLAGS	+= -I$(CONTRIB) -O3
+CFLAGS	+= -I$(CONTRIB)
 LDFLAGS	 = -lcrypto
 
 OBJS	= tcpcryptd.o tcpcrypt.o crypto.o crypto_rsa.o crypto_aes.o \

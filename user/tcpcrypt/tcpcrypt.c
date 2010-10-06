@@ -24,14 +24,14 @@
 #include "checksum.h"
 #include "test.h"
 
-/* lookup is local port, remote port, then linked list of connections */
-static void *_connection_map[65536];
-
 struct conn {
 	struct sockaddr_in	c_addr[2];
 	struct tc		*c_tc;
 	struct conn		*c_next;
 };
+
+/* XXX someone that knows what they're doing code a proper hash table */
+static struct conn *_connection_map[65536];
 
 struct freelist {
 	void		*f_obj;
@@ -279,7 +279,7 @@ static void session_cache(struct tc *tc)
 		return;
 
 	if (!s) {
-		s = malloc(sizeof(*s));
+		s = xmalloc(sizeof(*s));
 		if (!s)
 			err(1, "malloc()");
 
@@ -503,14 +503,15 @@ static void enable_encryption(struct tc *tc)
 		tc->tc_prf = &tc->tc_alg_pkey;
 }
 
+static int conn_hash(uint16_t src, uint16_t dst)
+{
+	return (src + dst) % 
+		(sizeof(_connection_map) / sizeof(*_connection_map));
+}
+
 static struct conn *get_head(uint16_t src, uint16_t dst)
 {
-	void **cmap = _connection_map[src];
-
-	if (!cmap)
-		return NULL;
-
-	return cmap[dst];
+	return _connection_map[conn_hash(src, dst)];
 }
 
 static struct tc *do_lookup_connection_prev(struct sockaddr_in *src,
@@ -615,23 +616,16 @@ static void retransmit(void *a)
 
 static void add_connection(struct conn *c)
 {
-	void **cmap;
 	int idx = c->c_addr[0].sin_port;
 	struct conn *head;
 
-	cmap = _connection_map[idx];
-	if (!cmap) {
-		cmap = _connection_map[idx] = xmalloc(sizeof(_connection_map));
-		memset(cmap, 0, sizeof(_connection_map));
+	idx = conn_hash(c->c_addr[0].sin_port, c->c_addr[1].sin_port);
+	if (!_connection_map[idx]) {
+		_connection_map[idx] = xmalloc(sizeof(*c));
+		memset(_connection_map[idx], 0, sizeof(*c));
 	}
 
-	idx = c->c_addr[1].sin_port;
-	if (!cmap[idx]) {
-		cmap[idx] = xmalloc(sizeof(*c));
-		memset(cmap[idx], 0, sizeof(*c));
-	}
-
-	head = cmap[idx];
+	head = _connection_map[idx];
 
 	c->c_next    = head->c_next;
 	head->c_next = c;
@@ -3335,26 +3329,19 @@ __next:
 /* XXX slow */
 static int tcpcrypt_netstat(void *val, unsigned int *len)
 {
-	int i, j;
+	int i;
 	int num = sizeof(_connection_map) / sizeof(*_connection_map);
-	void **cmap;
 	struct conn *c;
 	int copied = 0;
 	unsigned char *v = val;
 
 	for (i = 0; i < num; i++) {
-		cmap = _connection_map[i];
+		c = _connection_map[i];
 
-		if (!cmap)
+		if (!c)
 			continue;
 
-		for (j = 0; j < num; j++) {
-			c = cmap[j];
-			if (c) {
-				copied += do_tcpcrypt_netstat(c->c_next,
-							      &v[copied], len);
-			}
-		}
+		copied += do_tcpcrypt_netstat(c->c_next, &v[copied], len);
 	}
 
 	*len = copied;
