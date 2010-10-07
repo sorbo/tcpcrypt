@@ -26,6 +26,7 @@ endif
 
 ifneq (,$(filter $(OSNAME),Cygwin Mingw))
 	OBJS    += cygwin.o
+	LDFLAGS	+= -liphlpapi
 else 
 	OBJS	+= unix.o
 endif

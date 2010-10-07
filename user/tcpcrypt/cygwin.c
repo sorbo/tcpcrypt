@@ -4,6 +4,9 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#include <windows.h>
+#include <iphlpapi.h>
+
 #include "inc.h"
 #include "divert.h"
 #include "tcpcryptd.h"
@@ -61,52 +64,36 @@ static void do_divert_close(int s)
 }
 #endif
 
-static void parse_mac(char *m)
+static void probe_macs(void)
 {
-	int mac[6];
+        IP_ADAPTER_INFO ai[16];
+        DWORD len = sizeof(ai);
+        PIP_ADAPTER_INFO p;
 	struct mac *ma;
-	int i;
 
-	ma = xmalloc(sizeof(*ma));
+        if (GetAdaptersInfo(ai, &len) != ERROR_SUCCESS)
+                err(1, "GetAdaptersInfo()");
 
-	if (sscanf(m, "%x:%x:%x:%x:%x:%x",
-		   &mac[0], &mac[1], &mac[2],
-		   &mac[3], &mac[4], &mac[5]) != 6)
-		errx(1, "Can't parse MAC %s\n", m);
+        p = ai;
+        while (p) {
+		ma = xmalloc(sizeof(*ma));
+		memcpy(ma->m_mac, p->Address, sizeof(ma->m_mac));
+		ma->m_next = _macs.m_next;
+		_macs.m_next = ma;
 
-	for (i = 0; i < 6; i++)
-		ma->m_mac[i] = (unsigned char) mac[i];
+		xprintf(XP_ALWAYS, "MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
+	       		ma->m_mac[0], ma->m_mac[1], ma->m_mac[2],
+	       		ma->m_mac[3], ma->m_mac[4], ma->m_mac[5]);
 
-	xprintf(XP_ALWAYS, "MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
-	       ma->m_mac[0], ma->m_mac[1], ma->m_mac[2],
-	       ma->m_mac[3], ma->m_mac[4], ma->m_mac[5]);
-
-	ma->m_next = _macs.m_next;
-	_macs.m_next = ma;
+                p = p->Next;
+        }
 }
 
 int divert_open(int port, divert_cb cb)
 {
-	char *m;
-	char *p;
+	probe_macs();
 
-	m = driver_param(0);
-	if (!m)
-		errx(1 ,"Supply MAC address uses by this host"
-		        " e.g., -x 11:22:33:44:55:66,anothermac");
-
-	do {
-		p = strchr(m, ',');
-		if (p)
-			*p++ = 0;
-
-		parse_mac(m);
-
-		m = p;
-	} while (m);
-
-	_s = do_divert_open("\\\\.\\PassThru");
-
+	_s  = do_divert_open("\\\\.\\PassThru");
 	_cb = cb;
 
 	return _s;

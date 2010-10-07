@@ -1,7 +1,5 @@
 #include <windows.h>
 #include <stdio.h>
-#include <iphlpapi.h>
-#include <setupapi.h>
 #include <devguid.h>
 #include <winsock2.h>
 #include <unistd.h>
@@ -19,8 +17,6 @@ static HWND _hwnd;
 static HINSTANCE _hinstance;
 static NOTIFYICONDATA _nid[2];
 static NOTIFYICONDATA *_nidcur = NULL;
-static char _mac[6 * 3];
-static unsigned char _guid[16];
 
 static WINAPI DWORD check_term(void *arg)
 {
@@ -89,7 +85,7 @@ static void start()
 	STARTUPINFO si;
 
 	snprintf(cmd, sizeof(cmd), "tcpcryptd.exe");
-	snprintf(arg, sizeof(arg), "%s -x %s", cmd, _mac);
+	snprintf(arg, sizeof(arg), "%s", cmd);
 
 	memset(&si, 0, sizeof(si));
 	si.cb		 = sizeof(si);
@@ -296,70 +292,6 @@ static void parse_guid(unsigned char *guid, char *in)
 		err(1, "parse_guid() [%d]", x);
 }
 
-static void probe_mac(void)
-{
-        IP_ADAPTER_INFO ai[16];
-	int s;
-        WSADATA wsadata;
-        DWORD len = sizeof(ai);
-        PIP_ADAPTER_INFO p;
-	struct sockaddr_in s_in;
-	int l = sizeof(s_in);
-	char ip[16];
-	char msg[1024];
-
-	/* figure out our own IP addr */
-        if (WSAStartup(MAKEWORD(2,0), &wsadata) == SOCKET_ERROR)
-                err(1, "WSAStartup()");
-
-	s = socket(PF_INET, SOCK_DGRAM, 0);
-	if (s == -1)
-		err(1, "socket()");
-
-	memset(&s_in, 0, sizeof(s_in));
-	s_in.sin_family      = PF_INET;
-	s_in.sin_addr.s_addr = inet_addr("6.6.6.6");
-	s_in.sin_port        = htons(666);
-
-	if (connect(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
-		err(1, "connect()");
-
-	if (getsockname(s, (struct sockaddr*) &s_in, &l) == -1)
-		err(1, "getsockname()");
-
-	close(s);
-
-	strcpy(ip, inet_ntoa(s_in.sin_addr));
-
-	/* find interface for that ip */
-	if (GetAdaptersInfo(ai, &len) != ERROR_SUCCESS)
-		err(1, "GetAdaptersInfo()");
-
-        p = ai;
-        while (p) {
-		if (strcmp(ip, p->IpAddressList.IpAddress.String) == 0)
-			break;
-
-		p = p->Next;
-	}
-
-	if (!p)
-		err(1, "dunno what mac to use");
-
-	snprintf(_mac, sizeof(_mac), "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x",
-		 p->Address[0],
-		 p->Address[1],
-		 p->Address[2],
-		 p->Address[3],
-		 p->Address[4],
-		 p->Address[5]);
-
-	parse_guid(_guid, p->AdapterName + 1);
-
-	snprintf(msg, sizeof(msg), "IP %s MAC %s\r\n", ip, _mac);
-	SetWindowText(GetDlgItem(_hwnd, IDC_EDIT1), msg);
-}
-
 static void install_divert(void)
 {
 	INetCfg    *pnc;
@@ -418,7 +350,6 @@ static void probe_divert(void)
 static void do_init(void)
 {
 	setup_icons();
-	probe_mac();
 	probe_divert();
 }
 
