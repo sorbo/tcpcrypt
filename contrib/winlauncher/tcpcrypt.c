@@ -34,6 +34,26 @@ static WINAPI DWORD check_term(void *arg)
 	return 0;
 }
 
+static void stop()
+{
+	if (_tcpcryptd != INVALID_HANDLE_VALUE) {
+		if (!TerminateProcess(_tcpcryptd, 0))
+			MessageBox(_hwnd, "TerminateProcess()", "Error", MB_OK);
+	}
+
+	_tcpcryptd = INVALID_HANDLE_VALUE;
+}
+
+static void die(int rc)
+{
+	stop();
+
+	if (_nidcur)
+		Shell_NotifyIcon(NIM_DELETE, _nidcur);
+
+	exit(rc);
+}
+
 static void err(int rc, char *fmt, ...)
 {
 	va_list ap;
@@ -58,10 +78,7 @@ static void err(int rc, char *fmt, ...)
 
 	MessageBox(_hwnd, buf, "Error", MB_OK);
 
-	if (_nidcur)
-		Shell_NotifyIcon(NIM_DELETE, _nidcur);
-
-	exit(rc);
+	die(rc);
 }
 
 static void start()
@@ -95,16 +112,6 @@ static void start()
 
 	if (!CreateThread(NULL, 0, check_term, NULL, 0, NULL))
 		err(1, "CreateThread()");
-}
-
-static void stop()
-{
-	if (_tcpcryptd != INVALID_HANDLE_VALUE) {
-		if (!TerminateProcess(_tcpcryptd, 0))
-			err(1, "TerminateProcess()");
-	}
-
-	_tcpcryptd = INVALID_HANDLE_VALUE;
 }
 
 static void netstat()
@@ -475,10 +482,5 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		  (DLGPROC) DlgProc) == -1)
 		err(1, "DialogBox()");
 
-	stop();	
-
-	if (_nidcur)
-		Shell_NotifyIcon(NIM_DELETE, _nidcur);
-
-	exit(0);
+	die(0);
 }

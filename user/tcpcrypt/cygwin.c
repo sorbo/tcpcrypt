@@ -12,7 +12,6 @@
 
 static int	  _s;
 static divert_cb _cb;
-static unsigned char _mac[6];
 
 struct packet {
 	unsigned char p_buf[2048];
@@ -23,8 +22,14 @@ struct packet {
 struct arp {
 	unsigned int  a_ip;
 	unsigned char a_mac[6];
+	unsigned char a_src[6];
 	struct arp    *a_next;
 } _arp;
+
+struct mac {
+	unsigned char	m_mac[6];
+	struct mac	*m_next;
+} _macs;
 
 #ifdef __WIN32__
 extern int do_divert_open(char *dev);
@@ -56,16 +61,13 @@ static void do_divert_close(int s)
 }
 #endif
 
-int divert_open(int port, divert_cb cb)
+static void parse_mac(char *m)
 {
-	char *m;
-	int i;
 	int mac[6];
+	struct mac *ma;
+	int i;
 
-	m = driver_param(0);
-	if (!m)
-		errx(1 ,"Supply interface's MAC address"
-		        " e.g., -x 11:22:33:44:55:66");
+	ma = xmalloc(sizeof(*ma));
 
 	if (sscanf(m, "%x:%x:%x:%x:%x:%x",
 		   &mac[0], &mac[1], &mac[2],
@@ -73,10 +75,36 @@ int divert_open(int port, divert_cb cb)
 		errx(1, "Can't parse MAC %s\n", m);
 
 	for (i = 0; i < 6; i++)
-		_mac[i] = (unsigned char) mac[i];
+		ma->m_mac[i] = (unsigned char) mac[i];
 
 	xprintf(XP_ALWAYS, "MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
-	       _mac[0], _mac[1], _mac[2], _mac[3], _mac[4], _mac[5]);
+	       ma->m_mac[0], ma->m_mac[1], ma->m_mac[2],
+	       ma->m_mac[3], ma->m_mac[4], ma->m_mac[5]);
+
+	ma->m_next = _macs.m_next;
+	_macs.m_next = ma;
+}
+
+int divert_open(int port, divert_cb cb)
+{
+	char *m;
+	char *p;
+
+	probe_macs();
+	m = driver_param(0);
+	if (!m)
+		errx(1 ,"Supply MAC address uses by this host"
+		        " e.g., -x 11:22:33:44:55:66,anothermac");
+
+	do {
+		p = strchr(m, ',');
+		if (p)
+			*p++ = 0;
+
+		parse_mac(m);
+
+		m = p;
+	} while (m);
 
 	_s = do_divert_open("\\\\.\\PassThru");
 
@@ -94,18 +122,21 @@ static void arp_cache(unsigned char *buf, int in)
 {
 	struct ip *iph = (struct ip*) &buf[MAC_SIZE];
 	unsigned char *mac = buf;
+	unsigned char *src = &buf[6];
 	struct in_addr *i = &iph->ip_dst;
 	struct arp *a = _arp.a_next;
 	int num = 1;
 
 	if (in) {
 		mac = &buf[6];
+		src = buf;
 		i   = &iph->ip_src;
 	}
 
 	while (a) {
 		if (a->a_ip == i->s_addr) {
 			memcpy(a->a_mac, mac, 6);
+			memcpy(a->a_src, src, 6);
 			return;
 		}
 
@@ -121,6 +152,7 @@ static void arp_cache(unsigned char *buf, int in)
 
 	a->a_ip = i->s_addr;
 	memcpy(a->a_mac, mac, 6);
+	memcpy(a->a_src, src, 6);
 
 	a->a_next   = _arp.a_next;
 	_arp.a_next = a;
@@ -133,6 +165,20 @@ static void arp_cache(unsigned char *buf, int in)
 		num);
 }
 
+static int local_mac(void *mac)
+{
+	struct mac *m = _macs.m_next;
+
+	while (m) {
+		if (memcmp(mac, m->m_mac, 6) == 0)
+			return 1;
+
+		m = m->m_next;
+	}
+
+	return 0;
+}
+
 static void do_divert_next_packet(unsigned char *buf, int rc)
 {
 	int verdict;
@@ -143,7 +189,7 @@ static void do_divert_next_packet(unsigned char *buf, int rc)
 	if (rc < MAC_SIZE)
 		errx(1, "short read %d", rc);
 
-	if (memcmp(&buf[6], _mac, 6) != 0)
+	if (!local_mac(&buf[6]))
 		flags |= DF_IN;
 
 	arp_cache(buf, flags & DF_IN);
@@ -196,13 +242,14 @@ void divert_next_packet(int s)
 	do_divert_next_packet(buf, rc);
 }
 
-static void arp_resolve(void *mac, struct in_addr ip)
+static void arp_resolve(void *mac, void *src, struct in_addr ip)
 {
 	struct arp *a = _arp.a_next;
 
 	while (a) {
 		if (ip.s_addr == a->a_ip) {
 			memcpy(mac, a->a_mac, 6);
+			memcpy(src, a->a_src, 6);
 			return;
 		}
 
@@ -227,9 +274,7 @@ void divert_inject(void *data, int len)
 	memset(p, 0, sizeof(*p));
 
 	/* MAC header */
-	arp_resolve(p->p_buf, iph->ip_dst);
-
-	memcpy(&p->p_buf[6], _mac, 6);
+	arp_resolve(p->p_buf, &p->p_buf[6], iph->ip_dst);
 
 	et  = (unsigned short*) &p->p_buf[6 + 6];
 	*et = ntohs(0x0800); /* ETHERTYPE_IP */
