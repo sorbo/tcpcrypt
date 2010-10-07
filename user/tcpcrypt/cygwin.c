@@ -90,7 +90,6 @@ int divert_open(int port, divert_cb cb)
 	char *m;
 	char *p;
 
-	probe_macs();
 	m = driver_param(0);
 	if (!m)
 		errx(1 ,"Supply MAC address uses by this host"
