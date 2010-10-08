@@ -19,14 +19,26 @@ STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VIS
 CAPTION "tcpcrypt"
 FONT 8, "Ms Shell Dlg"
 {
-    PUSHBUTTON      "Start", IDOK, 10, 7, 51, 14
+    PUSHBUTTON      "Start", IDOK, 9, 7, 51, 15
     PUSHBUTTON      "Netstat", IDCANCEL, 65, 7, 54, 14
     EDITTEXT        IDC_EDIT1, 9, 37, 478, 76, ES_AUTOHSCROLL | ES_MULTILINE | ES_READONLY
-    PUSHBUTTON      "Exit", IDC_BUTTON1, 127, 7, 48, 14
+    PUSHBUTTON      "Exit", IDC_BUTTON1, 196, 7, 48, 15
     EDITTEXT        IDC_EDIT2, 9, 23, 123, 12, NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "Enter hall of fame", IDC_BUTTON2, 124, 7, 67, 14
 }
 
 
-IDI_MAIN	ICON	"main.ico"
-IDI_ON		ICON    "on.ico"
-IDI_OFF		ICON    "off.ico"
+
+//
+// Icon resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_MAIN           ICON           "main.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_OFF            ICON           "off.ico"
+
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+IDI_ON             ICON           "on.ico"

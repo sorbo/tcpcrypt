@@ -77,15 +77,28 @@ static void err(int rc, char *fmt, ...)
 	die(rc);
 }
 
+static void get_path(char *path)
+{
+	char *p;
+
+	if (!GetModuleFileName(NULL, path, _MAX_PATH))
+		err(1, "GetModuleFileName()");
+
+	p = strrchr(path, '\\');
+	if (p)
+		p[1] = 0;
+}
+
 static void start()
 {
-	char cmd[1024];
+	char cmd[_MAX_PATH];
 	char arg[1024];
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
 
-	snprintf(cmd, sizeof(cmd), "tcpcryptd.exe");
-	snprintf(arg, sizeof(arg), "%s", cmd);
+	get_path(cmd);
+	snprintf(cmd + strlen(cmd), sizeof(cmd) - strlen(cmd), "tcpcryptd.exe");
+	snprintf(arg, sizeof(arg), "%s", "tcpcryptd.exe");
 
 	memset(&si, 0, sizeof(si));
 	si.cb		 = sizeof(si);
@@ -112,7 +125,7 @@ static void start()
 
 static void netstat()
 {
-	char cmd[1024];
+	char cmd[_MAX_PATH];
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
 	HANDLE out[2], e[2];
@@ -123,7 +136,8 @@ static void netstat()
 
 	edit = GetDlgItem(_hwnd, IDC_EDIT1);
 
-	snprintf(cmd, sizeof(cmd), "tcnetstat.exe");
+	get_path(cmd);
+	snprintf(cmd + strlen(cmd), sizeof(cmd) - strlen(cmd), "tcnetstat.exe");
 
         memset(&sa, 0, sizeof(sa));
         sa.nLength = sizeof(sa);
@@ -198,6 +212,8 @@ static void do_stop(HWND dlg)
 	_nidcur = &_nid[0];
 	Shell_NotifyIcon(NIM_MODIFY, _nidcur);
 	SendMessage(_hwnd, WM_SETICON, ICON_SMALL, (LPARAM) _nidcur->hIcon);
+
+	EnableWindow(GetDlgItem(dlg, IDC_BUTTON2), FALSE);
 }
 
 static void add_text(char *x)
@@ -219,6 +235,7 @@ static void start_stop(HWND dlg)
 		Shell_NotifyIcon(NIM_MODIFY, _nidcur);
 		SendMessage(_hwnd, WM_SETICON, ICON_SMALL,
 			    (LPARAM) _nidcur->hIcon);
+		EnableWindow(GetDlgItem(dlg, IDC_BUTTON2), TRUE);
 	} else {
 		stop();
 		do_stop(dlg);
@@ -298,17 +315,10 @@ static void install_divert(void)
 	LPTSTR     lpszApp;
 	char dir[_MAX_PATH];
 	char inf[2][_MAX_PATH];
-	char *p;
 	HRESULT hr;
 	int i;
 
-	if (!GetModuleFileName(NULL, dir, sizeof(inf)))
-		err(1, "GetModuleFileName()");
-
-	p = strrchr(dir, '\\');
-	if (p)
-		p[1] = 0;
-
+	get_path(dir);
 	snprintf(inf[0], _MAX_PATH, "%s%s", dir, "netsf.inf");
 	snprintf(inf[1], _MAX_PATH, "%s%s", dir, "netsf_m.inf");
 
@@ -333,7 +343,7 @@ static void install_divert(void)
         }
 
 	hr = HrInstallNetComponent(pnc,
-				   L"ms_passthru",
+				   (LPCTSTR) L"ms_passthru",
 				   &GUID_DEVCLASS_NETSERVICE,
 				   NULL);
 
@@ -364,14 +374,17 @@ static int probe_divert(void)
 	return 1;
 }
 
-static void setup_divert(void)
+static void setup_divert(int silent)
 {
 	if (probe_divert())
 		return;
 
-	MessageBox(NULL, "About to install the tcpcrypt driver."
-	 "  You might need to press OK a couple of times depending on how many NICs you got.",
+	if (!silent) {
+		MessageBox(NULL, 
+	           "About to install the tcpcrypt driver."
+	 	   "  You might need to press OK a couple of times depending on how many NICs you got.",
 		   "tcpcrypt", MB_OK);
+	}
 
 	install_divert();
 
@@ -379,10 +392,42 @@ static void setup_divert(void)
 		err(1, "install_divert()");
 }
 
+static void uninstall_divert(void)
+{
+	INetCfg    *pnc;
+	LPTSTR     lpszApp;
+	HRESULT	   hr;
+
+	if (!probe_divert())
+		return;
+
+	if (HrGetINetCfg(TRUE, "tcpcrypt", &pnc, &lpszApp ) != S_OK)
+		err(1, "HrGetINetCfg()");
+
+
+	hr = HrUninstallNetComponent(pnc, (LPCTSTR) L"ms_passthru");
+
+	if (hr != S_OK && hr != NETCFG_S_REBOOT)
+		err(1, "HrUninstallNetComponent()");
+
+	HrReleaseINetCfg(pnc, TRUE);
+
+	if (probe_divert())
+		err(1, "uninstall_divert()");
+}
+
 static void do_init(void)
 {
 	setup_icons();
-	setup_divert();
+	setup_divert(0);
+}
+
+static void hof(void)
+{
+	if (((int) ShellExecute(NULL, (LPCTSTR) "open",
+		     "http://tcpcrypt.org/fame.php",
+		     NULL, ".\\", SW_SHOWNORMAL)) < 33)
+		err(1, "ShellExecute()");
 }
 
 LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -404,6 +449,8 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 		_hwnd = hWndDlg;
 		do_init();
 		do_stop(_hwnd);
+
+		start_stop(hWndDlg); /* didn't we say on by default? ;D */
 		break;
 
 	case WM_SYSCOMMAND:
@@ -429,6 +476,10 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 		case IDC_BUTTON1:
 			EndDialog(hWndDlg, 0);
 			return TRUE;
+
+		case IDC_BUTTON2:
+			hof();
+			return TRUE;
 		}
 		break;
 	}
@@ -439,6 +490,15 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR szCmdLine, int iCmdShow)
 {
+	/* windows doesn't need getopt - it's got l33t coders instead */
+	if (strstr(szCmdLine, "/i")) {
+		setup_divert(1);
+		exit(0);
+	} else if (strstr(szCmdLine, "/u")) {
+		uninstall_divert();
+		exit(0);
+	}
+
 	_hinstance = hInstance;
 
 	if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL,
