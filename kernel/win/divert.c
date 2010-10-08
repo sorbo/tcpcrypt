@@ -162,7 +162,30 @@ static void kick_pending(void)
 	}
 }
 
-int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet)
+static PADAPT get_pa(void *mac)
+{
+	PADAPT pa = NULL;
+	struct ifs *i;
+
+	lock();
+
+	i = _ifs.if_next;
+
+	while (i) {
+        	if (NPROT_MEM_CMP(mac, i->if_mac, NPROT_MAC_ADDR_LEN)) {
+			pa = i->if_pa;
+			break;
+		}
+
+		i = i->if_next;
+	}
+
+	unlock();
+
+	return pa;
+}
+
+int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet, int in)
 {
 #define HDR_SIZE 54
 	int len, cnt;
@@ -174,6 +197,7 @@ int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet)
 	struct tcphdr	     *tcp;
 	struct divert_packet *dp;
 	int off = 0; // 14;
+        NDISPROT_ETH_HEADER UNALIGNED *pEthHeader;
 
 	NdisAcquireSpinLock(&pAdapt->Lock);
 
@@ -187,8 +211,12 @@ int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet)
 		goto Out;
 
 	pEthHdr = (struct ether_header*) crap;
+	pEthHeader = pEthHdr;
 
 	if (ntohs( pEthHdr->ether_type ) != ETHERTYPE_IP)
+		goto Out;
+
+	if (in && get_pa(pEthHeader->SrcAddr))
 		goto Out;
 
 	pIPHeader = (struct ip * ) (pEthHdr + 1);
@@ -229,29 +257,6 @@ Out:
 
 	return rc;
 #undef HDR_SIZE
-}
-
-static PADAPT get_pa(void *mac)
-{
-	PADAPT pa = NULL;
-	struct ifs *i;
-
-	lock();
-
-	i = _ifs.if_next;
-
-	while (i) {
-        	if (NPROT_MEM_CMP(mac, i->if_mac, NPROT_MAC_ADDR_LEN)) {
-			pa = i->if_pa;
-			break;
-		}
-
-		i = i->if_next;
-	}
-
-	unlock();
-
-	return pa;
 }
 
 int divert_filter(
@@ -481,6 +486,11 @@ divert_write(
 	if ((pa2 = get_pa(pEthHeader->SrcAddr))) {
 		NdisSendPackets(pa2->BindingHandle, &pNdisPacket, 1);
 	} else {
+		/* XXX we broke multicast */
+		pa2 = get_pa(pEthHeader->DstAddr);
+		if (pa2)
+			pa = pa2;
+
 		NDIS_SET_PACKET_STATUS(pNdisPacket, NDIS_STATUS_RESOURCES);
 		NdisMIndicateReceivePacket(pa->MiniportHandle, &pNdisPacket, 1);
 		NdisFreePacket(pNdisPacket);

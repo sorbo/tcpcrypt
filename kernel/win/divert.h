@@ -11,7 +11,7 @@ int divert_filter(
    IN UINT           PacketSize
    );
 
-int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet);
+int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet, int in);
 
 NTSTATUS divert_read(
     IN PDEVICE_OBJECT       pDeviceObject,
