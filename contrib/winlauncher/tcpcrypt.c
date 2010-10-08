@@ -296,34 +296,54 @@ static void install_divert(void)
 {
 	INetCfg    *pnc;
 	LPTSTR     lpszApp;
-	char inf[_MAX_PATH];
+	char dir[_MAX_PATH];
+	char inf[2][_MAX_PATH];
 	char *p;
 	HRESULT hr;
+	int i;
 
-	if (!GetModuleFileName(NULL, inf, sizeof(inf)))
+	if (!GetModuleFileName(NULL, dir, sizeof(inf)))
 		err(1, "GetModuleFileName()");
 
-	p = strrchr(inf, '\\');
+	p = strrchr(dir, '\\');
 	if (p)
-		snprintf(p + 1, sizeof(inf) - (p - inf) - 1, "%s", "netsf.inf");
+		p[1] = 0;
+
+	snprintf(inf[0], _MAX_PATH, "%s%s", dir, "netsf.inf");
+	snprintf(inf[1], _MAX_PATH, "%s%s", dir, "netsf_m.inf");
 
 	if (HrGetINetCfg(TRUE, "tcpcrypt", &pnc, &lpszApp ) != S_OK)
 		err(1, "HrGetINetCfg()");
 
+	for (i = 0; i < 2; i++) {
+		if (!SetupCopyOEMInf(
+		    inf[i],
+		    dir, // Other files are in the
+		    // same dir. as primary INF
+		    SPOST_PATH,    // First param is path to INF
+		    0,             // Default copy style
+		    NULL,          // Name of the INF after
+		    // it's copied to %windir%\inf
+		    0,             // Max buf. size for the above               
+		    NULL,          // Required size if non-null
+		    NULL)          // Optionally get the filename
+		    // part of Inf name after it is copied.
+		    )
+			err(1, "SetupCopyOEMInf()");
+        }
+
 	hr = HrInstallNetComponent(pnc,
 				   L"ms_passthru",
 				   &GUID_DEVCLASS_NETSERVICE,
-				   inf);
+				   NULL);
 
 	if (hr != S_OK && hr != NETCFG_S_REBOOT)
 		err(1, "HrInstallNetComponent()");
-	
-//	INetCfg_Apply(pnc);
 
 	HrReleaseINetCfg(pnc, TRUE);
 }
 
-static void probe_divert(void)
+static int probe_divert(void)
 {
         HANDLE h;
         
@@ -336,21 +356,33 @@ static void probe_divert(void)
                 FILE_ATTRIBUTE_NORMAL,
                 INVALID_HANDLE_VALUE);
 
-	if (h != INVALID_HANDLE_VALUE) {
-		CloseHandle(h);
+	if (h == INVALID_HANDLE_VALUE)
+		return 0;
+
+	CloseHandle(h);
+
+	return 1;
+}
+
+static void setup_divert(void)
+{
+	if (probe_divert())
 		return;
-	}
-#if 1
-	MessageBox(NULL, "First run?  About to install tcpcrypt divert driver.",
+
+	MessageBox(NULL, "About to install the tcpcrypt driver."
+	 "  You might need to press OK a couple of times depending on how many NICs you got.",
 		   "tcpcrypt", MB_OK);
-#endif
+
 	install_divert();
+
+	if (!probe_divert())
+		err(1, "install_divert()");
 }
 
 static void do_init(void)
 {
 	setup_icons();
-	probe_divert();
+	setup_divert();
 }
 
 LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
