@@ -220,6 +220,10 @@ int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet, int in)
 		goto Out;
 
 	pIPHeader = (struct ip * ) (pEthHdr + 1);
+
+	if (pIPHeader->ip_p != IPPROTO_TCP)
+		goto Out;
+
 	tcp	  = (struct tcphr*) (pIPHeader + 1);
 
 #if 0
@@ -293,6 +297,9 @@ int divert_filter(
 	pIPHeader = (struct ip * )LookAheadBuffer;
 
 	if (LookAheadBufferSize < 40)
+		goto Out;
+
+	if (pIPHeader->ip_p != IPPROTO_TCP)
 		goto Out;
 
 	tcp = (struct tcphr*) (pIPHeader + 1);
@@ -486,7 +493,6 @@ divert_write(
 	if ((pa2 = get_pa(pEthHeader->SrcAddr))) {
 		NdisSendPackets(pa2->BindingHandle, &pNdisPacket, 1);
 	} else {
-		/* XXX we broke multicast */
 		pa2 = get_pa(pEthHeader->DstAddr);
 		if (pa2)
 			pa = pa2;
