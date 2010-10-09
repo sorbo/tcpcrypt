@@ -1,6 +1,10 @@
 CC	= $(PREFIX)gcc
 CXX	= $(PREFIX)g++
 
+WIX	= wine /root/.wine/drive_c/Program\ Files/Windows\ Installer\ XML\ v3/bin/
+CANDLE	= $(WIX)candle
+LIGHT	= $(WIX)light
+
 NAME	 = tcpcrypt.exe
 CFLAGS	 = -Wall -g -I. -MD
 CXXFLAGS = $(CFLAGS)
@@ -16,6 +20,12 @@ res.o: res.rc resource.h
 
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -o $(@) $(OBJS) $(LDFLAGS)
+
+tcpcrypt.wixobj: tcpcrypt.wxs tcpcrypt.exe
+	$(CANDLE) tcpcrypt.wxs
+
+tcpcrypt.msi: tcpcrypt.wixobj
+	$(LIGHT) -sval tcpcrypt.wixobj
 
 clean:
 	rm -f *.o $(NAME) *.d
