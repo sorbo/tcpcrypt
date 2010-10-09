@@ -13,9 +13,9 @@ LDFLAGS  = -lgdi32 -lsetupapi -lws2_32  -lole32 -luuid \
 
 OBJS	 = tcpcrypt.o res.o netcfgapi.o
 
-all: $(NAME)
+all: $(NAME) tcpcrypt.msi
 
-res.o: res.rc resource.h
+res.o: res.rc resource.h tcpcrypt.exe.manifest
 	$(PREFIX)windres $(<) $(@)
 
 $(NAME): $(OBJS)

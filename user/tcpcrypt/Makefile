@@ -32,7 +32,7 @@ else
 endif
 
 ifeq ($(OSNAME), Mingw)
-	OBJS	+= mingw.o
+	OBJS	+= mingw.o res.o
 	LDFLAGS += -lwsock32
 endif
 
@@ -44,6 +44,9 @@ all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -o $(@) $(OBJS) $(LDFLAGS)
+
+res.o: res.rc resource.h tcpcryptd.exe.manifest
+	$(PREFIX)windres $(<) $(@)
 
 clean:
 	rm -f $(NAME) *.o *.d core

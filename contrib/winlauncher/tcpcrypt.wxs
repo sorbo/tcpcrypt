@@ -18,6 +18,7 @@
       <Directory Id='ProgramFilesFolder' Name='PFiles'>
         <Directory Id='tcpcrypt' Name="tcpcrypt">
             <Component Id='tcpcrypt' Guid='6660071f-d011-4d68-b2ed-1e6c19b1ccdd'>
+	     <RemoveFolder Id='tcpcrypt' On='uninstall' />
               <File Id='tcpcrypt' Name='tcpcrypt.exe' DiskId='1'
 	      	    Source='tcpcrypt.exe' KeyPath='yes'>
 			<Shortcut Id="start" Directory="ProgramMenuDir"
@@ -54,9 +55,13 @@
       <ComponentRef Id='tcpcrypt' />
     </Feature>
 
-    <CustomAction Id='LaunchFile' FileKey='tcpcrypt' ExeCommand='tcpcrypt /i' Return='check' />
-    <CustomAction Id='uninst' FileKey='tcpcrypt' ExeCommand='tcpcrypt /u' Return='check' />
-    <CustomAction Id='LaunchTcpcrypt' FileKey='tcpcrypt' ExeCommand='tcpcrypt' Return='asyncNoWait' />
+    <CustomAction Id='LaunchFile' FileKey='tcpcrypt' Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /i' Return='check' />
+    <CustomAction Id='uninst' FileKey='tcpcrypt' Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /u' Return='check' />
+    <!--CustomAction Id='LaunchTcpcrypt' FileKey='tcpcrypt'
+    ExeCommand='tcpcrypt' Return='asyncNoWait' /-->
+
+    <Property Id='CMD'>cmd.exe</Property>
+    <CustomAction Id='LaunchTcpcrypt' Property="CMD" ExeCommand="/c start /d &quot;[ProgramFilesFolder]tcpcrypt&quot; tcpcrypt.exe" Return='asyncNoWait' />
 
    <Property Id="LAUNCHAPPONEXIT" Value="1"/>
 
@@ -136,7 +141,7 @@
     </UI>
 
       <InstallExecuteSequence>
-	<Custom Action='LaunchFile' After="InstallFinalize">NOT Installed</Custom>
+	<Custom Action='LaunchFile' After="InstallFiles">NOT Installed</Custom>
 	<Custom Action="uninst" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
       </InstallExecuteSequence>
 

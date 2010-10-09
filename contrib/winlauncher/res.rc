@@ -42,3 +42,5 @@ IDI_OFF            ICON           "off.ico"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_ON             ICON           "on.ico"
+
+MANIFEST_RESOURCE_ID RT_MANIFEST "tcpcrypt.exe.manifest"

@@ -1,0 +1,6 @@
+#include <windows.h>
+#include <commctrl.h>
+#include <richedit.h>
+#include "resource.h"
+
+MANIFEST_RESOURCE_ID RT_MANIFEST "tcpcryptd.exe.manifest"

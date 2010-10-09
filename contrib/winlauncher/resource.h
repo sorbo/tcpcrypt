@@ -10,3 +10,5 @@
 #define IDI_MAIN                                1010
 #define IDI_ON                                  1011
 #define IDI_OFF                                 1012
+
+#define MANIFEST_RESOURCE_ID 1                                                                 
