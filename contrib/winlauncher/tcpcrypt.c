@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <stdio.h>
 #include <devguid.h>
-#include <winsock2.h>
 #include <unistd.h>
 
 #define COBJMACROS
@@ -424,7 +423,7 @@ static void do_init(void)
 
 static void hof(void)
 {
-	if (((int) ShellExecute(NULL, (LPCTSTR) "open",
+	if (((long long) ShellExecute(NULL, (LPCTSTR) "open",
 		     "http://tcpcrypt.org/fame.php",
 		     NULL, ".\\", SW_SHOWNORMAL)) < 33)
 		err(1, "ShellExecute()");

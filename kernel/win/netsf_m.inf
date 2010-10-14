@@ -24,7 +24,8 @@ signature  = "$Windows NT$"
 Class      = Net
 ClassGUID  = {4d36e972-e325-11ce-bfc1-08002be10318}
 Provider   = %Msft%
-DriverVer  =10/01/2002,6.0.5019.0
+DriverVer  =10/01/2010,6.0.5019.0
+CatalogFile = netsf_m.cat
 
 [ControlFlags]
 ExcludeFromSelect = ms_passthrump

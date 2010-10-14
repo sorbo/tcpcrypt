@@ -19,26 +19,64 @@
         <Directory Id='tcpcrypt' Name="tcpcrypt">
             <Component Id='tcpcrypt' Guid='6660071f-d011-4d68-b2ed-1e6c19b1ccdd'>
 	     <RemoveFolder Id='tcpcrypt' On='uninstall' />
-              <File Id='tcpcrypt' Name='tcpcrypt.exe' DiskId='1'
-	      	    Source='tcpcrypt.exe' KeyPath='yes'>
-			<Shortcut Id="start" Directory="ProgramMenuDir"
+              <File Id='tcpcryptd' Name='tcpcryptd.exe' DiskId='1'
+	            Source='../../user/tcpcrypt/tcpcryptd.exe' />
+
+              <File Id='tcnetstat' Name='tcnetstat.exe' DiskId='1'
+	      	Source='../../user/util/tcnetstat.exe' />
+
+              <File Id='libcrypto_8' Name='libcrypto-8.dll' DiskId='1' Source='libcrypto-8.dll' />
+
+              <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
+
+              <File Id='netsf_m' Name='netsf_m.inf' DiskId='1'
+	      	Source='../../kernel/win/netsf_m.inf' />
+
+              <File Id='netsf' Name='netsf.inf' DiskId='1'
+	      	Source='../../kernel/win/netsf.inf' />
+            </Component>
+
+            <Component Id='tcpcrypt_driver64' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc64'>
+	    	<Condition>VersionNT64</Condition>
+              <File Id='tcpcrypt64' Name='tcpcrypt.exe' DiskId='1'
+	      	    Source='tcpcrypt64.exe' KeyPath='yes'>
+			<Shortcut Id="start64" Directory="ProgramMenuDir"
 				  Name="tcpcrypt"
 				  WorkingDirectory='INSTALLDIR'
 				  Icon="tcpcrypt.exe" IconIndex="0"
 				  Advertise="yes" />
 	      </File>
-              <File Id='tcpcryptd' Name='tcpcryptd.exe' DiskId='1'
-	            Source='../../user/tcpcrypt/tcpcryptd.exe' />
-              <File Id='tcnetstat' Name='tcnetstat.exe' DiskId='1'
-	      Source='../../user/util/tcnetstat.exe' />
+
               <File Id='passthru' Name='passthru.sys' DiskId='1'
-	      Source='../../kernel/win/objchk_wxp_x86/i386/passthru.sys' />
-              <File Id='netsf_m' Name='netsf_m.inf' DiskId='1'
-	      Source='../../kernel/win/netsf_m.inf' />
-              <File Id='netsf' Name='netsf.inf' DiskId='1'
-	      Source='../../kernel/win/netsf.inf' />
-              <File Id='libcrypto_8' Name='libcrypto-8.dll' DiskId='1' Source='libcrypto-8.dll' />
-              <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
+	      	Source='../../kernel/win/stage64/passthru.sys' />
+
+              <File Id='netsf_m_cat' Name='netsf_m.cat' DiskId='1'
+	      	Source='../../kernel/win/stage64/netsf_m.cat' />
+
+              <File Id='netsf_cat' Name='netsf.cat' DiskId='1'
+	      	Source='../../kernel/win/stage64/netsf.cat' />
+            </Component>
+
+            <Component Id='tcpcrypt_driver32' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc32'>
+	    	<Condition>NOT VersionNT64</Condition>
+
+              <File Id='tcpcrypt32' Name='tcpcrypt.exe' DiskId='1'
+	      	    Source='tcpcrypt32.exe' KeyPath='yes'>
+			<Shortcut Id="start32" Directory="ProgramMenuDir"
+				  Name="tcpcrypt"
+				  WorkingDirectory='INSTALLDIR'
+				  Icon="tcpcrypt.exe" IconIndex="0"
+				  Advertise="yes" />
+	      </File>
+
+              <File Id='passthru32' Name='passthru.sys' DiskId='1'
+	      	Source='../../kernel/win/stage32/passthru.sys' />
+
+              <File Id='netsf_m_cat32' Name='netsf_m.cat' DiskId='1'
+	      	Source='../../kernel/win/stage32/netsf_m.cat' />
+
+              <File Id='netsf_cat32' Name='netsf.cat' DiskId='1'
+	      	Source='../../kernel/win/stage32/netsf.cat' />
             </Component>
         </Directory>
       </Directory>
@@ -53,10 +91,15 @@
 
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id='tcpcrypt' />
+      <ComponentRef Id='tcpcrypt_driver64' />
+      <ComponentRef Id='tcpcrypt_driver32' />
     </Feature>
 
-    <CustomAction Id='LaunchFile' FileKey='tcpcrypt' Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /i' Return='check' />
-    <CustomAction Id='uninst' FileKey='tcpcrypt' Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /u' Return='check' />
+	<Property Id='TCPCRYPT'>666</Property>
+	<CustomAction Id='PropertyAssign' Property='TCPCRYPT' Value='[ProgramFilesFolder]tcpcrypt/tcpcrypt.exe' />                                
+
+    <CustomAction Id='LaunchFile' Property="TCPCRYPT" Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /i' Return='check' />
+    <CustomAction Id='uninst' Property="TCPCRYPT" Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /u' Return='check' />
     <!--CustomAction Id='LaunchTcpcrypt' FileKey='tcpcrypt'
     ExeCommand='tcpcrypt' Return='asyncNoWait' /-->
 
@@ -141,6 +184,7 @@
     </UI>
 
       <InstallExecuteSequence>
+	<Custom Action="PropertyAssign" After="CostFinalize" />
 	<Custom Action='LaunchFile' After="InstallFiles">NOT Installed</Custom>
 	<Custom Action="uninst" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
       </InstallExecuteSequence>
