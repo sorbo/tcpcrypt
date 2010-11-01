@@ -3,8 +3,7 @@
 
 #include <netinet/in.h>
 
-#define TCPCRYPT_CTLPATH "/tmp/tcpcrypt"
-
+#define TCPCRYPT_CTLPATH 666
 #define TCC_IN	0x00000001
 #define TCC_SET	0x00000002
 

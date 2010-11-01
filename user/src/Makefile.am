@@ -18,8 +18,14 @@ endif
 
 if OS_WINDOWS
 tcpcryptd_SOURCES += cygwin.c
+tcpcryptd_LDADD += -liphlpapi
 else
 tcpcryptd_SOURCES += unix.c
+endif
+
+if OS_MINGW
+tcpcryptd_SOURCES += mingw.o res.o
+tcpcryptd_LDADD	  += -lwsock32
 endif
 
 if !NO_ASM

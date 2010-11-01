@@ -426,7 +426,7 @@ Return Value:
             continue;
         }
 
-	if (divert_filter_send(pAdapt, Packet)) {
+	if (divert_filter_send(pAdapt, Packet, 0)) {
             NdisMSendComplete(
                ADAPT_MINIPORT_HANDLE(pAdapt),
                Packet,

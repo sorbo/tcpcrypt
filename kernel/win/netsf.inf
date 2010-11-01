@@ -49,7 +49,8 @@ Signature  = "$Windows NT$"
 Class      = NetService
 ClassGUID  = {4D36E974-E325-11CE-BFC1-08002BE10318}
 Provider   = %Msft%
-DriverVer  =10/01/2002,6.0.5019.0
+DriverVer  =10/01/2010,6.0.5019.0
+CatalogFile = netsf.cat 
 
 [Manufacturer]
 %Msft% = MSFT,NTx86,NTia64,NTamd64

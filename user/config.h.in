@@ -48,6 +48,9 @@
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #undef HAVE_LIBCRYPTO
 
+/* Define to 1 if you have the `iphlpapi' library (-liphlpapi). */
+#undef HAVE_LIBIPHLPAPI
+
 /* Define to 1 if you have the `netfilter_queue' library (-lnetfilter_queue).
    */
 #undef HAVE_LIBNETFILTER_QUEUE
@@ -63,6 +66,9 @@
 
 /* Define to 1 if you have the `ssl' library (-lssl). */
 #undef HAVE_LIBSSL
+
+/* Define to 1 if you have the `wsock32' library (-lwsock32). */
+#undef HAVE_LIBWSOCK32
 
 /* Define to 1 if you have the `z' library (-lz). */
 #undef HAVE_LIBZ

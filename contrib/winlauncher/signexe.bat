@@ -1,0 +1,1 @@
+signtool sign /v /ac c:\certs\MSCV-VSClass3.cer /s my /n "Stanford University" /t http://timestamp.verisign.com/scripts/timestamp.dll tcpcrypt32.exe tcpcrypt64.exe ..\..\user\tcpcrypt\tcpcryptd.exe ..\..\user\util\tcnetstat.exe

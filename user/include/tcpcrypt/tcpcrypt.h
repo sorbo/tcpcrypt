@@ -6,6 +6,8 @@ extern "C" {
 #pragma GCC visibility push(default)
 #endif
 
+#include <sys/socket.h>
+
 /* tcpcrypt get/setsockopt optnames */
 enum {
         TCP_CRYPT_ENABLE	= 0,

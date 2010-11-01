@@ -1,20 +1,12 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <arpa/inet.h>
-#include <netinet/in_systm.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#define __FAVOR_BSD
-#include <netinet/tcp.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <err.h>
 #include <assert.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
 #include <errno.h>
 #include <time.h>
 
+#include "inc.h"
 #include "tcpcrypt.h"
 #include "divert.h"
 #include "tcpcryptd.h"
@@ -23,14 +15,14 @@
 #include "checksum.h"
 #include "test.h"
 
-/* lookup is local port, remote port, then linked list of connections */
-static void *_connection_map[65536];
-
 struct conn {
 	struct sockaddr_in	c_addr[2];
 	struct tc		*c_tc;
 	struct conn		*c_next;
 };
+
+/* XXX someone that knows what they're doing code a proper hash table */
+static struct conn *_connection_map[65536];
 
 struct freelist {
 	void		*f_obj;
@@ -278,7 +270,7 @@ static void session_cache(struct tc *tc)
 		return;
 
 	if (!s) {
-		s = malloc(sizeof(*s));
+		s = xmalloc(sizeof(*s));
 		if (!s)
 			err(1, "malloc()");
 
@@ -502,14 +494,15 @@ static void enable_encryption(struct tc *tc)
 		tc->tc_prf = &tc->tc_alg_pkey;
 }
 
+static int conn_hash(uint16_t src, uint16_t dst)
+{
+	return (src + dst) % 
+		(sizeof(_connection_map) / sizeof(*_connection_map));
+}
+
 static struct conn *get_head(uint16_t src, uint16_t dst)
 {
-	void **cmap = _connection_map[src];
-
-	if (!cmap)
-		return NULL;
-
-	return cmap[dst];
+	return _connection_map[conn_hash(src, dst)];
 }
 
 static struct tc *do_lookup_connection_prev(struct sockaddr_in *src,
@@ -614,23 +607,16 @@ static void retransmit(void *a)
 
 static void add_connection(struct conn *c)
 {
-	void **cmap;
 	int idx = c->c_addr[0].sin_port;
 	struct conn *head;
 
-	cmap = _connection_map[idx];
-	if (!cmap) {
-		cmap = _connection_map[idx] = xmalloc(sizeof(_connection_map));
-		memset(cmap, 0, sizeof(_connection_map));
+	idx = conn_hash(c->c_addr[0].sin_port, c->c_addr[1].sin_port);
+	if (!_connection_map[idx]) {
+		_connection_map[idx] = xmalloc(sizeof(*c));
+		memset(_connection_map[idx], 0, sizeof(*c));
 	}
 
-	idx = c->c_addr[1].sin_port;
-	if (!cmap[idx]) {
-		cmap[idx] = xmalloc(sizeof(*c));
-		memset(cmap[idx], 0, sizeof(*c));
-	}
-
-	head = cmap[idx];
+	head = _connection_map[idx];
 
 	c->c_next    = head->c_next;
 	head->c_next = c;
@@ -1220,7 +1206,7 @@ static void do_random(void *p, int len)
 	uint8_t *x = p;
 
 	while (len--)
-		*x++ = random() & 0xff;
+		*x++ = rand() & 0xff;
 }
 
 static void generate_nonce(struct tc *tc)
@@ -2003,7 +1989,7 @@ static int do_input_closed(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	return tc->tc_verdict;
 }
 
-static int min(int a, int b)
+static int do_min(int a, int b)
 {
 	if (a < b)
 		return a;
@@ -2011,7 +1997,7 @@ static int min(int a, int b)
 	return b;
 }
 
-static int max(int a, int b)
+static int do_max(int a, int b)
 {
 	if (a > b)
 		return a;
@@ -2035,10 +2021,10 @@ static int negotiate_cipher(struct tc *tc, struct tc_cipher_spec *a, int an)
 			    && a->tcs_key_max >= b->tcs_key_min) {
 
 				out->tcs_algo    = a->tcs_algo;
-				out->tcs_key_min = max(a->tcs_key_min,
-						       b->tcs_key_min);
-				out->tcs_key_max = min(a->tcs_key_max,
-						       b->tcs_key_max);
+				out->tcs_key_min = do_max(a->tcs_key_min,
+						          b->tcs_key_min);
+				out->tcs_key_max = do_min(a->tcs_key_max,
+						          b->tcs_key_max);
 
 				return 1;
 			}
@@ -3334,26 +3320,19 @@ __next:
 /* XXX slow */
 static int tcpcrypt_netstat(void *val, unsigned int *len)
 {
-	int i, j;
+	int i;
 	int num = sizeof(_connection_map) / sizeof(*_connection_map);
-	void **cmap;
 	struct conn *c;
 	int copied = 0;
 	unsigned char *v = val;
 
 	for (i = 0; i < num; i++) {
-		cmap = _connection_map[i];
+		c = _connection_map[i];
 
-		if (!cmap)
+		if (!c)
 			continue;
 
-		for (j = 0; j < num; j++) {
-			c = cmap[j];
-			if (c) {
-				copied += do_tcpcrypt_netstat(c->c_next,
-							      &v[copied], len);
-			}
-		}
+		copied += do_tcpcrypt_netstat(c->c_next, &v[copied], len);
 	}
 
 	*len = copied;

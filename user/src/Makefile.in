@@ -39,8 +39,11 @@ bin_PROGRAMS = tcpcryptd$(EXEEXT)
 @OS_LINUX_TRUE@am__append_2 = linux.c
 @OS_LINUX_TRUE@am__append_3 = -lnetfilter_queue -lnfnetlink -lcap
 @OS_WINDOWS_TRUE@am__append_4 = cygwin.c
-@OS_WINDOWS_FALSE@am__append_5 = unix.c
-@NO_ASM_FALSE@am__append_6 = checksum_32.S
+@OS_WINDOWS_TRUE@am__append_5 = -liphlpapi
+@OS_WINDOWS_FALSE@am__append_6 = unix.c
+@OS_MINGW_TRUE@am__append_7 = mingw.o res.o
+@OS_MINGW_TRUE@am__append_8 = -lwsock32
+@NO_ASM_FALSE@am__append_9 = checksum_32.S
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -61,12 +64,13 @@ am__tcpcryptd_SOURCES_DIST = tcpcryptd.c tcpcrypt.c crypto.c \
 	profile.c checksum.c test.c crypto_rc4.c crypto_umac.c \
 	$(top_srcdir)/contrib/umac.c \
 	$(top_srcdir)/contrib/rijndael-alg-fst.c freebsd.c linux.c \
-	cygwin.c unix.c checksum_32.S
+	cygwin.c unix.c mingw.o res.o checksum_32.S
 @OS_BSD_TRUE@am__objects_1 = tcpcryptd-freebsd.$(OBJEXT)
 @OS_LINUX_TRUE@am__objects_2 = tcpcryptd-linux.$(OBJEXT)
 @OS_WINDOWS_TRUE@am__objects_3 = tcpcryptd-cygwin.$(OBJEXT)
 @OS_WINDOWS_FALSE@am__objects_4 = tcpcryptd-unix.$(OBJEXT)
-@NO_ASM_FALSE@am__objects_5 = checksum_32.$(OBJEXT)
+am__objects_5 =
+@NO_ASM_FALSE@am__objects_6 = checksum_32.$(OBJEXT)
 am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
 	tcpcryptd-tcpcrypt.$(OBJEXT) tcpcryptd-crypto.$(OBJEXT) \
 	tcpcryptd-crypto_rsa.$(OBJEXT) tcpcryptd-crypto_aes.$(OBJEXT) \
@@ -76,10 +80,11 @@ am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
 	tcpcryptd-crypto_rc4.$(OBJEXT) tcpcryptd-crypto_umac.$(OBJEXT) \
 	tcpcryptd-umac.$(OBJEXT) tcpcryptd-rijndael-alg-fst.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5)
+	$(am__objects_4) $(am__objects_5) $(am__objects_6)
 tcpcryptd_OBJECTS = $(am_tcpcryptd_OBJECTS)
 am__DEPENDENCIES_1 =
-tcpcryptd_DEPENDENCIES = $(am__DEPENDENCIES_1)
+tcpcryptd_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 tcpcryptd_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcpcryptd_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -226,10 +231,11 @@ tcpcryptd_SOURCES = tcpcryptd.c tcpcrypt.c crypto.c crypto_rsa.c \
 	crypto_aes.c crypto_hmac.c crypto_dummy.c profile.c checksum.c \
 	test.c crypto_rc4.c crypto_umac.c $(top_srcdir)/contrib/umac.c \
 	$(top_srcdir)/contrib/rijndael-alg-fst.c $(am__append_1) \
-	$(am__append_2) $(am__append_4) $(am__append_5) \
-	$(am__append_6)
+	$(am__append_2) $(am__append_4) $(am__append_6) \
+	$(am__append_7) $(am__append_9)
 tcpcryptd_CFLAGS = -I$(top_srcdir)/include/
-tcpcryptd_LDADD = -lcrypto $(am__append_3)
+tcpcryptd_LDADD = -lcrypto $(am__append_3) $(am__append_5) \
+	$(am__append_8)
 all: all-am
 
 .SUFFIXES:

@@ -21,6 +21,7 @@ AC_MSG_CHECKING(OS)
 AM_CONDITIONAL(OS_BSD, [echo $host_os | grep -E 'darwin|freebsd'])
 AM_CONDITIONAL(OS_LINUX, [echo $host_os | grep linux])
 AM_CONDITIONAL(OS_WINDOWS, [echo $host_os | grep -E 'cygwin|mingw'])
+AM_CONDITIONAL(OS_MINGW, [echo $host_os | grep -E mingw])
 
 # DEBUG
 AC_ARG_ENABLE(debug, 
@@ -65,6 +66,8 @@ AC_CHECK_LIB([pthread], [pthread_create])
 AC_CHECK_LIB([rt], [clock_gettime])
 AC_CHECK_LIB([ssl], [EC_POINT_new])
 AC_CHECK_LIB([z], [compress])
+AC_CHECK_LIB([wsock32], [bind]) # TODO: find symbol name
+AC_CHECK_LIB([iphlpapi], [GetAdaptersInfo]) # TODO: find symbol name
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netinet/in.h stddef.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h unistd.h])

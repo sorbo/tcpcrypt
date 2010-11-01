@@ -10,6 +10,12 @@ struct divert_packet {
 	struct divert_packet	*dp_next;
 };
 
+struct ifs {
+	unsigned char	if_mac[NPROT_MAC_ADDR_LEN];
+	PADAPT		if_pa;
+	struct ifs	*if_next;
+} _ifs;
+
 static struct divert_packet _packet_queue, _packet_free;
 static NDIS_SPIN_LOCK _lock;
 static PIRP _pending;
@@ -66,12 +72,27 @@ static void free_queue(struct divert_packet *dp)
 	}
 }
 
+static void free_ifs()
+{
+	struct ifs *i = _ifs.if_next;
+
+	while (i) {
+		struct ifs *tmp = i->if_next;
+
+		ExFreePoolWithTag(i, (ULONG) "aoz");
+
+		i = tmp;
+	}
+}
+
 void divert_kill(void)
 {
 	lock();
 
 	free_queue(&_packet_queue);
 	free_queue(&_packet_free);
+
+	free_ifs();
 
 	// XXX
 	NdisFreeBufferPool(_buf_pool);
@@ -141,7 +162,30 @@ static void kick_pending(void)
 	}
 }
 
-int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet)
+static PADAPT get_pa(void *mac)
+{
+	PADAPT pa = NULL;
+	struct ifs *i;
+
+	lock();
+
+	i = _ifs.if_next;
+
+	while (i) {
+        	if (NPROT_MEM_CMP(mac, i->if_mac, NPROT_MAC_ADDR_LEN)) {
+			pa = i->if_pa;
+			break;
+		}
+
+		i = i->if_next;
+	}
+
+	unlock();
+
+	return pa;
+}
+
+int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet, int in)
 {
 #define HDR_SIZE 54
 	int len, cnt;
@@ -153,6 +197,7 @@ int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet)
 	struct tcphdr	     *tcp;
 	struct divert_packet *dp;
 	int off = 0; // 14;
+        NDISPROT_ETH_HEADER UNALIGNED *pEthHeader;
 
 	NdisAcquireSpinLock(&pAdapt->Lock);
 
@@ -166,11 +211,19 @@ int divert_filter_send(PADAPT pAdapt, PNDIS_PACKET Packet)
 		goto Out;
 
 	pEthHdr = (struct ether_header*) crap;
+	pEthHeader = pEthHdr;
 
 	if (ntohs( pEthHdr->ether_type ) != ETHERTYPE_IP)
 		goto Out;
 
+	if (in && get_pa(pEthHeader->SrcAddr))
+		goto Out;
+
 	pIPHeader = (struct ip * ) (pEthHdr + 1);
+
+	if (pIPHeader->ip_p != IPPROTO_TCP)
+		goto Out;
+
 	tcp	  = (struct tcphr*) (pIPHeader + 1);
 
 #if 0
@@ -238,12 +291,15 @@ int divert_filter(
 	if (ntohs( pEthHdr->ether_type ) != ETHERTYPE_IP)
 		goto Out;
 
-	if (NPROT_MEM_CMP(pEthHeader->SrcAddr, _mac, NPROT_MAC_ADDR_LEN))
+	if (get_pa(pEthHeader->SrcAddr))
 		goto Out;
 
 	pIPHeader = (struct ip * )LookAheadBuffer;
 
 	if (LookAheadBufferSize < 40)
+		goto Out;
+
+	if (pIPHeader->ip_p != IPPROTO_TCP)
 		goto Out;
 
 	tcp = (struct tcphr*) (pIPHeader + 1);
@@ -403,7 +459,7 @@ divert_write(
 {
 	int rc = STATUS_SUCCESS;
 	PNDIS_PACKET pNdisPacket;
-	PADAPT pa = _pa; // XXX
+	PADAPT pa = _pa, pa2; // XXX
 	NDIS_STATUS status;
 	PIO_STACK_LOCATION pIrpSp;
 	NDISPROT_ETH_HEADER UNALIGNED *pEthHeader;
@@ -434,9 +490,13 @@ divert_write(
 
 	NdisChainBufferAtFront(pNdisPacket, pIrp->MdlAddress);
 
-	if (NPROT_MEM_CMP(pEthHeader->SrcAddr, _mac, NPROT_MAC_ADDR_LEN)) {
-		NdisSendPackets(pa->BindingHandle, &pNdisPacket, 1);
+	if ((pa2 = get_pa(pEthHeader->SrcAddr))) {
+		NdisSendPackets(pa2->BindingHandle, &pNdisPacket, 1);
 	} else {
+		pa2 = get_pa(pEthHeader->DstAddr);
+		if (pa2)
+			pa = pa2;
+
 		NDIS_SET_PACKET_STATUS(pNdisPacket, NDIS_STATUS_RESOURCES);
 		NdisMIndicateReceivePacket(pa->MiniportHandle, &pNdisPacket, 1);
 		NdisFreePacket(pNdisPacket);
@@ -517,9 +577,32 @@ int divert_req_complete(PADAPT adapt, PNDIS_REQUEST req)
 
 void divert_bind(PADAPT adapt)
 {
+	struct ifs *i;
+
+	lock();
+
 	_pa = adapt; // XXX
 
     	get_mac(adapt);
+
+	i = ExAllocatePoolWithTag(PagedPool, sizeof(*i),
+				  (ULONG) "aoz");
+
+	if (!i) {
+		DbgPrint("damn");
+		goto Out;
+	}
+
+	memset(i, 0, sizeof(*i));
+
+	i->if_pa = _pa;
+	memcpy(i->if_mac, _mac, sizeof(i->if_mac));
+	i->if_next = _ifs.if_next;
+
+	_ifs.if_next = i;
+
+Out:
+	unlock();
 }
 
 void divert_open(void)

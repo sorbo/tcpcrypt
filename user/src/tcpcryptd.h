@@ -19,7 +19,7 @@ struct conf {
 	int		cf_port;
 	int		cf_verbose;
 	int		cf_disable;
-	char		*cf_ctl;
+	int		cf_ctl;
 	int		cf_nocache;
 	int		cf_accept;
 	int		cf_modify;

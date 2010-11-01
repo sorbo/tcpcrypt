@@ -1,24 +1,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <netinet/in.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <err.h>
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
 #include <sys/time.h>
 #include <stdarg.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#define __FAVOR_BSD
-#include <netinet/tcp.h>
 #include <errno.h>
 #include <openssl/err.h>
 
+#include "inc.h"
 #include "tcpcrypt_ctl.h"
 #include "divert.h"
 #include "tcpcrypt.h"
@@ -34,7 +27,7 @@ struct conf _conf;
 
 struct backlog_ctl {
 	struct backlog_ctl	*bc_next;
-	struct sockaddr_un	bc_sun;
+	struct sockaddr_in	bc_sun;
 	struct tcpcrypt_ctl	bc_ctl;
 };
 
@@ -81,10 +74,8 @@ static void cleanup()
 	if (_state.s_ctl > 0)
 		close(_state.s_ctl);
 
-	if (_state.s_raw > 0) {
+	if (_state.s_raw > 0)
 		close(_state.s_raw);
-		unlink(_conf.cf_ctl);
-	}
 
 	profile_end();
 }
@@ -250,7 +241,7 @@ void set_packet_hook(int post, packet_hook p)
 		_state.s_pre_packet_hook  = p;
 }
 
-static void backlog_ctl(struct tcpcrypt_ctl *c, struct sockaddr_un *s_un)
+static void backlog_ctl(struct tcpcrypt_ctl *c, struct sockaddr_in *s_un)
 {
 	struct backlog_ctl *b;
 
@@ -265,7 +256,7 @@ static void backlog_ctl(struct tcpcrypt_ctl *c, struct sockaddr_un *s_un)
 	_state.s_backlog_ctl.bc_next = b;
 }
 
-static int do_handle_ctl(struct tcpcrypt_ctl *c, struct sockaddr_un *s_un)
+static int do_handle_ctl(struct tcpcrypt_ctl *c, struct sockaddr_in *s_un)
 {
 	int l, rc;
 
@@ -285,7 +276,7 @@ static int do_handle_ctl(struct tcpcrypt_ctl *c, struct sockaddr_un *s_un)
 		return 0;
 
 	l = sizeof(*c) + c->tcc_dlen;
-	rc = sendto(_state.s_ctl, c, l, 0, (struct sockaddr*) s_un,
+	rc = sendto(_state.s_ctl, (void*) c, l, 0, (struct sockaddr*) s_un,
 		    sizeof(*s_un));
 
 	if (rc == -1)
@@ -321,10 +312,11 @@ static void handle_ctl(int ctl)
 	unsigned char buf[4096];
 	struct tcpcrypt_ctl *c = (struct tcpcrypt_ctl*) buf;
 	int rc;
-	struct sockaddr_un s_un;
+	struct sockaddr_in s_un;
 	socklen_t len = sizeof(s_un);
 
-	rc = recvfrom(ctl, buf, sizeof(buf), 0, (struct sockaddr*) &s_un, &len);
+	rc = recvfrom(ctl, (void*) buf, sizeof(buf), 0,
+	 	      (struct sockaddr*) &s_un, &len);
 	if (rc == -1)
 		err(1, "read(ctl)");
 
@@ -347,26 +339,19 @@ static void handle_ctl(int ctl)
 
 static void open_unix(void)
 {
-	struct sockaddr_un s_un;
-        mode_t old_mask;
+	struct sockaddr_in s_un;
 
-	_state.s_ctl = socket(PF_UNIX, SOCK_DGRAM, 0);
+	_state.s_ctl = socket(PF_INET, SOCK_DGRAM, 0);
 	if (_state.s_ctl == -1)
-		err(1, "socket()");
+		err(1, "socket(ctl)");
 
 	memset(&s_un, 0, sizeof(s_un));
-	s_un.sun_family = PF_UNIX;
-	strcpy(s_un.sun_path, _conf.cf_ctl);
-
-	unlink(_conf.cf_ctl);
-
-        // want TCPCRYPT_CTLPATH to be 0666 so non-root can get/setsockopt
-        old_mask = umask(0111);
+	s_un.sin_family      = PF_INET;
+	s_un.sin_addr.s_addr = inet_addr("127.0.0.1");
+	s_un.sin_port        = htons(_conf.cf_ctl);
 
 	if (bind(_state.s_ctl, (struct sockaddr*) &s_un, sizeof(s_un)) == -1)
 		err(1, "bind()");
-
-        umask(old_mask);
 }
 
 static void dispatch_timers(void)
@@ -606,7 +591,7 @@ static void usage(char *prog)
 	       "-c\tno cache\n"
 	       "-a\tdivert accept (NOP)\n"
 	       "-m\tdivert modify (NOP)\n"
-	       "-u\t<ctl unix socket path>\n"
+	       "-u\t<ctl socket port>\n"
 	       "-n\tno crypto\n"
 	       "-P\tprofile\n"
 	       "-S\tprofile time source (0 TSC, 1 gettimeofday)\n"
@@ -629,6 +614,12 @@ static void usage(char *prog)
 int main(int argc, char *argv[])
 {
 	int ch;
+
+#ifdef __WIN32__
+	WSADATA wsadata;
+	if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR)
+		errx(1, "WSAStartup()");
+#endif
 
 	_conf.cf_port = 666;
 	_conf.cf_ctl  = TCPCRYPT_CTLPATH;
@@ -698,7 +689,7 @@ int main(int argc, char *argv[])
 			break;
 
 		case 'u':
-			_conf.cf_ctl = optarg;
+			_conf.cf_ctl = atoi(optarg);
 			break;
 
 		case 'd':
@@ -726,10 +717,10 @@ int main(int argc, char *argv[])
 
 	if (signal(SIGTERM, sig) == SIG_ERR)
 		err(1, "signal()");
-
+#ifndef __WIN32__
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
 		err(1, "signal()");
-
+#endif
 	profile_setopt(PROFILE_DISCARD, 3);
 	profile_setopt(PROFILE_ENABLE, _conf.cf_profile);
 

@@ -1200,8 +1200,6 @@ Return Value:
     PNDIS_PACKET        MyPacket;
     BOOLEAN             Remaining;
 
-    DBGPRINT(("1111111111111\n"));
-
     //
     // Drop the packet silently if the upper miniport edge isn't initialized or
     // the miniport edge is in low power state
@@ -1211,8 +1209,8 @@ Return Value:
           return 0;
     }
 
-//    if (divert_filter(pAdapt, Packet))
-//	return 0;
+    if (divert_filter_send(pAdapt, Packet, 1))
+	return 0;
 
 #ifdef NDIS51
     //

@@ -1,14 +1,12 @@
-#include <sys/uio.h>
-#include <sys/time.h>
 #include <time.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <err.h>
 #include <assert.h>
-#include <netinet/in.h>
 
+#include "inc.h"
+#include "tcpcrypt_ctl.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "crypto.h"

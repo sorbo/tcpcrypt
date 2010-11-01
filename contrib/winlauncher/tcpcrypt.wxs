@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Name='tcpcrypt' Id='66628142-23d4-491f-b6a4-d3fcd62ac025'
+           UpgradeCode='66603d06-6370-474f-9525-eaca2589c40c'
+    Language='1033' Version='1.0.0' Manufacturer='tcpcrypt'>
+
+    <Package 
+    	     Keywords='Installer'
+    	     Description="tcpcrypt installer"
+             Comments='tcpcrypt' Manufacturer='tcpcrypt'
+             InstallerVersion='100' Languages='1033' Compressed='yes'
+	     SummaryCodepage='1252' />
+
+    <Media Id='1' Cabinet='tcpcrypt.cab' EmbedCab='yes' />
+    <Property Id='DiskPrompt' Value="tcpcrypt installation [1]" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFilesFolder' Name='PFiles'>
+        <Directory Id='tcpcrypt' Name="tcpcrypt">
+            <Component Id='tcpcrypt' Guid='6660071f-d011-4d68-b2ed-1e6c19b1ccdd'>
+	     <RemoveFolder Id='tcpcrypt' On='uninstall' />
+              <File Id='tcpcryptd' Name='tcpcryptd.exe' DiskId='1'
+	            Source='../../user/tcpcrypt/tcpcryptd.exe' />
+
+              <File Id='tcnetstat' Name='tcnetstat.exe' DiskId='1'
+	      	Source='../../user/util/tcnetstat.exe' />
+
+              <File Id='libcrypto_8' Name='libcrypto-8.dll' DiskId='1' Source='libcrypto-8.dll' />
+
+              <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
+
+              <File Id='netsf_m' Name='netsf_m.inf' DiskId='1'
+	      	Source='../../kernel/win/netsf_m.inf' />
+
+              <File Id='netsf' Name='netsf.inf' DiskId='1'
+	      	Source='../../kernel/win/netsf.inf' />
+            </Component>
+
+            <Component Id='tcpcrypt_driver64' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc64'>
+	    	<Condition>VersionNT64</Condition>
+              <File Id='tcpcrypt64' Name='tcpcrypt.exe' DiskId='1'
+	      	    Source='tcpcrypt64.exe' KeyPath='yes'>
+			<Shortcut Id="start64" Directory="ProgramMenuDir"
+				  Name="tcpcrypt"
+				  WorkingDirectory='INSTALLDIR'
+				  Icon="tcpcrypt.exe" IconIndex="0"
+				  Advertise="yes" />
+	      </File>
+
+              <File Id='passthru' Name='passthru.sys' DiskId='1'
+	      	Source='../../kernel/win/stage64/passthru.sys' />
+
+              <File Id='netsf_m_cat' Name='netsf_m.cat' DiskId='1'
+	      	Source='../../kernel/win/stage64/netsf_m.cat' />
+
+              <File Id='netsf_cat' Name='netsf.cat' DiskId='1'
+	      	Source='../../kernel/win/stage64/netsf.cat' />
+            </Component>
+
+            <Component Id='tcpcrypt_driver32' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc32'>
+	    	<Condition>NOT VersionNT64</Condition>
+
+              <File Id='tcpcrypt32' Name='tcpcrypt.exe' DiskId='1'
+	      	    Source='tcpcrypt32.exe' KeyPath='yes'>
+			<Shortcut Id="start32" Directory="ProgramMenuDir"
+				  Name="tcpcrypt"
+				  WorkingDirectory='INSTALLDIR'
+				  Icon="tcpcrypt.exe" IconIndex="0"
+				  Advertise="yes" />
+	      </File>
+
+              <File Id='passthru32' Name='passthru.sys' DiskId='1'
+	      	Source='../../kernel/win/stage32/passthru.sys' />
+
+              <File Id='netsf_m_cat32' Name='netsf_m.cat' DiskId='1'
+	      	Source='../../kernel/win/stage32/netsf_m.cat' />
+
+              <File Id='netsf_cat32' Name='netsf.cat' DiskId='1'
+	      	Source='../../kernel/win/stage32/netsf.cat' />
+            </Component>
+        </Directory>
+      </Directory>
+
+       <Directory Id="ProgramMenuFolder" Name="Programs">                                       
+         <Directory Id="ProgramMenuDir" Name="tcpcrypt">
+         </Directory>                                                                               
+       </Directory>                                                                                 
+
+    </Directory>
+
+
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='tcpcrypt' />
+      <ComponentRef Id='tcpcrypt_driver64' />
+      <ComponentRef Id='tcpcrypt_driver32' />
+    </Feature>
+
+	<Property Id='TCPCRYPT'>666</Property>
+	<CustomAction Id='PropertyAssign' Property='TCPCRYPT' Value='[ProgramFilesFolder]tcpcrypt/tcpcrypt.exe' />                                
+
+    <CustomAction Id='LaunchFile' Property="TCPCRYPT" Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /i' Return='check' />
+    <CustomAction Id='uninst' Property="TCPCRYPT" Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /u' Return='check' />
+    <!--CustomAction Id='LaunchTcpcrypt' FileKey='tcpcrypt'
+    ExeCommand='tcpcrypt' Return='asyncNoWait' /-->
+
+    <Property Id='CMD'>cmd.exe</Property>
+    <CustomAction Id='LaunchTcpcrypt' Property="CMD" ExeCommand="/c start /d &quot;[ProgramFilesFolder]tcpcrypt&quot; tcpcrypt.exe" Return='asyncNoWait' />
+
+   <Property Id="LAUNCHAPPONEXIT" Value="1"/>
+
+    <UI>
+      <Property Id="DefaultUIFont">DlgFont8</Property>
+
+      <Dialog Id="InstallDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">       
+        <Control Id="Install" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Install]">
+	  <Publish Event="NewDialog" Value="ProgressDlg" />
+	  <Condition Action="enable">1</Condition>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="[BannerBitmap]" />                                                                                        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>The [Wizard] is ready to begin the installation</Text>
+        </Control>
+        <Control Id="Text" Type="Text" X="25" Y="70" Width="320" Height="40">
+          <Text>You're about to install the tcpcrypt driver.  Windows will prompt you multiple times depending on how many network cards you have - just press yes / continue until the install ends.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes"> 
+          <Text>{\DlgTitleFont}Ready to Install</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+    
+      <Dialog Id="ProgressDlg" Width="370" Height="270" Title="[ProductName] [Setup]" Modeless="yes">
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_Cancel]" Disabled="yes">
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="[BannerBitmap]" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Back]" />
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Next]" />
+        <Control Id="ActionText" Type="Text" X="70" Y="100" Width="265" Height="10">
+          <Subscribe Event="ActionText" Attribute="Text" />
+        </Control>
+        <Control Id="Text" Type="Text" X="35" Y="65" Width="300" Height="20">
+          <Text>Please wait while the [Wizard] installs [ProductName]. This may take a minute.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="20" Y="15" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\DlgTitleFont}[Progress1] [ProductName]</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+        <Control Id="ProgressBar" Type="ProgressBar" X="35" Y="115" Width="300" Height="10" ProgressBlocks="yes" Text="Progress done">
+          <Subscribe Event="SetProgress" Attribute="Progress" />
+        </Control>
+        <Control Id="StatusLabel" Type="Text" X="35" Y="100" Width="35" Height="10" Text="Status:" />
+      </Dialog>
+ 
+      <Dialog Id="ExitDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+        <Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_Finish]">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+	  <Publish Event="DoAction" Value="LaunchTcpcrypt">LAUNCHAPPONEXIT</Publish>
+        </Control>        
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Cancel]" />
+        <Control Id="Bitmap" Type="Bitmap" X="0" Y="0" Width="123" Height="234" TabSkip="no" Text="[DialogBitmap]" />          
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Disabled="yes" Text="[ButtonText_Back]" /> 
+        <Control Id="Description" Type="Text" X="135" Y="70" Width="220" Height="20" Transparent="yes" NoPrefix="yes">         
+          <Text>The install was successful.</Text>
+        </Control>        
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="135" Y="20" Width="220" Height="60" Transparent="yes" NoPrefix="yes">               
+          <Text>{\VerdanaBold13}Completing the [ProductName] [Wizard]</Text>
+        </Control>
+
+     <Control Id="LaunchCheckBox" Type="CheckBox" X="135" Y="100" Width="170" Height="17" Property="LAUNCHAPPONEXIT" Hidden="yes" CheckBoxValue="1" Text="Launch tcpcrypt">
+         <Condition Action="show">NOT Installed</Condition>                        
+     </Control>                        
+      </Dialog>
+
+ 
+      <TextStyle Id="DlgFont8" FaceName="Tahoma" Size="8" />
+      <TextStyle Id="DlgTitleFont" FaceName="Tahoma" Size="8" Bold="yes" />
+
+      <InstallUISequence>                                                                                    <Show Dialog="InstallDlg" After="CostFinalize" />
+	<Show Dialog="ExitDlg" OnExit="success" />
+      </InstallUISequence>
+
+    </UI>
+
+      <InstallExecuteSequence>
+	<Custom Action="PropertyAssign" After="CostFinalize" />
+	<Custom Action='LaunchFile' After="InstallFiles">NOT Installed</Custom>
+	<Custom Action="uninst" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+      </InstallExecuteSequence>
+
+    <Property Id="Setup">Setup</Property>
+    <Property Id="ButtonText_Back">&lt; &amp;Back</Property>
+    <Property Id="ButtonText_Browse">Br&amp;owse</Property>
+    <Property Id="ButtonText_Cancel">Cancel</Property>
+    <Property Id="ButtonText_Exit">&amp;Exit</Property>
+    <Property Id="ButtonText_Finish">&amp;Finish</Property>
+    <Property Id="ButtonText_Ignore">&amp;Ignore</Property>
+    <Property Id="ButtonText_Install">&amp;Install</Property>
+    <Property Id="ButtonText_Next">&amp;Next &gt;</Property>
+    <Property Id="ButtonText_No">&amp;No</Property>
+    <Property Id="ButtonText_OK">OK</Property>
+    <Property Id="ButtonText_Remove">&amp;Remove</Property>
+    <Property Id="ButtonText_Repair">&amp;Repair</Property>
+    <Property Id="ButtonText_Reset">&amp;Reset</Property>
+    <Property Id="ButtonText_Resume">&amp;Resume</Property>
+    <Property Id="ButtonText_Retry">&amp;Retry</Property>
+    <Property Id="ButtonText_Return">&amp;Return</Property>
+    <Property Id="ButtonText_Yes">&amp;Yes</Property>
+    <Property Id="BannerBitmap">bannrbmp</Property>
+    <Property Id="Wizard">Setup Wizard</Property>
+    <Property Id="InfoIcon">info</Property>
+    <Property Id="DialogBitmap">dlgbmp</Property>
+    <Property Id="LAUNCHPRODUCT">1</Property>
+
+    <Binary Id="bannrbmp" SourceFile="Bitmaps\bannrbmp.bmp" />
+    <Binary Id="dlgbmp" SourceFile="Bitmaps\dlgbmp.bmp" />
+
+    <Icon Id="tcpcrypt.exe" SourceFile="tcpcrypt.exe" />
+    <Icon Id="tcpcrypt_icon" SourceFile="on.ico" />
+    <Property Id="ARPPRODUCTICON" Value="tcpcrypt_icon" />
+    <Property Id="ALLUSERS" Value="1"/>
+  </Product>
+</Wix>
