@@ -34,6 +34,9 @@ extern int tcpcrypt_getsockopt(int s, int level, int optname, void *optval,
 extern int tcpcrypt_setsockopt(int s, int level, int optname,
 			       const void *optval, socklen_t optlen);
 
+extern char *tcpcrypt_getsessid(char *remote_ip, uint16_t remote_port,
+                                char *local_ip,  uint16_t local_port);
+
 #ifdef __cplusplus
 }
 #pragma GCC visibility pop

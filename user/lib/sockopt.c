@@ -302,3 +302,72 @@ int tcpcrypt_setsockopt(int s, int level, int optname, const void *optval,
 
 	return do_sockopt(TCC_SET, s, level, optname, (void*) optval, &optlen);
 }
+
+/* for tcpcrypt_getsessid */
+int __open_socket_for_getsessid()
+{
+    int s;
+    struct sockaddr_in s_in;
+#ifdef __WIN32__
+    WSADATA wsadata;
+    if (WSAStartup(MAKEWORD(1,1), &wsadata) == SOCKET_ERROR)
+	errx(1, "WSAStartup()");
+#endif  
+
+    memset(&s_in, 0, sizeof(s_in));
+    s_in.sin_family = PF_INET;
+    s_in.sin_port = 0;
+    s_in.sin_addr.s_addr = INADDR_ANY;
+
+    s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (s == -1)
+        err(1, "socket()");
+
+    if (bind(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
+        err(1, "bind()");
+
+    return s;
+}
+
+char *tcpcrypt_getsessid(char *remote_ip, uint16_t remote_port,
+                         char *local_ip,  uint16_t local_port)
+{
+    /* mostly copied from tcnetstat.c */
+    static char static_sessid[512]; /* TODO: len */
+    unsigned char buf[2048];
+    unsigned int len = sizeof(buf);
+    struct tc_netstat *n = (struct tc_netstat*) buf;
+    int s, sl, i;
+    struct in_addr dip;
+    
+    s = __open_socket_for_getsessid();
+
+    if (!inet_aton(remote_ip, &dip)) {
+        /* invalid remote_ip */
+        return NULL;
+    }
+
+    if (tcpcrypt_getsockopt(s, IPPROTO_TCP, TCP_CRYPT_NETSTAT, buf, &len) == -1)
+        err(1, "tcpcrypt_getsockopt()");
+
+    while (len > sizeof(*n)) {
+        sl = ntohs(n->tn_len);
+
+        assert(len >= sizeof(*n) + sl);
+
+        /* TODO: also check source ip/port */
+        if (memcmp(&dip, &n->tn_dip, sizeof(struct in_addr)) == 0 &&
+            ntohs(n->tn_dport) == remote_port) {
+            for (i = 0; i < sl; i++)
+                sprintf(&static_sessid[i*2], "%.2X", n->tn_sid[i]);
+            return static_sessid;
+        }
+        
+        sl  += sizeof(*n);
+        n    = (struct tc_netstat*) ((unsigned long) n + sl);
+        len -= sl;
+    }
+    assert(len == 0);
+
+    return NULL;
+}
