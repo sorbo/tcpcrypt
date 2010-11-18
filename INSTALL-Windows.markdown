@@ -1,25 +1,25 @@
 Installing tcpcrypt on Windows
 ==============================
 
-
-
-Note: Tcpcrypt has only been tested on Windows XP 32-bit.
-
 Compiling
 =========
 
-You need Cygwin and the following packages to compile tcpcrypt:
+Only cross-compiling for Windows on Linux (using mingw) is supported right now. You can almost certainly compile the Windows version on Windows itself, but we haven't done that yet (if you have, contact us).
 
-* libopenssl098
-* openssl-devel
-* gcc
-* make (GNU make)
-
-To compile:
+Using mingw, run the following commands to cross-compile tcpcrypt for Windows
+on a Linux host.
 
     cd tcpcrypt/user
-    ./configure
+./configure CC=i586-mingw32msvc-gcc CFLAGS="-mwin32 -D__WIN32__ -I<path-to-mingw-openssl>/include" LDFLAGS=" -L<path-to-openssl> " --target=i586-mingw32msvc --host=i586-mingw32msvc --prefix=/usr/local/i586-mingw32msvc
     make
+
+Replace `<path-to-mingw-openssl>` with the path to OpenSSL compiled for
+Windows. You can download binaries from
+[http://www.slproweb.com/products/Win32OpenSSL.html](http://www.slproweb.com/products/Win32OpenSSL.html)
+(use the 'Win32 OpenSSL v1.0.0a' link) and run the installer with Wine. Then
+rename `libeay32.dll` to `libcrypto.dll` in the root OpenSSL folder (that you
+just installed into). There's almost certainly a cleaner way to do this, but
+this is the quickest way.
 
 Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
 headers, for building apps that use tcpcrypt's session ID.
@@ -48,11 +48,12 @@ Getting the userland daemon
 ---------------------------
 
 If you followed the compilation steps above, you're done. Otherwise, download
-the pre-compiled tcpcryptd binary for Cygwin at
-[http://tcpcrypt.org/tcpcryptd.cygwin](http://tcpcrypt.org/tcpcryptd.cygwin). If
-you will use the launch script (below), move this file to
-tcpcrypt/user/tcpcrypt/tcpcryptd.exe, which is where the launch script expects
-it.
+the pre-compiled tcpcryptd binary for Windows at
+[http://tcpcrypt.org/](http://tcpcrypt.org/). If you will use the launch script
+(below), move this file to tcpcrypt/user/tcpcrypt/tcpcryptd.exe, which is where
+the launch script expects it.
+
+Or you can just download the precompiled Windows GUI version at the link above.
 
 Running
 =======
@@ -66,7 +67,7 @@ By default, this script tells tcpcryptd to use the first network interface
 listed in `ipconfig /all`. If you want to use a different interface, run
 tcpcryptd manually:
 
-    LD_LIBRARY_PATH=lib/ tcpcrypt/tcpcryptd -x 0a:1b:2c:3d:4f:6a
+    tcpcrypt/tcpcryptd -x 0a:1b:2c:3d:4f:6a
 
 
 Test drive
