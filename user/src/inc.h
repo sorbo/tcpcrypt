@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/types.h>
 #include <netinet/in_systm.h>
 #include <netinet/ip.h>
 #define __FAVOR_BSD
