@@ -1,6 +1,13 @@
 Installing tcpcrypt on Mac OS X
 ===============================
 
+Using the Mac OS X GUI wrapper
+------------------------------
+
+If you don't want to compile your own tcpcrypt, you can use the Mac OS X GUI
+wrapper, which includes the binary and is available at
+[http://tcpcrypt.org/download.php](http://tcpcrypt.org/download.php).
+
 Compiling
 ---------
 
