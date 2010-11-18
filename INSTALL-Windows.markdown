@@ -10,7 +10,7 @@ Using mingw, run the following commands to cross-compile tcpcrypt for Windows
 on a Linux host.
 
     cd tcpcrypt/user
-./configure CC=i586-mingw32msvc-gcc CFLAGS="-mwin32 -D__WIN32__ -I<path-to-mingw-openssl>/include" LDFLAGS=" -L<path-to-openssl> " --target=i586-mingw32msvc --host=i586-mingw32msvc --prefix=/usr/local/i586-mingw32msvc
+    ./configure CFLAGS="-mwin32 -D__WIN32__ -I/home/sqs/src/mingw/OpenSSL-Win32/include" LDFLAGS=" -L/home/sqs/src/mingw/OpenSSL-Win32/ " --host=i586-mingw32msvc
     make
 
 Replace `<path-to-mingw-openssl>` with the path to OpenSSL compiled for
