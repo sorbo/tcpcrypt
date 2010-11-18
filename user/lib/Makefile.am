@@ -6,3 +6,7 @@ libtcpcrypt_la_CFLAGS  = -I$(top_srcdir)/include/
 
 TCPCRYPT_LIBRARY_VERSION = 0:0:0
 libtcpcrypt_la_LDFLAGS = -version-info $(TCPCRYPT_LIBRARY_VERSION)
+
+if OS_MINGW
+libtcpcrypt_la_LIBADD = -lws2_32
+endif

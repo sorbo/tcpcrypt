@@ -35,6 +35,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = tcnetstat$(EXEEXT)
+@OS_MINGW_TRUE@am__append_1 = -lwsock32 -liphlpapi
 subdir = util
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -52,7 +53,9 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_tcnetstat_OBJECTS = tcnetstat-tcnetstat.$(OBJEXT)
 tcnetstat_OBJECTS = $(am_tcnetstat_OBJECTS)
-tcnetstat_DEPENDENCIES = $(top_builddir)/lib/libtcpcrypt.la
+am__DEPENDENCIES_1 =
+tcnetstat_DEPENDENCIES = $(top_builddir)/lib/libtcpcrypt.la \
+	$(am__DEPENDENCIES_1)
 tcnetstat_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcnetstat_CFLAGS) \
 	$(CFLAGS) $(tcnetstat_LDFLAGS) $(LDFLAGS) -o $@
@@ -191,7 +194,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 tcnetstat_SOURCES = tcnetstat.c
-tcnetstat_LDADD = $(top_builddir)/lib/libtcpcrypt.la $(AM_LDFLAGS)
+tcnetstat_LDADD = $(top_builddir)/lib/libtcpcrypt.la $(AM_LDFLAGS) \
+	$(am__append_1)
 tcnetstat_CFLAGS = -I$(top_srcdir)/include/
 tcnetstat_LDFLAGS = --all-static
 all: all-am

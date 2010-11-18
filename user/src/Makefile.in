@@ -38,12 +38,10 @@ bin_PROGRAMS = tcpcryptd$(EXEEXT)
 @OS_BSD_TRUE@am__append_1 = freebsd.c
 @OS_LINUX_TRUE@am__append_2 = linux.c
 @OS_LINUX_TRUE@am__append_3 = -lnetfilter_queue -lnfnetlink -lcap
-@OS_WINDOWS_TRUE@am__append_4 = cygwin.c
-@OS_WINDOWS_TRUE@am__append_5 = -liphlpapi
-@OS_WINDOWS_FALSE@am__append_6 = unix.c
-@OS_MINGW_TRUE@am__append_7 = mingw.o res.o
-@OS_MINGW_TRUE@am__append_8 = -lwsock32
-@NO_ASM_FALSE@am__append_9 = checksum_32.S
+@OS_MINGW_TRUE@am__append_4 = mingw.c res.rc cygwin.c
+@OS_MINGW_TRUE@am__append_5 = -lwsock32 -liphlpapi
+@OS_MINGW_FALSE@am__append_6 = unix.c
+@NO_ASM_FALSE@am__append_7 = checksum_32.S
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -64,13 +62,13 @@ am__tcpcryptd_SOURCES_DIST = tcpcryptd.c tcpcrypt.c crypto.c \
 	profile.c checksum.c test.c crypto_rc4.c crypto_umac.c \
 	$(top_srcdir)/contrib/umac.c \
 	$(top_srcdir)/contrib/rijndael-alg-fst.c freebsd.c linux.c \
-	cygwin.c unix.c mingw.o res.o checksum_32.S
+	mingw.c res.rc cygwin.c unix.c checksum_32.S
 @OS_BSD_TRUE@am__objects_1 = tcpcryptd-freebsd.$(OBJEXT)
 @OS_LINUX_TRUE@am__objects_2 = tcpcryptd-linux.$(OBJEXT)
-@OS_WINDOWS_TRUE@am__objects_3 = tcpcryptd-cygwin.$(OBJEXT)
-@OS_WINDOWS_FALSE@am__objects_4 = tcpcryptd-unix.$(OBJEXT)
-am__objects_5 =
-@NO_ASM_FALSE@am__objects_6 = checksum_32.$(OBJEXT)
+@OS_MINGW_TRUE@am__objects_3 = tcpcryptd-mingw.$(OBJEXT) \
+@OS_MINGW_TRUE@	tcpcryptd-cygwin.$(OBJEXT)
+@OS_MINGW_FALSE@am__objects_4 = tcpcryptd-unix.$(OBJEXT)
+@NO_ASM_FALSE@am__objects_5 = checksum_32.$(OBJEXT)
 am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
 	tcpcryptd-tcpcrypt.$(OBJEXT) tcpcryptd-crypto.$(OBJEXT) \
 	tcpcryptd-crypto_rsa.$(OBJEXT) tcpcryptd-crypto_aes.$(OBJEXT) \
@@ -80,11 +78,10 @@ am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
 	tcpcryptd-crypto_rc4.$(OBJEXT) tcpcryptd-crypto_umac.$(OBJEXT) \
 	tcpcryptd-umac.$(OBJEXT) tcpcryptd-rijndael-alg-fst.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6)
+	$(am__objects_4) $(am__objects_5)
 tcpcryptd_OBJECTS = $(am_tcpcryptd_OBJECTS)
 am__DEPENDENCIES_1 =
-tcpcryptd_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+tcpcryptd_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 tcpcryptd_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcpcryptd_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -232,10 +229,9 @@ tcpcryptd_SOURCES = tcpcryptd.c tcpcrypt.c crypto.c crypto_rsa.c \
 	test.c crypto_rc4.c crypto_umac.c $(top_srcdir)/contrib/umac.c \
 	$(top_srcdir)/contrib/rijndael-alg-fst.c $(am__append_1) \
 	$(am__append_2) $(am__append_4) $(am__append_6) \
-	$(am__append_7) $(am__append_9)
+	$(am__append_7)
 tcpcryptd_CFLAGS = -I$(top_srcdir)/include/
-tcpcryptd_LDADD = -lcrypto $(am__append_3) $(am__append_5) \
-	$(am__append_8)
+tcpcryptd_LDADD = -lcrypto $(am__append_3) $(am__append_5)
 all: all-am
 
 .SUFFIXES:
@@ -335,6 +331,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-cygwin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-freebsd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-linux.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-mingw.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-profile.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-rijndael-alg-fst.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-tcpcrypt.Po@am__quote@
@@ -608,6 +605,20 @@ tcpcryptd-linux.obj: linux.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='linux.c' object='tcpcryptd-linux.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-linux.obj `if test -f 'linux.c'; then $(CYGPATH_W) 'linux.c'; else $(CYGPATH_W) '$(srcdir)/linux.c'; fi`
+
+tcpcryptd-mingw.o: mingw.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-mingw.o -MD -MP -MF $(DEPDIR)/tcpcryptd-mingw.Tpo -c -o tcpcryptd-mingw.o `test -f 'mingw.c' || echo '$(srcdir)/'`mingw.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tcpcryptd-mingw.Tpo $(DEPDIR)/tcpcryptd-mingw.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mingw.c' object='tcpcryptd-mingw.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-mingw.o `test -f 'mingw.c' || echo '$(srcdir)/'`mingw.c
+
+tcpcryptd-mingw.obj: mingw.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-mingw.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-mingw.Tpo -c -o tcpcryptd-mingw.obj `if test -f 'mingw.c'; then $(CYGPATH_W) 'mingw.c'; else $(CYGPATH_W) '$(srcdir)/mingw.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tcpcryptd-mingw.Tpo $(DEPDIR)/tcpcryptd-mingw.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='mingw.c' object='tcpcryptd-mingw.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-mingw.obj `if test -f 'mingw.c'; then $(CYGPATH_W) 'mingw.c'; else $(CYGPATH_W) '$(srcdir)/mingw.c'; fi`
 
 tcpcryptd-cygwin.o: cygwin.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-cygwin.o -MD -MP -MF $(DEPDIR)/tcpcryptd-cygwin.Tpo -c -o tcpcryptd-cygwin.o `test -f 'cygwin.c' || echo '$(srcdir)/'`cygwin.c

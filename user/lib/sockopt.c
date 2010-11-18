@@ -342,10 +342,18 @@ char *tcpcrypt_getsessid(char *remote_ip, uint16_t remote_port,
     
     s = __open_socket_for_getsessid();
 
+#ifndef __WIN32__
     if (!inet_aton(remote_ip, &dip)) {
         /* invalid remote_ip */
         return NULL;
     }
+#else
+    dip.s_addr = inet_addr(remote_ip);
+    if (dip.s_addr = INADDR_NONE) {
+        /* invalid remote ip */
+        return NULL;
+    }
+#endif
 
     if (tcpcrypt_getsockopt(s, IPPROTO_TCP, TCP_CRYPT_NETSTAT, buf, &len) == -1)
         err(1, "tcpcrypt_getsockopt()");

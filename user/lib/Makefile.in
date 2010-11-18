@@ -73,7 +73,7 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(libtcpcrypt_ladir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libtcpcrypt_la_LIBADD =
+libtcpcrypt_la_DEPENDENCIES =
 am_libtcpcrypt_la_OBJECTS = libtcpcrypt_la-sockopt.lo
 libtcpcrypt_la_OBJECTS = $(am_libtcpcrypt_la_OBJECTS)
 libtcpcrypt_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -221,6 +221,7 @@ libtcpcrypt_la_SOURCES = sockopt.c
 libtcpcrypt_la_CFLAGS = -I$(top_srcdir)/include/
 TCPCRYPT_LIBRARY_VERSION = 0:0:0
 libtcpcrypt_la_LDFLAGS = -version-info $(TCPCRYPT_LIBRARY_VERSION)
+@OS_MINGW_TRUE@libtcpcrypt_la_LIBADD = -lws2_32
 all: all-am
 
 .SUFFIXES:

@@ -20,7 +20,6 @@ AC_CANONICAL_HOST
 AC_MSG_CHECKING(OS)
 AM_CONDITIONAL(OS_BSD, [echo $host_os | grep -E 'darwin|freebsd'])
 AM_CONDITIONAL(OS_LINUX, [echo $host_os | grep linux])
-AM_CONDITIONAL(OS_WINDOWS, [echo $host_os | grep -E 'cygwin|mingw'])
 AM_CONDITIONAL(OS_MINGW, [echo $host_os | grep -E mingw])
 
 # DEBUG

@@ -1,7 +1,7 @@
 #ifndef __TCPCRYPT_TCPCRYPT_CTL_H__
 #define __TCPCRYPT_TCPCRYPT_CTL_H__
 
-#include <netinet/in.h>
+#include "inc.h"
 
 #define TCPCRYPT_CTLPATH 666
 #define TCC_IN	0x00000001

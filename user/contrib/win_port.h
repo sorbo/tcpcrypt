@@ -29,6 +29,9 @@
  *      @(#)tcp.h       8.1 (Berkeley) 6/10/93
  */
 
+#ifndef WIN_PORT_H
+#define WIN_PORT_H
+
 #include <assert.h>
 
 #define __LITTLE_ENDIAN 666
@@ -162,3 +165,5 @@ static void err(int eval, const char *fmt, ...)
 
 	exit(eval);
 }
+
+#endif // WIN_PORT_H

@@ -6,7 +6,12 @@ extern "C" {
 #pragma GCC visibility push(default)
 #endif
 
+#ifndef __WIN32__
 #include <sys/socket.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h> /* TODO: needed? */
+#endif
 
 /* tcpcrypt get/setsockopt optnames */
 enum {
