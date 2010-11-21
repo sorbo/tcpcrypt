@@ -57,7 +57,7 @@ AM_CONDITIONAL(HAVE_NI, false)
 AC_CHECK_LIB([cap], [cap_set_flag])
 AC_CHECK_LIB([crypto], [EVP_OpenInit])
 
-LDFLAGS+=-L/usr/local/lib
+LDFLAGS="$LDFLAGS -L/usr/local/lib"
 AC_CHECK_LIB([netfilter_queue], [nfq_open])
 
 AC_CHECK_LIB([nfnetlink], [nfnl_rcvbufsiz])

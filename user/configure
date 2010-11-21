@@ -10859,7 +10859,7 @@ _ACEOF
 fi
 
 
-LDFLAGS+=-L/usr/local/lib
+LDFLAGS="$LDFLAGS -L/usr/local/lib"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for nfq_open in -lnetfilter_queue" >&5
 $as_echo_n "checking for nfq_open in -lnetfilter_queue... " >&6; }
 if test "${ac_cv_lib_netfilter_queue_nfq_open+set}" = set; then :
