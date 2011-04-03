@@ -141,8 +141,8 @@ int main(int argc, char **argv) {
 		setup_ipfw_rules();
 		run_tcpcryptd(argv[0]);
 	} else if (strncmp(action, stop, strlen(stop)) == 0) {
-		stop_tcpcryptd();
 		teardown_ipfw_rules();
+		stop_tcpcryptd();
 	} else {
 		printf("usage: %s start|stop\n", argv[0]);
 		exit(1);
