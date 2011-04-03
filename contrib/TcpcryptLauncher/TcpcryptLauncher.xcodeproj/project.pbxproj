@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		58456381134841F600704BF3 /* tcpcryptd in Resources */ = {isa = PBXBuildFile; fileRef = 58456380134841F600704BF3 /* tcpcryptd */; };
 		58B394F8121B3C5300EE7796 /* TCTcpcryptController.m in Sources */ = {isa = PBXBuildFile; fileRef = 58B394F7121B3C5300EE7796 /* TCTcpcryptController.m */; };
-		58B39525121B404300EE7796 /* tcpcryptd in Resources */ = {isa = PBXBuildFile; fileRef = 58B39524121B404300EE7796 /* tcpcryptd */; };
 		58B39615121B538200EE7796 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58B39614121B538200EE7796 /* Security.framework */; };
 		58B396A3121B7BA400EE7796 /* tcpcryptd_wrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 58B396A2121B7BA400EE7796 /* tcpcryptd_wrapper.c */; };
 		58C9293F121B3242002FE941 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 58C9293E121B3242002FE941 /* Cocoa.framework */; };
@@ -32,9 +32,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		58456380134841F600704BF3 /* tcpcryptd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = tcpcryptd; path = ../../user/src/tcpcryptd; sourceTree = "<group>"; };
 		58B394F6121B3C5300EE7796 /* TCTcpcryptController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TCTcpcryptController.h; sourceTree = "<group>"; };
 		58B394F7121B3C5300EE7796 /* TCTcpcryptController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TCTcpcryptController.m; sourceTree = "<group>"; };
-		58B39524121B404300EE7796 /* tcpcryptd */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = tcpcryptd; path = ../../user/tcpcrypt/tcpcryptd; sourceTree = SOURCE_ROOT; };
 		58B39614121B538200EE7796 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		58B396A2121B7BA400EE7796 /* tcpcryptd_wrapper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tcpcryptd_wrapper.c; sourceTree = "<group>"; };
 		58C9293B121B3242002FE941 /* TcpcryptLauncher.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TcpcryptLauncher.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -74,7 +74,7 @@
 		58B394FB121B3EF700EE7796 /* External Products */ = {
 			isa = PBXGroup;
 			children = (
-				58B39524121B404300EE7796 /* tcpcryptd */,
+				58456380134841F600704BF3 /* tcpcryptd */,
 			);
 			name = "External Products";
 			sourceTree = "<group>";
@@ -215,12 +215,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				58B39525121B404300EE7796 /* tcpcryptd in Resources */,
 				58C92944121B3242002FE941 /* InfoPlist.strings in Resources */,
 				58C92949121B3242002FE941 /* MainMenu.xib in Resources */,
 				58C9294C121B3242002FE941 /* Credits.rtf in Resources */,
 				58EDEADC1220A1A100AA7A7F /* tcpcryptd_wrapper in Resources */,
 				58EDEBB31220B2A900AA7A7F /* TcpcryptLauncher.icns in Resources */,
+				58456381134841F600704BF3 /* tcpcryptd in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
