@@ -16,7 +16,7 @@
 #pragma mark NSObject
 
 - (id)init {
-	if (self = [super init]) {
+	if ((self = [super init])) {
 		_wrapperPath = [[[NSBundle mainBundle] pathForResource:@"tcpcryptd_wrapper" ofType:@""] retain];
 		_tcpcryptdPath = [[[NSBundle mainBundle] pathForResource:@"tcpcryptd" ofType:@""] retain];
 	}
