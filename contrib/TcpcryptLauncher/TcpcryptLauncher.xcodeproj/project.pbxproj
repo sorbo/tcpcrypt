@@ -311,6 +311,8 @@
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				INSTALL_PATH = /usr/local/bin;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_CFLAGS = "-mmacosx-version-min=10.5";
 				PREBINDING = NO;
 				PRODUCT_NAME = tcpcryptd_wrapper;
 			};
@@ -325,6 +327,8 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_MODEL_TUNING = G5;
 				INSTALL_PATH = /usr/local/bin;
+				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				OTHER_CFLAGS = "-mmacosx-version-min=10.5";
 				PREBINDING = NO;
 				PRODUCT_NAME = launch_tcpcryptd;
 				ZERO_LINK = NO;
