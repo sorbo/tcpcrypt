@@ -195,6 +195,7 @@
 			isa = PBXProject;
 			buildConfigurationList = 58C92931121B3241002FE941 /* Build configuration list for PBXProject "TcpcryptLauncher" */;
 			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
