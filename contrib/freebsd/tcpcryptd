@@ -1,0 +1,66 @@
+#!/bin/sh
+
+# $FreeBSD$
+#
+# PROVIDE: tcpcryptd
+# REQUIRE: ipfw networking
+# KEYWORD: shutdown
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# tcpcryptd_enable (bool):   Set to NO by default.
+#               Set it to YES to enable tcpcryptd.
+#
+
+. /etc/rc.subr
+
+name="tcpcryptd"
+rcvar=`set_rcvar`
+DIVERT_PORT=666
+PORT=80
+PORT2=7777
+
+command="/usr/local/bin/${name}"
+command_args="-p $DIVERT_PORT"
+
+pidfile="/var/run/${name}.pid"
+
+: ${tcpcryptd_enable="NO"}
+
+required_files=""
+
+sig_reload="USR1"
+
+start_precmd="${name}_prestart"
+start_cmd="${name}_start"
+stop_postcmd="${name}_poststop"
+
+extra_commands=""
+
+tcpcryptd_prestart()
+{
+   echo Tcpcrypting port 80 and local traffic on port 7777...
+   ipfw 02 add divert $DIVERT_PORT tcp from any to any $PORT
+   ipfw 03 add divert $DIVERT_PORT tcp from any $PORT to any
+   ipfw 04 add divert $DIVERT_PORT tcp from any to any $PORT2 via lo0
+   ipfw 05 add divert $DIVERT_PORT tcp from any $PORT2 to any via lo0
+   return 0
+}
+
+tcpcryptd_start()
+{
+   LD_LIBRARY_PATH=lib/ $command $command_args &
+   echo $! > $pidfile
+   return 0
+}
+
+tcpcryptd_poststop()
+{
+   echo Removing ipfw rules and quitting tcpcryptd...
+   ipfw delete 02 03 04 05
+   return 0
+}
+
+load_rc_config $name
+run_rc_command "$1"

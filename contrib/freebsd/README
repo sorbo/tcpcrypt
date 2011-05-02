@@ -1,0 +1,6 @@
+FreeBSD rc start script
+Provided by Richard Carback
+
+Instructions:
+* Install the included "tcpcryptd" file to /usr/local/etc/rc.d/tcpcryptd
+* Add the following to /etc/rc.conf to enable the script: tcpcryptd_enable="YES"
