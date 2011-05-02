@@ -37,6 +37,8 @@ to send port 80 and 7777 packets through tcpcrypt:
 With tcpcryptd running, open
 [http://tcpcrypt.org/test.php](http://tcpcrypt.org/test.php) to try it out.
 
+See `contrib/freebsd` for a FreeBSD rc script that loads tcpcryptd on system startup.
+
 More info
 ----------
 
