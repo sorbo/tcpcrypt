@@ -75,6 +75,7 @@ If it's not working, the most likely causes are the following.
 Visit [http://wiki.github.com/sorbo/tcpcrypt/troubleshooting](http://wiki.github.com/sorbo/tcpcrypt/troubleshooting) if you're still
 unable to make it work.
 
+To build the `test_tcpcrypt` utility, run `make check` from `user/`. Run `test_tcpcrypt -v` to see the various tests that it can run.
 
 More info
 ---------
