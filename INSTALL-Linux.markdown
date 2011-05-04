@@ -58,6 +58,12 @@ Try it out
 See the included `README.markdown` file for ways to try out tcpcrypt.
 
 
+Reported issues
+---------------
+
+Tcpcrypt is incompatible with ECN (explicit congestion notification, RFC 3168). To disable ECN (if you know what you're doing), run `sudo sysctl net.ipv4.tcp_ecn=0`. Reported by jech at https://github.com/sorbo/tcpcrypt/issues/7.
+
+
 iptables firewall setup
 =======================
 
