@@ -197,7 +197,6 @@ tcnetstat_SOURCES = tcnetstat.c
 tcnetstat_LDADD = $(top_builddir)/lib/libtcpcrypt.la $(AM_LDFLAGS) \
 	$(am__append_1)
 tcnetstat_CFLAGS = -I$(top_srcdir)/include/
-tcnetstat_LDFLAGS = --all-static
 all: all-am
 
 .SUFFIXES:
