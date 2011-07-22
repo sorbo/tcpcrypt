@@ -154,7 +154,7 @@ static int do_sockopt(uint32_t flags, int s, int level, int optname,
                         port = ntohs(ss.in6.sin6_port);
 
 		if (i == 1) {
-			printf("forced bind to %d\n", port);
+//			printf("forced bind to %d\n", port);
 			break;
 		}
 

@@ -13,6 +13,8 @@ extern "C" {
 #include <ws2tcpip.h> /* TODO: needed? */
 #endif
 
+#define TCPCRYPT_SID_MAXLEN	32
+
 /* tcpcrypt get/setsockopt optnames */
 enum {
         TCP_CRYPT_ENABLE	= 0,
