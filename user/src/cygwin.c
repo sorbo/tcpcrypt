@@ -22,78 +22,14 @@ struct packet {
 	struct packet *p_next;
 } _outbound;
 
-struct arp {
-	unsigned int  a_ip;
-	unsigned char a_mac[6];
-	unsigned char a_src[6];
-	struct arp    *a_next;
-} _arp;
-
-struct mac {
-	unsigned char	m_mac[6];
-	struct mac	*m_next;
-} _macs;
-
-#ifdef __WIN32__
-extern int do_divert_open(char *dev);
+extern int do_divert_open(void);
 extern int do_divert_read(int s, void *buf, int len);
 extern int do_divert_write(int s, void *buf, int len);
 extern void do_divert_close(int s);
-#else
-static int do_divert_open(char *dev)
-{
-	if ((_s = open(dev, O_RDWR)) == -1)
-		err(1, "open()");
-
-	return _s;
-}
-
-static int do_divert_read(int s, void *buf, int len)
-{
-	return read(s, buf, len);
-}
-
-static int do_divert_write(int s, void *buf, int len)
-{
-	return write(s, buf, len);
-}
-
-static void do_divert_close(int s)
-{
-	close(s);
-}
-#endif
-
-static void probe_macs(void)
-{
-        IP_ADAPTER_INFO ai[16];
-        DWORD len = sizeof(ai);
-        PIP_ADAPTER_INFO p;
-	struct mac *ma;
-
-        if (GetAdaptersInfo(ai, &len) != ERROR_SUCCESS)
-                err(1, "GetAdaptersInfo()");
-
-        p = ai;
-        while (p) {
-		ma = xmalloc(sizeof(*ma));
-		memcpy(ma->m_mac, p->Address, sizeof(ma->m_mac));
-		ma->m_next = _macs.m_next;
-		_macs.m_next = ma;
-
-		xprintf(XP_ALWAYS, "MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
-	       		ma->m_mac[0], ma->m_mac[1], ma->m_mac[2],
-	       		ma->m_mac[3], ma->m_mac[4], ma->m_mac[5]);
-
-                p = p->Next;
-        }
-}
 
 int divert_open(int port, divert_cb cb)
 {
-	probe_macs();
-
-	_s  = do_divert_open("\\\\.\\PassThru");
+	_s  = do_divert_open();
 	_cb = cb;
 
 	return _s;
@@ -102,67 +38,6 @@ int divert_open(int port, divert_cb cb)
 void divert_close(void)
 {
 	do_divert_close(_s);
-}
-
-static void arp_cache(unsigned char *buf, int in)
-{
-	struct ip *iph = (struct ip*) &buf[MAC_SIZE];
-	unsigned char *mac = buf;
-	unsigned char *src = &buf[6];
-	struct in_addr *i = &iph->ip_dst;
-	struct arp *a = _arp.a_next;
-	int num = 1;
-
-	if (in) {
-		mac = &buf[6];
-		src = buf;
-		i   = &iph->ip_src;
-	}
-
-	while (a) {
-		if (a->a_ip == i->s_addr) {
-			memcpy(a->a_mac, mac, 6);
-			memcpy(a->a_src, src, 6);
-			return;
-		}
-
-		a = a->a_next;
-		num++;
-	}
-
-	a = malloc(sizeof(*a));
-	if (!a)
-		err(1, "malloc()");
-
-	memset(a, 0, sizeof(*a));
-
-	a->a_ip = i->s_addr;
-	memcpy(a->a_mac, mac, 6);
-	memcpy(a->a_src, src, 6);
-
-	a->a_next   = _arp.a_next;
-	_arp.a_next = a;
-
-	xprintf(XP_DEBUG,
-		"Added ARP entry for %s [%02x:%02x:%02x:%02x:%02x:%02x]"
-                " table size %d\n",
-		inet_ntoa(*i),
-		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
-		num);
-}
-
-static int local_mac(void *mac)
-{
-	struct mac *m = _macs.m_next;
-
-	while (m) {
-		if (memcmp(mac, m->m_mac, 6) == 0)
-			return 1;
-
-		m = m->m_next;
-	}
-
-	return 0;
 }
 
 static void do_divert_next_packet(unsigned char *buf, int rc)
@@ -174,11 +49,6 @@ static void do_divert_next_packet(unsigned char *buf, int rc)
 
 	if (rc < MAC_SIZE)
 		errx(1, "short read %d", rc);
-
-	if (!local_mac(&buf[6]))
-		flags |= DF_IN;
-
-	arp_cache(buf, flags & DF_IN);
 
 	// XXX ethernet padding on short packets?  (46 byte minimum)
 	len = rc - MAC_SIZE;
@@ -228,25 +98,6 @@ void divert_next_packet(int s)
 	do_divert_next_packet(buf, rc);
 }
 
-static void arp_resolve(void *mac, void *src, struct in_addr ip)
-{
-	struct arp *a = _arp.a_next;
-
-	while (a) {
-		if (ip.s_addr == a->a_ip) {
-			memcpy(mac, a->a_mac, 6);
-			memcpy(src, a->a_src, 6);
-			return;
-		}
-
-		a = a->a_next;
-	}
-
-	printf("Shit no arp entry for %s\n", inet_ntoa(ip));
-
-	memcpy(mac, "\xff\xff\xff\xff\xff\xff", 6); /* XXX */
-}
-
 void divert_inject(void *data, int len)
 {
 	struct packet *p, *p2;
@@ -259,12 +110,10 @@ void divert_inject(void *data, int len)
 
 	memset(p, 0, sizeof(*p));
 
-	/* MAC header */
-	arp_resolve(p->p_buf, &p->p_buf[6], iph->ip_dst);
-
-	et  = (unsigned short*) &p->p_buf[6 + 6];
-	*et = ntohs(0x0800); /* ETHERTYPE_IP */
-
+        // XXX: for divert, we can just zero the ethhdr, which contains the
+        //      DIVERT_ADDRESS.  A zeroed address usually gives the desired
+        //      result.
+        
 	/* payload */
 	p->p_len = len + MAC_SIZE;
 
