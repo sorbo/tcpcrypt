@@ -5,13 +5,12 @@
 #include <stdio.h>
 
 #include "inc.h"
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
 
-// XXX: include WinDivert header
-#define UINT8   unsigned char
+#define UINT8   unsigned char   // XXX: Mingw workaround
 #define UINT16  unsigned short
-#include "../../contrib/divert/divert.h"
+#include <divert.h>
 
 #define MAC_SIZE        14
 
@@ -27,7 +26,7 @@ static WINAPI DWORD reader(void *arg)
         
         // XXX: the DIVERT_ADDRESS is stored in the ethhdr.
         PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
-	
+
 	if ((s = socket(PF_INET, SOCK_DGRAM, 0)) == -1)
 		err(1, "socket()");
 
@@ -71,6 +70,7 @@ int do_divert_open(void)
 	if (bind(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
 		err(1, "bind(divert)");
 
+        // XXX: Currently TCP port 80 only...
         _h = DivertOpen(
                 "ip and "
                 "((outbound and tcp.DstPort == 80) or "

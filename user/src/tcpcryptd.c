@@ -13,7 +13,7 @@
 
 #include "inc.h"
 #include "tcpcrypt_ctl.h"
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "tcpcrypt.h"
 #include "tcpcryptd.h"
 #include "profile.h"

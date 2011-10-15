@@ -17,7 +17,7 @@
 #include <sys/capability.h>
 #include <sys/prctl.h>
 
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
 
 static struct nfq_handle    *_h;

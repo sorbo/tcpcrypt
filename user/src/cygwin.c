@@ -8,8 +8,12 @@
 #include <iphlpapi.h>
 
 #include "inc.h"
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
+
+#define UINT8   unsigned char   // XXX: Mingw workaround
+#define UINT16  unsigned short
+#include <divert.h>
 
 #define MAC_SIZE 14
 
@@ -37,7 +41,7 @@ int divert_open(int port, divert_cb cb)
 
 void divert_close(void)
 {
-	do_divert_close(_s);
+        do_divert_close(_s);
 }
 
 static void do_divert_next_packet(unsigned char *buf, int rc)
@@ -46,9 +50,13 @@ static void do_divert_next_packet(unsigned char *buf, int rc)
 	int flags = 0;
 	struct ip *iph = (struct ip*) &buf[MAC_SIZE];
 	int len;
+        PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
 
 	if (rc < MAC_SIZE)
 		errx(1, "short read %d", rc);
+
+        if (addr->Direction == DIVERT_PACKET_DIRECTION_INBOUND)
+                flags |= DF_IN;
 
 	// XXX ethernet padding on short packets?  (46 byte minimum)
 	len = rc - MAC_SIZE;

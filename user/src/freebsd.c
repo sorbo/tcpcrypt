@@ -9,7 +9,7 @@
 #include <err.h>
 #include <unistd.h>
 
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
 
 static int	  _s;
