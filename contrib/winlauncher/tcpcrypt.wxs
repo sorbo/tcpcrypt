@@ -29,11 +29,12 @@
 
               <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
 
-              <File Id='netsf_m' Name='netsf_m.inf' DiskId='1'
-	      	Source='../../kernel/win/netsf_m.inf' />
+              <File Id='divert_dll' Name='divert.dll' DiskId='1' Source='divert.dll'/>
 
-              <File Id='netsf' Name='netsf.inf' DiskId='1'
-	      	Source='../../kernel/win/netsf.inf' />
+              <File Id='divert_inf' Name='divert.inf' DiskId='1' Source='divert.inf'/>
+
+              <File Id='WdfCoInstaller01009' Name='WdfCoInstaller01009.dll' DiskId='1' Source='WdfCoInstaller01009.dll'/>
+
             </Component>
 
             <Component Id='tcpcrypt_driver64' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc64'>
@@ -47,14 +48,9 @@
 				  Advertise="yes" />
 	      </File>
 
-              <File Id='passthru' Name='passthru.sys' DiskId='1'
-	      	Source='../../kernel/win/stage64/passthru.sys' />
+              <File Id='divert64' Name='divert.sys' DiskId='1'
+                    Source='divert64.sys'/>
 
-              <File Id='netsf_m_cat' Name='netsf_m.cat' DiskId='1'
-	      	Source='../../kernel/win/stage64/netsf_m.cat' />
-
-              <File Id='netsf_cat' Name='netsf.cat' DiskId='1'
-	      	Source='../../kernel/win/stage64/netsf.cat' />
             </Component>
 
             <Component Id='tcpcrypt_driver32' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc32'>
@@ -69,14 +65,9 @@
 				  Advertise="yes" />
 	      </File>
 
-              <File Id='passthru32' Name='passthru.sys' DiskId='1'
-	      	Source='../../kernel/win/stage32/passthru.sys' />
+              <File Id='divert32' Name='divert.sys' DiskId='1'
+                    Source='divert32.sys'/>
 
-              <File Id='netsf_m_cat32' Name='netsf_m.cat' DiskId='1'
-	      	Source='../../kernel/win/stage32/netsf_m.cat' />
-
-              <File Id='netsf_cat32' Name='netsf.cat' DiskId='1'
-	      	Source='../../kernel/win/stage32/netsf.cat' />
             </Component>
         </Directory>
       </Directory>
@@ -98,8 +89,6 @@
 	<Property Id='TCPCRYPT'>666</Property>
 	<CustomAction Id='PropertyAssign' Property='TCPCRYPT' Value='[ProgramFilesFolder]tcpcrypt/tcpcrypt.exe' />                                
 
-    <CustomAction Id='LaunchFile' Property="TCPCRYPT" Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /i' Return='check' />
-    <CustomAction Id='uninst' Property="TCPCRYPT" Execute="deferred" Impersonate="no" ExeCommand='tcpcrypt /u' Return='check' />
     <!--CustomAction Id='LaunchTcpcrypt' FileKey='tcpcrypt'
     ExeCommand='tcpcrypt' Return='asyncNoWait' /-->
 
@@ -120,7 +109,7 @@
           <Text>The [Wizard] is ready to begin the installation</Text>
         </Control>
         <Control Id="Text" Type="Text" X="25" Y="70" Width="320" Height="40">
-          <Text>You're about to install the tcpcrypt driver.  Windows will prompt you multiple times depending on how many network cards you have - just press yes / continue until the install ends.</Text>
+          <Text>You are about to install tcpcrypt.</Text>
         </Control>
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes"> 
@@ -185,8 +174,6 @@
 
       <InstallExecuteSequence>
 	<Custom Action="PropertyAssign" After="CostFinalize" />
-	<Custom Action='LaunchFile' After="InstallFiles">NOT Installed</Custom>
-	<Custom Action="uninst" Before="RemoveFiles">Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
       </InstallExecuteSequence>
 
     <Property Id="Setup">Setup</Property>

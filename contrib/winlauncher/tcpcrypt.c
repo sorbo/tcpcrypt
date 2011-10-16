@@ -1,13 +1,10 @@
 #include <windows.h>
 #include <stdio.h>
 #include <devguid.h>
-#include <unistd.h>
+
+#include "resource.h"
 
 #define COBJMACROS
-
-#include "netcfgx.h"
-#include "netcfgapi.h"
-#include "resource.h"
 
 #define WM_TERM (WM_APP + 1)
 
@@ -272,153 +269,9 @@ static void setup_icons(void)
 	SendMessage(_hwnd, WM_SETICON, ICON_SMALL, (LPARAM) _nidcur->hIcon);
 }
 
-static void parse_guid(unsigned char *guid, char *in)
-{
-	int x = 0;
-	int len = strlen(in);
-
-	while (len >= 2) {
-		char tmp[3];
-		int num;
-
-		if (*in == '-') {
-			len--;
-			in++;
-			continue;
-		}
-
-		tmp[0] = in[0];
-		tmp[1] = in[1];
-		tmp[2] = 0;
-	
-		if (sscanf(tmp, "%x", &num) != 1)
-			err(1, "sscanf()");
-
-		*guid++ = num;
-		x++;
-
-		if (x == 16)
-			break;
-
-		in  += 2;
-		len -= 2;
-	}
-
-	if (x != 16)
-		err(1, "parse_guid() [%d]", x);
-}
-
-static void install_divert(void)
-{
-	INetCfg    *pnc;
-	LPTSTR     lpszApp;
-	char dir[_MAX_PATH];
-	char inf[2][_MAX_PATH];
-	HRESULT hr;
-	int i;
-
-	get_path(dir);
-	snprintf(inf[0], _MAX_PATH, "%s%s", dir, "netsf.inf");
-	snprintf(inf[1], _MAX_PATH, "%s%s", dir, "netsf_m.inf");
-
-	if (HrGetINetCfg(TRUE, "tcpcrypt", &pnc, &lpszApp ) != S_OK)
-		err(1, "HrGetINetCfg()");
-
-	for (i = 0; i < 2; i++) {
-		if (!SetupCopyOEMInf(
-		    inf[i],
-		    dir, // Other files are in the
-		    // same dir. as primary INF
-		    SPOST_PATH,    // First param is path to INF
-		    0,             // Default copy style
-		    NULL,          // Name of the INF after
-		    // it's copied to %windir%\inf
-		    0,             // Max buf. size for the above               
-		    NULL,          // Required size if non-null
-		    NULL)          // Optionally get the filename
-		    // part of Inf name after it is copied.
-		    )
-			err(1, "SetupCopyOEMInf()");
-        }
-
-	hr = HrInstallNetComponent(pnc,
-				   (LPCTSTR) L"ms_passthru",
-				   &GUID_DEVCLASS_NETSERVICE,
-				   NULL);
-
-	if (hr != S_OK && hr != NETCFG_S_REBOOT)
-		err(1, "HrInstallNetComponent()");
-
-	HrReleaseINetCfg(pnc, TRUE);
-}
-
-static int probe_divert(void)
-{
-        HANDLE h;
-        
-        h = CreateFile(
-                "\\\\.\\PassThru",
-                GENERIC_READ | GENERIC_WRITE,
-                0,
-                NULL,
-                OPEN_EXISTING,
-                FILE_ATTRIBUTE_NORMAL,
-                INVALID_HANDLE_VALUE);
-
-	if (h == INVALID_HANDLE_VALUE)
-		return 0;
-
-	CloseHandle(h);
-
-	return 1;
-}
-
-static void setup_divert(int silent)
-{
-	if (probe_divert())
-		return;
-
-	if (!silent) {
-		MessageBox(NULL, 
-	           "About to install the tcpcrypt driver."
-	 	   "  You might need to press OK a couple of times depending on how many NICs you got.",
-		   "tcpcrypt", MB_OK);
-	}
-
-	install_divert();
-
-	if (!probe_divert())
-		err(1, "install_divert()");
-}
-
-static void uninstall_divert(void)
-{
-	INetCfg    *pnc;
-	LPTSTR     lpszApp;
-	HRESULT	   hr;
-
-	if (!probe_divert())
-		return;
-
-	if (HrGetINetCfg(TRUE, "tcpcrypt", &pnc, &lpszApp ) != S_OK)
-		err(1, "HrGetINetCfg()");
-
-
-	hr = HrUninstallNetComponent(pnc, (LPCTSTR) L"ms_passthru");
-
-	if (hr != S_OK && hr != NETCFG_S_REBOOT)
-		err(1, "HrUninstallNetComponent()");
-
-	HrReleaseINetCfg(pnc, TRUE);
-
-	if (probe_divert())
-		err(1, "uninstall_divert()");
-}
-
 static void do_init(void)
 {
 	setup_icons();
-	setup_divert(0);
 }
 
 static void hof(void)
@@ -489,15 +342,6 @@ LRESULT CALLBACK DlgProc(HWND hWndDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                    LPSTR szCmdLine, int iCmdShow)
 {
-	/* windows doesn't need getopt - it's got l33t coders instead */
-	if (strstr(szCmdLine, "/i")) {
-		setup_divert(1);
-		exit(0);
-	} else if (strstr(szCmdLine, "/u")) {
-		uninstall_divert();
-		exit(0);
-	}
-
 	_hinstance = hInstance;
 
 	if (DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL,

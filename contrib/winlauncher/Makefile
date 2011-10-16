@@ -1,8 +1,7 @@
 CC	= $(PREFIX)gcc
 CXX	= $(PREFIX)g++
-CC	= $(CXX)
 
-WIX	= wine /root/.wine/drive_c/Program\ Files/Windows\ Installer\ XML\ v3/bin/
+WIX	= wine $(HOME)/.wine/drive_c/Program\ Files/Windows\ Installer\ XML\ v3/bin/
 CANDLE	= $(WIX)candle
 LIGHT	= $(WIX)light
 
@@ -12,7 +11,7 @@ CXXFLAGS = $(CFLAGS)
 LDFLAGS  = -lgdi32 -lsetupapi -lws2_32  -lole32 -luuid \
 		-Wl,-subsystem,windows
 
-OBJS	 = tcpcrypt.o res.o netcfgapi.o
+OBJS	 = tcpcrypt.o res.o 
 
 all: $(NAME)
 
