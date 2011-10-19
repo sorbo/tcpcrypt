@@ -12,20 +12,19 @@
 #define UINT16  unsigned short
 #include <divert.h>
 
-#define MAC_SIZE        14
+#define MAC_SIZE	14
 
-static HANDLE _h;
+static HANDLE _h, _h2;
 
-// XXX signal 1 byte and have main thread ReadFile directly.  Peek here.
 static WINAPI DWORD reader(void *arg)
 {
 	int s;
 	struct sockaddr_in s_in;
-        UINT r;
+	UINT r;
 	unsigned char buf[2048];
-        
-        // XXX: the DIVERT_ADDRESS is stored in the ethhdr.
-        PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
+	
+	// XXX: the DIVERT_ADDRESS is stored in the ethhdr.
+	PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
 
 	if ((s = socket(PF_INET, SOCK_DGRAM, 0)) == -1)
 		err(1, "socket()");
@@ -37,14 +36,14 @@ static WINAPI DWORD reader(void *arg)
 	s_in.sin_port	     = htons(619);
 
 	while (1) {
-                memset(buf, 0, MAC_SIZE);
-                if (!DivertRecv(_h, buf + MAC_SIZE, sizeof(buf) - MAC_SIZE,
-                           addr, &r))
-                        err(1, "DivertRead()");
-
+		memset(buf, 0, MAC_SIZE);
+		if (!DivertRecv(_h, buf + MAC_SIZE, sizeof(buf) - MAC_SIZE,
+			   addr, &r))
+			err(1, "DivertRead()");
+		
 		if (sendto(s, (void*) buf, r + MAC_SIZE, 0,
 			   (struct sockaddr*) &s_in, sizeof(s_in)) !=
-                           r + MAC_SIZE)
+			   r + MAC_SIZE)
 			err(1, "sendto()");
 	}
 
@@ -54,7 +53,6 @@ static WINAPI DWORD reader(void *arg)
 int do_divert_open(void)
 {
 	// XXX i know this is lame
-        // XXX yeah
 	struct sockaddr_in s_in;
 	int s;
 
@@ -65,29 +63,35 @@ int do_divert_open(void)
 	memset(&s_in, 0, sizeof(s_in));
 	s_in.sin_family	     = PF_INET;
 	s_in.sin_addr.s_addr = inet_addr("127.0.0.1");
-	s_in.sin_port        = htons(619);
+	s_in.sin_port	= htons(619);
 
 	if (bind(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
 		err(1, "bind(divert)");
 
-        // XXX: Currently TCP port 80 only...
-        _h = DivertOpen(
-                "ip and "
-                "((outbound and tcp.DstPort == 80) or "
-                " (inbound and tcp.SrcPort == 80))");
+	// XXX: Currently TCP port 80 only...
+	_h = DivertOpen(
+		"ip and "
+		"((outbound and tcp.DstPort == 80) or "
+		" (inbound and tcp.SrcPort == 80)) and "
+		"ip.DstAddr != 127.0.0.1 and "
+		"ip.SrcAddr != 127.0.0.1");
 
-	if (_h == INVALID_HANDLE_VALUE)
+	// Second handle for injection only
+	_h2 = DivertOpen("false");
+
+	if (_h == INVALID_HANDLE_VALUE || _h2 == INVALID_HANDLE_VALUE)
 		err(1, "DivertOpen()");
 
 	if (!CreateThread(NULL, 0, reader, NULL, 0, NULL))
 		err(1, "CreateThread()");
 
-        return s;
+	return s;
 }
 
 void do_divert_close(int s)
 {
-        DivertClose(_h);
+	DivertClose(_h);
+	DivertClose(_h2);
 }
 
 int do_divert_read(int s, void *buf, int len)
@@ -95,20 +99,20 @@ int do_divert_read(int s, void *buf, int len)
 	return recv(s, buf, len, 0);
 }
 
-int do_divert_write(int s, void *buf, int len)                                      
+int do_divert_write(int s, void *buf, int len)				      
 {
-        UINT r;
-        PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
+	UINT r;
+	PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
 
-        if (len <= MAC_SIZE)
-                return -1;
+	if (len <= MAC_SIZE)
+		return -1;
 
-        buf += MAC_SIZE;
-        len -= MAC_SIZE;
+	buf += MAC_SIZE;
+	len -= MAC_SIZE;
 
-        if (!DivertSend(_h, buf, len, addr, &r))
-                return -1;
+	if (!DivertSend(_h2, buf, len, addr, &r))
+		return -1;
 
-        return r + MAC_SIZE;
+	return r + MAC_SIZE;
 }
 

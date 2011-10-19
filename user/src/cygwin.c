@@ -41,7 +41,7 @@ int divert_open(int port, divert_cb cb)
 
 void divert_close(void)
 {
-        do_divert_close(_s);
+	do_divert_close(_s);
 }
 
 static void do_divert_next_packet(unsigned char *buf, int rc)
@@ -50,13 +50,13 @@ static void do_divert_next_packet(unsigned char *buf, int rc)
 	int flags = 0;
 	struct ip *iph = (struct ip*) &buf[MAC_SIZE];
 	int len;
-        PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
+	PDIVERT_ADDRESS addr = (PDIVERT_ADDRESS)buf;
 
 	if (rc < MAC_SIZE)
 		errx(1, "short read %d", rc);
 
-        if (addr->Direction == DIVERT_PACKET_DIRECTION_INBOUND)
-                flags |= DF_IN;
+	if (addr->Direction == DIVERT_PACKET_DIRECTION_INBOUND)
+		flags |= DF_IN;
 
 	// XXX ethernet padding on short packets?  (46 byte minimum)
 	len = rc - MAC_SIZE;
@@ -118,10 +118,10 @@ void divert_inject(void *data, int len)
 
 	memset(p, 0, sizeof(*p));
 
-        // XXX: for divert, we can just zero the ethhdr, which contains the
-        //      DIVERT_ADDRESS.  A zeroed address usually gives the desired
-        //      result.
-        
+	// XXX: for divert, we can just zero the ethhdr, which contains the
+	//      DIVERT_ADDRESS.  A zeroed address usually gives the desired
+	//      result.
+	
 	/* payload */
 	p->p_len = len + MAC_SIZE;
 
