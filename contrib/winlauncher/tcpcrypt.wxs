@@ -25,7 +25,7 @@
               <File Id='tcnetstat' Name='tcnetstat.exe' DiskId='1'
 	      	Source='tcnetstat.exe' />
 
-              <File Id='libcrypto_8' Name='libaey32.dll' DiskId='1' Source='libcrypto-8.dll' />
+              <File Id='libcrypto_8' Name='libeay32.dll' DiskId='1' Source='libcrypto-8.dll' />
 
               <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
 
