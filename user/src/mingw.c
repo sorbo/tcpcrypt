@@ -14,7 +14,7 @@
 
 #define MAC_SIZE	14
 
-static HANDLE _h, _h2;
+static HANDLE _h;
 
 static WINAPI DWORD reader(void *arg)
 {
@@ -76,10 +76,7 @@ int do_divert_open(void)
 		"ip.DstAddr != 127.0.0.1 and "
 		"ip.SrcAddr != 127.0.0.1");
 
-	// Second handle for injection only
-	_h2 = DivertOpen("false");
-
-	if (_h == INVALID_HANDLE_VALUE || _h2 == INVALID_HANDLE_VALUE)
+	if (_h == INVALID_HANDLE_VALUE)
 		err(1, "DivertOpen()");
 
 	if (!CreateThread(NULL, 0, reader, NULL, 0, NULL))
@@ -91,7 +88,6 @@ int do_divert_open(void)
 void do_divert_close(int s)
 {
 	DivertClose(_h);
-	DivertClose(_h2);
 }
 
 int do_divert_read(int s, void *buf, int len)
@@ -110,7 +106,7 @@ int do_divert_write(int s, void *buf, int len)
 	buf += MAC_SIZE;
 	len -= MAC_SIZE;
 
-	if (!DivertSend(_h2, buf, len, addr, &r))
+	if (!DivertSend(_h, buf, len, addr, &r))
 		return -1;
 
 	return r + MAC_SIZE;

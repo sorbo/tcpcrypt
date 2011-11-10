@@ -29,11 +29,11 @@
 
               <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
 
-              <File Id='divert_dll' Name='divert.dll' DiskId='1' Source='divert.dll'/>
+              <File Id='divert_dll' Name='divert.dll' DiskId='1' Source='divert/x86/divert.dll'/>
 
-              <File Id='divert_inf' Name='divert.inf' DiskId='1' Source='divert.inf'/>
+              <File Id='divert_inf' Name='divert.inf' DiskId='1' Source='divert/divert.inf'/>
 
-              <File Id='WdfCoInstaller01009' Name='WdfCoInstaller01009.dll' DiskId='1' Source='WdfCoInstaller01009.dll'/>
+              <File Id='WdfCoInstaller01009' Name='WdfCoInstaller01009.dll' DiskId='1' Source='divert/x86/WdfCoInstaller01009.dll'/>
 
             </Component>
 
@@ -49,7 +49,7 @@
 	      </File>
 
               <File Id='divert64' Name='divert.sys' DiskId='1'
-                    Source='divert64.sys'/>
+                    Source='divert/amd64/divert.sys'/>
 
             </Component>
 
@@ -66,7 +66,7 @@
 	      </File>
 
               <File Id='divert32' Name='divert.sys' DiskId='1'
-                    Source='divert32.sys'/>
+                    Source='divert/x86/divert.sys'/>
 
             </Component>
         </Directory>
