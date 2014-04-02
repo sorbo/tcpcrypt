@@ -106,14 +106,15 @@ static void put_connection(struct conn *c)
 	put_free(&_free_conn, c);
 }
 
-static void do_add_ciphers(struct ciphers *c, void *spec, int *speclen, int sz)
+static void do_add_ciphers(struct ciphers *c, void *spec, int *speclen, int sz,
+			   void *specend)
 {
 	uint8_t *p = (uint8_t*) spec + *speclen;
 
 	c = c->c_next;
 
 	while (c) {
-		assert(p + sz <= (uint8_t*) speclen); /* XXX */
+		assert(p + sz <= (uint8_t*) specend);
 
 		memcpy(p, c->c_crypt->co_spec(), sz);
 		p        += sz;
@@ -3478,9 +3479,12 @@ static void init_ciphers(void)
 	do_init_ciphers(&_ciphers_sym);
 	do_init_ciphers(&_ciphers_mac);
 
-	do_add_ciphers(&_ciphers_pkey, &_pkey, &_pkey_len, sizeof(*_pkey));
-	do_add_ciphers(&_ciphers_sym, &_sym, &_sym_len, sizeof(*_sym));
-	do_add_ciphers(&_ciphers_mac, &_sym, &_sym_len, sizeof(*_sym));
+	do_add_ciphers(&_ciphers_pkey, &_pkey, &_pkey_len, sizeof(*_pkey),
+		       (uint8_t*) _pkey + sizeof(_pkey));
+	do_add_ciphers(&_ciphers_sym, &_sym, &_sym_len, sizeof(*_sym),
+                       (uint8_t*) _sym + sizeof(_sym));
+	do_add_ciphers(&_ciphers_mac, &_sym, &_sym_len, sizeof(*_sym),
+		       (uint8_t*) _sym + sizeof(_sym));
 }
 
 void tcpcrypt_init(void)
