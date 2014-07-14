@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <tcpcrypt/tcpcrypt.h>
 #include "src/tcpcrypt_ctl.h"
@@ -135,7 +136,8 @@ static int do_sockopt(uint32_t flags, int s, int level, int optname,
 		*optlen = MAX_LEN;
 	}
 
-	ctl = crap = alloca(sizeof(*ctl) + (*optlen));
+	crap = alloca(sizeof(*ctl) + (*optlen));
+	ctl  = (struct tcpcrypt_ctl*) crap;
 	if (!crap)
 		return -1;
 
