@@ -101,7 +101,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__tcpcryptd_SOURCES_DIST = tcpcryptd.c tcpcrypt.c crypto.c \
 	crypto_rsa.c crypto_aes.c crypto_hmac.c crypto_dummy.c \
-	profile.c checksum.c test.c crypto_rc4.c crypto_umac.c \
+	profile.c checksum.c test.c crypto_umac.c \
 	$(top_srcdir)/contrib/umac.c \
 	$(top_srcdir)/contrib/rijndael-alg-fst.c freebsd.c linux.c \
 	mingw.c res.rc cygwin.c unix.c checksum_32.S
@@ -117,10 +117,10 @@ am_tcpcryptd_OBJECTS = tcpcryptd-tcpcryptd.$(OBJEXT) \
 	tcpcryptd-crypto_hmac.$(OBJEXT) \
 	tcpcryptd-crypto_dummy.$(OBJEXT) tcpcryptd-profile.$(OBJEXT) \
 	tcpcryptd-checksum.$(OBJEXT) tcpcryptd-test.$(OBJEXT) \
-	tcpcryptd-crypto_rc4.$(OBJEXT) tcpcryptd-crypto_umac.$(OBJEXT) \
-	tcpcryptd-umac.$(OBJEXT) tcpcryptd-rijndael-alg-fst.$(OBJEXT) \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5)
+	tcpcryptd-crypto_umac.$(OBJEXT) tcpcryptd-umac.$(OBJEXT) \
+	tcpcryptd-rijndael-alg-fst.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5)
 tcpcryptd_OBJECTS = $(am_tcpcryptd_OBJECTS)
 am__DEPENDENCIES_1 =
 tcpcryptd_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
@@ -323,7 +323,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 tcpcryptd_SOURCES = tcpcryptd.c tcpcrypt.c crypto.c crypto_rsa.c \
 	crypto_aes.c crypto_hmac.c crypto_dummy.c profile.c checksum.c \
-	test.c crypto_rc4.c crypto_umac.c $(top_srcdir)/contrib/umac.c \
+	test.c crypto_umac.c $(top_srcdir)/contrib/umac.c \
 	$(top_srcdir)/contrib/rijndael-alg-fst.c $(am__append_1) \
 	$(am__append_2) $(am__append_4) $(am__append_6) \
 	$(am__append_7)
@@ -429,7 +429,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-crypto_aes.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-crypto_dummy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-crypto_hmac.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-crypto_rc4.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-crypto_rsa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-crypto_umac.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcpcryptd-cygwin.Po@am__quote@
@@ -625,20 +624,6 @@ tcpcryptd-test.obj: test.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test.c' object='tcpcryptd-test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-test.obj `if test -f 'test.c'; then $(CYGPATH_W) 'test.c'; else $(CYGPATH_W) '$(srcdir)/test.c'; fi`
-
-tcpcryptd-crypto_rc4.o: crypto_rc4.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_rc4.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo -c -o tcpcryptd-crypto_rc4.o `test -f 'crypto_rc4.c' || echo '$(srcdir)/'`crypto_rc4.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo $(DEPDIR)/tcpcryptd-crypto_rc4.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='crypto_rc4.c' object='tcpcryptd-crypto_rc4.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_rc4.o `test -f 'crypto_rc4.c' || echo '$(srcdir)/'`crypto_rc4.c
-
-tcpcryptd-crypto_rc4.obj: crypto_rc4.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_rc4.obj -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo -c -o tcpcryptd-crypto_rc4.obj `if test -f 'crypto_rc4.c'; then $(CYGPATH_W) 'crypto_rc4.c'; else $(CYGPATH_W) '$(srcdir)/crypto_rc4.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tcpcryptd-crypto_rc4.Tpo $(DEPDIR)/tcpcryptd-crypto_rc4.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='crypto_rc4.c' object='tcpcryptd-crypto_rc4.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -c -o tcpcryptd-crypto_rc4.obj `if test -f 'crypto_rc4.c'; then $(CYGPATH_W) 'crypto_rc4.c'; else $(CYGPATH_W) '$(srcdir)/crypto_rc4.c'; fi`
 
 tcpcryptd-crypto_umac.o: crypto_umac.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcpcryptd_CFLAGS) $(CFLAGS) -MT tcpcryptd-crypto_umac.o -MD -MP -MF $(DEPDIR)/tcpcryptd-crypto_umac.Tpo -c -o tcpcryptd-crypto_umac.o `test -f 'crypto_umac.c' || echo '$(srcdir)/'`crypto_umac.c

@@ -17,7 +17,7 @@
 #define MAC_SIZE	8
 
 static struct tc_scipher _umac_spec =
-	{ 0, TC_ANY, 0, TC_UMAC };
+	{ 0x0 };
 
 static struct crypt_prop _umac_prop = {
         .cp_ivlen       = 0,
@@ -116,5 +116,5 @@ static void __umac_init(void) __attribute__ ((constructor));
 
 static void __umac_init(void)
 {
-	crypto_register(&_umac_ops);
+//	crypto_register(&_umac_ops);
 }

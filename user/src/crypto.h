@@ -12,8 +12,11 @@ struct crypt_prop {
 	int	cp_ivmode;
 	int	cp_maclen;
 	int	cp_cipherlen;
+	int	cp_noncelen;
+	int	cp_noncelen_s;
 	int	cp_preference;
 	int	cp_rekey;
+	int	cp_keylen;
 };
 
 struct crypt_ops {
@@ -31,6 +34,7 @@ struct crypt_ops {
 	void		  *(*co_spec)(void);
 	int		  (*co_type)(void);
 	void		  (*co_mac_set_key)(struct tc *tc, void *key, int len);
+	void		  (*co_set_keys)(struct tc *tc, struct tc_keys *keys);
 	struct crypt_prop *(*co_crypt_prop)(struct tc *tc);
 };
 
@@ -52,6 +56,7 @@ extern void crypto_register(struct crypt_ops *ops);
 extern int  crypto_get_key(struct tc *tc, void **out);
 extern int  crypto_set_key(struct tc *tc, void *key, int len);
 extern void crypto_mac_set_key(struct tc *tc, void *key, int len);
+extern void crypto_set_keys(struct tc *tc, struct tc_keys *keys);
 extern void *crypto_priv(struct tc *tc);
 extern void *crypto_priv_init(struct tc *tc, int sz);
 

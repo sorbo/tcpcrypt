@@ -13,10 +13,7 @@
 #include "crypto.h"
 #include "profile.h"
 
-#define MAC_SIZE	20
-
-static struct tc_scipher _hmac_spec =
-	{ 0, TC_ANY, 0, TC_HMAC_SHA1_128 };
+#define MAC_SIZE	32
 
 struct hmac_priv {
 	HMAC_CTX hp_ctx;
@@ -29,7 +26,7 @@ static void hmac_init(struct tc *tc)
 
 	hp = crypto_priv_init(tc, sizeof(*hp));
 	HMAC_CTX_init(&hp->hp_ctx);
-	HMAC_Init_ex(&hp->hp_ctx, "a", 1, EVP_sha1(), NULL);
+	HMAC_Init_ex(&hp->hp_ctx, "a", 1, EVP_sha256(), NULL);
 }
 
 static void hmac_finish(struct tc *tc)
@@ -72,7 +69,7 @@ static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
 
 static void *hmac_spec(void)
 {
-	return &_hmac_spec;
+	return NULL;
 }
 
 static int hmac_type(void)
@@ -103,5 +100,5 @@ static void __hmac_init(void) __attribute__ ((constructor));
 
 static void __hmac_init(void)
 {
-	crypto_register(&_hmac_ops);
+//	crypto_register(&_hmac_ops);
 }

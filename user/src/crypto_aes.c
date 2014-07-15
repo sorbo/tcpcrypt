@@ -17,10 +17,11 @@
 #define BLEN	16
 
 static struct tc_scipher _aes_spec =
-	{ 0, TC_AES128_CTR_SEQIV, 0, TC_ANY };
+	{ TC_AES128_HMAC_SHA2 };
 
 struct aes_priv {
-	EVP_CIPHER_CTX ap_ctx;
+	EVP_CIPHER_CTX		ap_ctx;
+	struct crypto_priv	*ap_hmac;
 };
 
 static void aes_init(struct tc *tc)
@@ -28,6 +29,11 @@ static void aes_init(struct tc *tc)
 	struct aes_priv *ap = crypto_priv_init(tc, sizeof(*ap));
 
 	EVP_CIPHER_CTX_init(&ap->ap_ctx);
+
+	/* XXX */
+	_hmac_ops.co_init(tc);
+	ap->ap_hmac  = tc->tc_crypt;
+	tc->tc_crypt = ap;
 }
 
 static void aes_finish(struct tc *tc)
@@ -38,6 +44,9 @@ static void aes_finish(struct tc *tc)
 		return;
 
 	EVP_CIPHER_CTX_cleanup(&ap->ap_ctx);
+
+	tc->tc_crypt = ap->ap_hmac;
+	_hmac_ops.co_finish(tc);
 
 	free(ap);
 }
@@ -153,6 +162,13 @@ static int aes_decrypt(struct tc *tc, void *iv, void *data, int len)
 
 static void *aes_spec(void)
 {
+	static int init = 0;
+
+	if (!init) {
+		_aes_spec.sc_algo = htonl(_aes_spec.sc_algo);
+		init = 1;
+	}
+
 	return &_aes_spec;
 }
 
@@ -179,15 +195,43 @@ static void aes_next_iv(struct tc *tc, void *out, int *outlen)
 	*outlen = -IVMODE_SEQ;
 }
 
+static void aes_set_keys(struct tc *tc, struct tc_keys *keys)
+{
+	aes_set_key(tc, keys->tk_enc.s_data, keys->tk_enc.s_len);
+}
+
+static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
+                     void *out, int *outlen)
+{
+#define MAC_LEN 20
+	struct aes_priv *ap = crypto_priv(tc);
+	unsigned char lame[64];
+	int l = sizeof(lame);
+
+	if (*outlen < MAC_LEN) {
+		*outlen = MAC_LEN;
+		return;
+	}
+
+	tc->tc_crypt = ap->ap_hmac;
+	_hmac_ops.co_mac(tc, iov, num, iv, lame, &l);
+	tc->tc_crypt = ap;
+
+	memcpy(out, lame, MAC_LEN);
+	*outlen = MAC_LEN;
+}
+
 static struct crypt_ops _aes_ops = {
 	.co_init	= aes_init,
 	.co_finish	= aes_finish,
 	.co_encrypt	= aes_encrypt,
 	.co_decrypt	= aes_decrypt,
+	.co_mac		= hmac_mac,
 	.co_spec	= aes_spec,
 	.co_type	= aes_type,
 	.co_set_key	= aes_set_key,
 	.co_next_iv	= aes_next_iv,
+	.co_set_keys	= aes_set_keys,
 };
 
 static void __aes_init(void) __attribute__ ((constructor));

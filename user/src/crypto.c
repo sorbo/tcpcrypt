@@ -70,6 +70,11 @@ void crypto_mac_set_key(struct tc *tc, void *key, int len)
 	tc->tc_crypt_ops->co_mac_set_key(tc, key, len);
 }
 
+void crypto_set_keys(struct tc *tc, struct tc_keys *keys)
+{
+	tc->tc_crypt_ops->co_set_keys(tc, keys);
+}
+
 void *crypto_priv(struct tc *tc)
 {
 	return tc->tc_crypt;
@@ -118,11 +123,11 @@ static int get_id(struct crypt_ops *o)
 
 	case TYPE_SYM:
 		sym = o->co_spec();
-		return sym->sc_cipher;
+		return sym->sc_algo;
 
 	case TYPE_MAC:
 		sym = o->co_spec();
-		return sym->sc_mac;
+		return sym->sc_algo;
 
 	default:
 		abort();

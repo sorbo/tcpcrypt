@@ -7,14 +7,11 @@
 #define TC_DUMMY	0x69
 
 enum {
-	TC_CIPHER_RABIN_WILLIAMS = 0x01,
-	TC_CIPHER_OAEP_RSA_3,
+	TC_CIPHER_OAEP_RSA_3 = 0x0100,
 };
 
 enum {
-	TC_ANY			= 0x00,
-	TC_AES128_CTR_SEQIV,
-	TC_RC4,
+	TC_AES128_HMAC_SHA2 = 0x00000100,
 };
 
 enum {
@@ -22,29 +19,24 @@ enum {
 	TC_UMAC,
 };
 
-typedef uint32_t tag_t;
-
 enum {
-	TAG_SESSID	= 0x00,
-	TAG_NEXTK,
-	TAG_REKEY,
-	TAG_KEY_C_ENC,
-	TAG_KEY_C_MAC,
-	TAG_KEY_S_ENC,
-	TAG_KEY_S_MAC,
+	CONST_NEXTK	= 0x01,
+	CONST_SESSID	= 0x02,
+	CONST_REKEY	= 0x03,
+	CONST_KEY_C	= 0x04,
+	CONST_KEY_S	= 0x05,
+	CONST_KEY_ENC	= 0x06,
+	CONST_KEY_MAC	= 0x07,
+	CONST_KEY_ACK	= 0x08,
 };
 
 struct tc_cipher_spec {
-        uint8_t tcs_algo;
-        uint8_t tcs_key_min;
-        uint8_t tcs_key_max;
-};
+	uint8_t  tcs_algo_top;
+	uint16_t tcs_algo;
+} __attribute__ ((__packed__));
 
 struct tc_scipher {
-	uint8_t	sc_z1;
-	uint8_t sc_cipher;
-	uint8_t sc_z2;
-	uint8_t	sc_mac;
+	uint32_t sc_algo;
 };
 
 enum {
@@ -121,11 +113,10 @@ struct tc_sid {
 
 #define TC_MTU		1500
 #define MAX_CIPHERS	8
-#define MAX_NONCE	16
+#define MAX_NONCE	48
 
 struct crypt_sym_mac {
 	struct crypt_alg	csm_sym;
-	struct crypt_alg	csm_mac;
 };
 
 enum {
@@ -139,11 +130,16 @@ enum {
 	DIR_OUT,
 };
 
+struct tc_keys {
+	struct stuff	tk_prk;
+	struct stuff	tk_enc;
+	struct stuff	tk_mac;
+	struct stuff	tk_ack;
+};
+
 struct tc_keyset {
-	struct stuff		tc_kec;
-	struct stuff		tc_kac;
-	struct stuff		tc_kes;
-	struct stuff		tc_kas;
+	struct tc_keys		tc_client;
+	struct tc_keys		tc_server;
 	struct crypt_sym_mac	tc_alg_tx;
 	struct crypt_sym_mac	tc_alg_rx;
 };
@@ -160,7 +156,6 @@ struct tc {
 	struct tc_scipher	tc_cipher_sym;
 	struct crypt_ops	*tc_crypt_pkey;
 	struct crypt_ops	*tc_crypt_sym;
-	struct crypt_ops	*tc_crypt_mac;
 	int			tc_mac_size;
 	int			tc_mac_ivlen;
 	int			tc_mac_ivmode;
@@ -219,15 +214,15 @@ struct tc {
 };
 
 enum {  
-        TCOP_NONE               = 0x0,
-        TCOP_HELLO,
-	TCOP_HELLO_SUPPORT,
-	TCOP_NEXTK2		= 0x04,
-	TCOP_NEXTK2_SUPPORT,
-	TCOP_INIT1		= 0x06,
-	TCOP_INIT2,
+        TCOP_NONE               = 0x00,
+        TCOP_HELLO		= 0x01,
+	TCOP_HELLO_SUPPORT	= 0x02,
+	TCOP_NEXTK2		= 0x05,
+	TCOP_NEXTK2_SUPPORT	= 0x06,
+	TCOP_INIT1		= 0x07,
+	TCOP_INIT2		= 0x08,	
         TCOP_PKCONF             = 0x41,
-        TCOP_PKCONF_SUPPORT,
+        TCOP_PKCONF_SUPPORT	= 0x42,
 	TCOP_REKEY		= 0x83,
         TCOP_NEXTK1		= 0x84,
         TCOP_NEXTK1_SUPPORT,
@@ -281,12 +276,13 @@ struct mac_a {
 };
 
 enum {
-	TC_INIT1 = 0x0001,
-	TC_INIT2,
+	TC_INIT1 = 0x2911,
+	TC_INIT2 = 0x8310,
 };
 
 struct tc_init1 {
-	uint16_t		i1_op;
+	uint32_t		i1_len;
+	uint16_t		i1_magic;
 	uint16_t		i1_num_ciphers;
 	uint16_t		i1_nonce_len;
 	uint16_t		i1_pkey_len;
@@ -294,7 +290,8 @@ struct tc_init1 {
 };
 
 struct tc_init2 {
-	uint16_t		i2_op;
+	uint32_t		i2_len;
+	uint16_t		i2_magic;
 	uint16_t		i2_clen;
 	struct tc_scipher	i2_scipher;
 	uint8_t			i2_data[0];

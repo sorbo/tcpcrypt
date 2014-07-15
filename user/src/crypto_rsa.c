@@ -14,12 +14,14 @@
 #include "crypto.h"
 #include "profile.h"
 
-#define LENM		512
-#define MAX_KEYLEN	4
+#define NONCE_LEN	32
+#define NONCE_LEN_S	48
+#define KEYLEN		4096
+#define LENM		(KEYLEN / 8)
 #define RSA_EXPONENT	3
 
 static struct tc_cipher_spec _rsa_spec = 
-	{ TC_CIPHER_OAEP_RSA_3, 4, MAX_KEYLEN };
+	{ 0, TC_CIPHER_OAEP_RSA_3 };
 
 static struct crypt_prop _rsa_prop;
 
@@ -31,7 +33,7 @@ struct key {
 };
 
 static struct state {
-	struct key	s_keys[MAX_KEYLEN + 1];
+	struct key	s_key;
 } _state;
 
 struct tc_priv {
@@ -55,30 +57,27 @@ static RSA* generate_key(int bits)
 
 static void generate_keys(void)
 {
-	int i;
-	struct key *k;
+	struct key *k = &_state.s_key;
 
-	xprintf(XP_DEFAULT, "Generating RSA keys\n");
-	for (i = _rsa_spec.tcs_key_min; i <= _rsa_spec.tcs_key_max; i++) {
-		k = &_state.s_keys[i];
+	xprintf(XP_DEFAULT, "Generating RSA key\n");
 
-		if (k->k_rsa) { 
-			RSA_free(k->k_rsa);
-			free(k->k_bin);
-		}
-
-		k->k_len  = i * LENM;
-		k->k_rsa  = generate_key(k->k_len);
-		k->k_blen = BN_num_bytes(k->k_rsa->n);
-		k->k_bin  = xmalloc(k->k_blen);
-		BN_bn2bin(k->k_rsa->n, k->k_bin);
+	if (k->k_rsa) { 
+		RSA_free(k->k_rsa);
+		free(k->k_bin);
 	}
-	xprintf(XP_DEFAULT, "Done generating RSA keys\n");
+
+	k->k_len  = KEYLEN;
+	k->k_rsa  = generate_key(k->k_len);
+	k->k_blen = BN_num_bytes(k->k_rsa->n);
+	k->k_bin  = xmalloc(k->k_blen);
+	BN_bn2bin(k->k_rsa->n, k->k_bin);
+
+	xprintf(XP_DEFAULT, "Done generating RSA key\n");
 }
 
-static struct key *get_key(int bits)
+static struct key *get_key(void)
 {
-	return &_state.s_keys[bits / LENM];
+	return &_state.s_key;
 }
 
 static struct tc_priv *rsa_init_priv(struct tc *tc)
@@ -167,6 +166,13 @@ static int rsa_decrypt(struct tc *tc, void *iv, void *data, int len)
 
 static void *rsa_spec(void)
 {
+	static int init = 0;
+
+	if (!init) {
+		_rsa_spec.tcs_algo = htons(_rsa_spec.tcs_algo);
+		init = 1;
+	}
+
 	return &_rsa_spec;
 }
 
@@ -178,10 +184,9 @@ static int rsa_type(void)
 static int rsa_get_key(struct tc *tc, void **out)
 {
 	struct tc_priv *tp = crypto_priv(tc);
-	int bits = tc->tc_cipher_pkey.tcs_key_min * LENM;
 	struct key *k;
 
-	k = tp->tp_key = get_key(bits);
+	k = tp->tp_key = get_key();
 	*out = k->k_bin;
 
 	return k->k_blen;
@@ -207,9 +212,9 @@ static int rsa_set_key(struct tc *tc, void *key, int len)
 	if (plen % LENM)
 		goto __err;
 
-	r->e = get_key(_rsa_spec.tcs_key_min * LENM)->k_rsa->e;
+	r->e = get_key()->k_rsa->e;
 
-	return plen / LENM;
+	return 0;
 __err:
 	crypto_finish(tc);
 	return -1;
@@ -240,7 +245,13 @@ struct crypt_prop *rsa_prop(struct tc *tc)
 
 	tp = crypto_priv(tc);
 	cp = &tp->tp_prop;
-	cp->cp_cipherlen = RSA_size(tp->tp_rsa);
+
+	cp->cp_noncelen   = NONCE_LEN;
+	cp->cp_noncelen_s = NONCE_LEN_S;
+	cp->cp_keylen     = (KEYLEN / 8);
+
+	if (tp->tp_rsa)
+		cp->cp_cipherlen = RSA_size(tp->tp_rsa);
 
 	return cp;
 }

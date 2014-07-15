@@ -73,7 +73,7 @@ static unsigned int cipher_throughput(float sample, unsigned int avg)
 void test_sym_throughput(void)
 {
 	struct tc *tc;
-	int id	    = TC_AES128_CTR_SEQIV;
+	int id	    = TC_AES128_HMAC_SHA2;
 	uint64_t iv = 0;
 	int dlen    = 1420;
 	void *data;

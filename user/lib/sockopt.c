@@ -120,8 +120,6 @@ static int do_sockopt(uint32_t flags, int s, int level, int optname,
 	struct tcpcrypt_ctl *ctl;
 	union sockaddr_u ss;
 	socklen_t sl = sizeof ss;
-	struct iovec iov[2];
-	struct msghdr mh;
 	int rc, len, i, port;
 	int set = flags & TCC_SET;
 
