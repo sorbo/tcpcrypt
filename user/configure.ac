@@ -22,6 +22,8 @@ AM_CONDITIONAL(OS_BSD, [echo $host_os | grep -E 'darwin|freebsd'])
 AM_CONDITIONAL(OS_LINUX, [echo $host_os | grep linux])
 AM_CONDITIONAL(OS_MINGW, [echo $host_os | grep -E mingw])
 
+CFLAGS="$CFLAGS -Wall -Wno-deprecated-declarations"
+
 # DEBUG
 AC_ARG_ENABLE(debug, 
     AS_HELP_STRING([--enable-debug],
