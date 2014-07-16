@@ -15,7 +15,7 @@
 #include "profile.h"
 
 #define BLEN	16
-#define MAC_LEN 20
+#define MAC_LEN 16
 
 static struct tc_scipher _aes_spec =
 	{ TC_AES128_HMAC_SHA2 };
@@ -23,7 +23,7 @@ static struct tc_scipher _aes_spec =
 struct aes_priv {
 	EVP_CIPHER_CTX		ap_ctx;
 	EVP_CIPHER_CTX		ap_mac;
-	struct tc		*ap_hmac;
+	struct crypt		*ap_hmac;
 };
 
 static void aes_init(struct tc *tc)
@@ -33,10 +33,7 @@ static void aes_init(struct tc *tc)
 	EVP_CIPHER_CTX_init(&ap->ap_ctx);
 	EVP_CIPHER_CTX_init(&ap->ap_mac);
 
-	/* XXX */
-	ap->ap_hmac = xmalloc(sizeof(*ap->ap_hmac));
-	ap->ap_hmac->tc_crypt_ops = &_hmac_ops;
-	crypto_init(ap->ap_hmac);
+	ap->ap_hmac = crypt_HMAC_SHA256_new();
 }
 
 static void aes_finish(struct tc *tc)
@@ -49,10 +46,8 @@ static void aes_finish(struct tc *tc)
 	EVP_CIPHER_CTX_cleanup(&ap->ap_ctx);
 	EVP_CIPHER_CTX_cleanup(&ap->ap_mac);
 
-	if (ap->ap_hmac) {
-		crypto_finish(ap->ap_hmac);
-		free(ap->ap_hmac);
-	}
+	if (ap->ap_hmac)
+		crypt_destroy(ap->ap_hmac);
 
 	free(ap);
 }
@@ -206,7 +201,7 @@ static void aes_set_keys(struct tc *tc, struct tc_keys *keys)
 	struct aes_priv *ap = crypto_priv(tc);
 
 	aes_set_key(tc, keys->tk_enc.s_data, keys->tk_enc.s_len);
-	crypto_set_key(ap->ap_hmac, keys->tk_mac.s_data, keys->tk_mac.s_len);
+	crypt_set_key(ap->ap_hmac, keys->tk_mac.s_data, keys->tk_mac.s_len);
 
 	assert(keys->tk_ack.s_len >= 16);
 	if (!EVP_EncryptInit(&ap->ap_mac, EVP_aes_128_ecb(),
@@ -226,7 +221,7 @@ static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
 		return;
 	}
 
-	crypto_mac(ap->ap_hmac, iov, num, iv, lame, &l);
+	crypt_mac(ap->ap_hmac, iov, num, lame, &l);
 	memcpy(out, lame, MAC_LEN);
 	*outlen = MAC_LEN;
 }

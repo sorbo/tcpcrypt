@@ -219,20 +219,13 @@ static struct tc *tc_dup(struct tc *tc)
 
 static void do_expand(struct tc *tc, uint8_t tag, struct stuff *out)
 {
-	struct iovec iov[2];
-	uint8_t one = 1;
+	int len = 32; /* XXX */
 
-	iov[0].iov_base = &tag;
-	iov[0].iov_len  = sizeof(tag);
+	assert(len <= sizeof(out->s_data));
 
-	iov[1].iov_base = &one;
-	iov[1].iov_len  = sizeof(one);
+	tc->tc_crypt_ops->co_expand(tc, tag, len, out->s_data);
 
-	out->s_len = sizeof(out->s_data);
-	crypto_mac(tc, iov, sizeof(iov) / sizeof(*iov),
-		   NULL, out->s_data, &out->s_len);
-
-	assert(out->s_len <= sizeof(out->s_data));
+	out->s_len = len;
 }
 
 static void compute_nextk(struct tc *tc, struct stuff *out)
@@ -2247,7 +2240,8 @@ static void compute_ss(struct tc *tc,
 	profile_add(1, "compute ss mac set key");
 
 	tc->tc_ss.s_len = sizeof(tc->tc_ss.s_data);
-	crypto_mac(tc, iov, sizeof(iov) / sizeof(*iov), NULL, tc->tc_ss.s_data,
+	tc->tc_crypt_ops->co_extract
+	(tc, iov, sizeof(iov) / sizeof(*iov), tc->tc_ss.s_data,
 	           &tc->tc_ss.s_len);
 
 	assert(tc->tc_ss.s_len <= sizeof(tc->tc_ss.s_data));

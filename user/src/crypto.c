@@ -155,3 +155,16 @@ struct crypt_ops *crypto_find_cipher(int type, int id)
 
 	return NULL;
 }
+
+struct crypt *crypt_init(int sz)
+{
+	struct crypt *c = xmalloc(sizeof(*c));
+	memset(c, 0, sizeof(*c));
+
+	if (sz) {
+		c->c_priv = xmalloc(sz);
+		memset(c->c_priv, 0, sz);
+	}
+
+	return c;
+}
