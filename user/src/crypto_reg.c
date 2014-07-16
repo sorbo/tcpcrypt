@@ -31,9 +31,28 @@ static struct crypt_pub *RSA_HKDF_new(void)
 	return cp;
 }
 
-static void register_pub(int id, struct crypt_pub *(*ctr)(void))
+static struct crypt_sym *AES_HMAC_new(void)
+{
+	struct crypt_sym *cs = xmalloc(sizeof(*cs));
+
+	memset(cs, 0, sizeof(*cs));
+
+	cs->cs_cipher  = crypt_AES_new();
+	cs->cs_mac     = crypt_HMAC_SHA256_new();
+	cs->cs_ack_mac = crypt_AES_new();
+	cs->cs_mac_len = (128 / 8);
+
+	return cs;
+}
+
+static void register_pub(unsigned int id, struct crypt_pub *(*ctr)(void))
 {
 	crypt_register(TYPE_PKEY, id, (crypt_ctr) ctr);
+}
+
+static void register_sym(unsigned int id, struct crypt_sym *(*ctr)(void))
+{
+	crypt_register(TYPE_SYM, id, (crypt_ctr) ctr);
 }
 
 static void __register_ciphers(void) __attribute__ ((constructor));
@@ -41,4 +60,6 @@ static void __register_ciphers(void) __attribute__ ((constructor));
 static void __register_ciphers(void)
 {
 	register_pub(TC_CIPHER_OAEP_RSA_3, RSA_HKDF_new);
+
+	register_sym(TC_AES128_HMAC_SHA2, AES_HMAC_new);
 }

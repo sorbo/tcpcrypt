@@ -36,14 +36,11 @@ static void hmac_mac(struct crypt *c, struct iovec *iov, int num,
 	             void *out, int *outlen)
 {
 	struct hmac_priv *hp = crypt_priv(c);
-
-	if (*outlen < MAC_SIZE) {
-		*outlen = MAC_SIZE;
-		return;
-	}
+	void *o = out;
+	unsigned int olen = MAC_SIZE;
 
 	profile_add(3, "hmac_mac in");
-	
+
 	if (!hp->hp_fresh)
 		HMAC_Init_ex(&hp->hp_ctx, NULL, 0, NULL, NULL);
 	else
@@ -55,8 +52,16 @@ static void hmac_mac(struct crypt *c, struct iovec *iov, int num,
 		iov++;
 	}
 
-	HMAC_Final(&hp->hp_ctx, out, (unsigned int*) outlen);
+	if (*outlen < MAC_SIZE)
+		o = alloca(MAC_SIZE);
+
+	HMAC_Final(&hp->hp_ctx, o, &olen);
 	profile_add(3, "hmac_mac final");
+
+	if (*outlen < MAC_SIZE)
+		memcpy(out, o, *outlen);
+	else
+		*outlen = olen;
 }
 
 static int hmac_set_key(struct crypt *c, void *key, int len)

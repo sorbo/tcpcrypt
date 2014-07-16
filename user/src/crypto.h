@@ -91,6 +91,7 @@ struct crypt {
 extern struct crypt *crypt_HMAC_SHA256_new(void);
 extern struct crypt *crypt_HKDF_SHA256_new(void);
 extern struct crypt *crypt_RSA_new(void);
+extern struct crypt *crypt_AES_new(void);
 
 extern struct crypt *crypt_init(int sz);
 extern void crypt_register(int type, unsigned int id, crypt_ctr ctr);
@@ -170,6 +171,25 @@ static inline void crypt_pub_destroy(struct crypt_pub *cp)
 	crypt_destroy(cp->cp_hkdf);
 	crypt_destroy(cp->cp_pub);
 	free(cp);
+}
+
+/* sym crypto */
+
+struct crypt_sym {
+	crypt_ctr	cs_ctr;		/* must be first */
+	struct crypt	*cs_cipher;
+	struct crypt	*cs_mac;
+	struct crypt	*cs_ack_mac;
+	int		cs_mac_len;
+	int		cs_iv_len;
+};
+
+static inline void crypt_sym_destroy(struct crypt_sym *cs)
+{
+	crypt_destroy(cs->cs_cipher);
+	crypt_destroy(cs->cs_mac);
+	crypt_destroy(cs->cs_ack_mac);
+	free(cs);
 }
 
 #endif /* __TCPCRYPT_CRYPTO_H__ */

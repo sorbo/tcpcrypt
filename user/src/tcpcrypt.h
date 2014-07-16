@@ -94,7 +94,7 @@ struct stuff {
 
 struct tc_sess {
 	struct crypt_pub	*ts_pub;
-	struct crypt_alg	ts_sym;
+	struct crypt_sym	*ts_sym;
 	struct crypt_alg	ts_mac;
 	struct stuff		ts_sid;
 	struct stuff		ts_nk;
@@ -114,10 +114,6 @@ struct tc_sid {
 #define TC_MTU		1500
 #define MAX_CIPHERS	8
 #define MAX_NONCE	48
-
-struct crypt_sym_mac {
-	struct crypt_alg	csm_sym;
-};
 
 enum {
 	IVMODE_NONE	= 0,
@@ -140,8 +136,8 @@ struct tc_keys {
 struct tc_keyset {
 	struct tc_keys		tc_client;
 	struct tc_keys		tc_server;
-	struct crypt_sym_mac	tc_alg_tx;
-	struct crypt_sym_mac	tc_alg_rx;
+	struct crypt_sym	*tc_alg_tx;
+	struct crypt_sym	*tc_alg_rx;
 };
 
 struct conn;
@@ -155,7 +151,7 @@ struct tc {
 	struct tc_cipher_spec	tc_cipher_pkey;
 	struct tc_scipher	tc_cipher_sym;
 	struct crypt_pub	*tc_crypt_pub;
-	struct crypt_ops	*tc_crypt_sym;
+	struct crypt_sym	*tc_crypt_sym;
 	int			tc_mac_size;
 	int			tc_mac_ivlen;
 	int			tc_mac_ivmode;

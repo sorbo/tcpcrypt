@@ -116,7 +116,7 @@ static void do_add_ciphers(struct ciphers *c, void *spec, int *speclen, int sz,
 	c = c->c_next;
 
 	while (c) {
-		unsigned char *sp = c->c_crypt ? c->c_crypt->co_spec() : c->c_spec;
+		unsigned char *sp = c->c_spec;
 
 		assert(p + sz <= (uint8_t*) specend);
 
@@ -133,12 +133,6 @@ static int bad_packet(char *msg)
 	xprintf(XP_ALWAYS, "%s\n", msg);
 
 	return 0;
-}
-
-static void crypto_switch(struct tc *tc, struct crypt_alg *ca)
-{
-	tc->tc_crypt_ops = ca->ca_ops;
-	tc->tc_crypt     = ca->ca_priv;
 }
 
 static void tc_init(struct tc *tc)
@@ -168,15 +162,6 @@ static void tc_reset(struct tc *tc)
 	tc->tc_conn = c;
 }
 
-static void crypto_free(struct tc *tc, struct crypt_alg *alg)
-{
-	if (!alg->ca_ops)
-		return;
-
-	crypto_switch(tc, alg);
-	crypto_finish(tc);
-}
-
 static void kill_retransmit(struct tc *tc)
 {
 	if (!tc->tc_retransmit)
@@ -189,14 +174,20 @@ static void kill_retransmit(struct tc *tc)
 
 static void crypto_free_keyset(struct tc *tc, struct tc_keyset *ks)
 {
-	crypto_free(tc, &ks->tc_alg_tx.csm_sym);
-	crypto_free(tc, &ks->tc_alg_rx.csm_sym);
+	if (ks->tc_alg_tx)
+		crypt_sym_destroy(ks->tc_alg_tx);
+
+	if (ks->tc_alg_rx)
+		crypt_sym_destroy(ks->tc_alg_rx);
 }
 
 static void tc_finish(struct tc *tc)
 {
 	if (tc->tc_crypt_pub)
 		crypt_pub_destroy(tc->tc_crypt_pub);
+
+	if (tc->tc_crypt_sym)
+		crypt_sym_destroy(tc->tc_crypt_sym);
 
 	crypto_free_keyset(tc, &tc->tc_key_current);
 	crypto_free_keyset(tc, &tc->tc_key_next);
@@ -278,7 +269,7 @@ static void session_cache(struct tc *tc)
 		s->ts_ip   	 = tc->tc_dst_ip;
 		s->ts_port 	 = tc->tc_dst_port;
 		s->ts_pub	 = crypt_new(tc->tc_crypt_pub->cp_ctr);
-		s->ts_sym.ca_ops = tc->tc_crypt_sym;
+		s->ts_sym	 = crypt_new(tc->tc_crypt_sym->cs_ctr);
 	}
 
 	set_expand_key(tc, &tc->tc_nk);
@@ -294,17 +285,16 @@ static void session_cache(struct tc *tc)
 	profile_add(1, "session_cache compute_nk");
 }
 
-static void init_algo(struct tc *tc, struct crypt_ops *ops,
-		      struct crypt_alg *algo, struct tc_keys *keys)
+static void init_algo(struct tc *tc, struct crypt_sym *cs,
+		      struct crypt_sym **algo, struct tc_keys *keys)
 {
-	tc->tc_crypt_ops = ops;
-	tc->tc_crypt     = NULL;
+	*algo = crypt_new(cs->cs_ctr);
 
-	crypto_init(tc);
-	algo->ca_ops  = ops;
-	algo->ca_priv = tc->tc_crypt;
+	cs = *algo;
 
-	crypto_set_keys(tc, keys);
+	crypt_set_key(cs->cs_cipher, keys->tk_enc.s_data, keys->tk_enc.s_len);
+	crypt_set_key(cs->cs_mac, keys->tk_mac.s_data, keys->tk_mac.s_len);
+	crypt_set_key(cs->cs_ack_mac, keys->tk_ack.s_data, keys->tk_ack.s_len);
 }
 
 static void compute_asm_keys(struct tc *tc, struct tc_keys *tk)
@@ -318,7 +308,7 @@ static void compute_asm_keys(struct tc *tc, struct tc_keys *tk)
 
 static void compute_keys(struct tc *tc, struct tc_keyset *out)
 {
-	struct crypt_sym_mac *tx, *rx;
+	struct crypt_sym **tx, **rx;
 
 	set_expand_key(tc, &tc->tc_mk);
 
@@ -349,53 +339,15 @@ static void compute_keys(struct tc *tc, struct tc_keyset *out)
 		break;
 	}
 
-	init_algo(tc, tc->tc_crypt_sym, &tx->csm_sym, &out->tc_client);
-	init_algo(tc, tc->tc_crypt_sym, &rx->csm_sym, &out->tc_server);
+	init_algo(tc, tc->tc_crypt_sym, tx, &out->tc_client);
+	init_algo(tc, tc->tc_crypt_sym, rx, &out->tc_server);
 	profile_add(1, "initialized algos");
-}
-
-static void get_iv_info(struct tc *tc, int *ivlen, int *ivmode)
-{
-	int len = 0;
-
-	if (!tc->tc_crypt_ops->co_next_iv) {
-		if (tc->tc_crypt_ops->co_crypt_prop) {
-			struct crypt_prop *c = crypto_prop(tc);
-
-			*ivlen  = c->cp_ivlen;
-			*ivmode = c->cp_ivmode;
-		}
-
-		return;
-	}
-
-	crypto_next_iv(tc, NULL, &len);
-	if (!len)
-		return;
-
-	if (len > 0) {
-		*ivlen  = len;
-		*ivmode = IVMODE_CRYPT;
-		return;
-	}
-
-	*ivmode = -1 * len;
-	switch (*ivmode) {
-	case IVMODE_SEQ:
-		break;
-
-	default:
-		assert(!"bleh");
-		break;
-	}
 }
 
 static void get_algo_info(struct tc *tc)
 {
-	crypto_switch(tc, &tc->tc_key_current.tc_alg_tx.csm_sym);
-	crypto_mac(tc, NULL, 0, NULL, NULL, &tc->tc_mac_size);
-//	get_iv_info(tc, &tc->tc_mac_ivlen, &tc->tc_mac_ivmode);
-	get_iv_info(tc, &tc->tc_sym_ivlen, &tc->tc_sym_ivmode);
+	tc->tc_mac_size = tc->tc_crypt_sym->cs_mac_len;
+	tc->tc_sym_ivmode = IVMODE_SEQ; /* XXX */
 }
 
 static void scrub_sensitive(struct tc *tc)
@@ -419,7 +371,7 @@ static int session_resume(struct tc *tc)
 	copy_stuff(&tc->tc_nk, &s->ts_nk);
 
 	tc->tc_role	 = s->ts_role;
-	tc->tc_crypt_sym = s->ts_sym.ca_ops;
+	tc->tc_crypt_sym = crypt_new(s->ts_sym->cs_ctr);
 	tc->tc_crypt_pub = crypt_new(s->ts_pub->cp_ctr);
 
 	return 1;
@@ -1364,6 +1316,8 @@ static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	uint32_t *p1, *p2;
 	uint64_t seq = tc->tc_seq + ntohl(tcp->th_seq);
 	uint64_t ack = tc->tc_ack + ntohl(tcp->th_ack);
+	struct crypt_sym *cs = dir_in ? tc->tc_key_active->tc_alg_rx
+				      : tc->tc_key_active->tc_alg_tx;
 
 	seq -= dir_in ? tc->tc_isn_peer : tc->tc_isn;
 	ack -= dir_in ? tc->tc_isn : tc->tc_isn_peer;
@@ -1409,7 +1363,7 @@ static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	maclen = tc->tc_mac_size;
 
 	profile_add(2, "compute_mac pre M");
-	crypto_mac(tc, iov, num, iv, out, &maclen);
+	crypt_mac(cs->cs_mac, iov, num, out, &maclen);
 	profile_add(2, "compute_mac MACed M");
 
 	/* A struct */
@@ -1417,8 +1371,12 @@ static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	a.ma_ack   = htonl(ack & 0xFFFFFFFF);
 
 	memset(mac, 0, maca_len);
-	crypto_mac_ack(tc, &a, sizeof(a), mac, &maca_len);
-	assert(maca_len <= tc->tc_mac_size);
+
+	iov[0].iov_base = &a;
+	iov[0].iov_len  = sizeof(a);
+
+	crypt_mac(cs->cs_ack_mac, iov, 1, mac, &maca_len);
+	assert(maca_len == tc->tc_mac_size);
 	profile_add(2, "compute_mac MACed A");
 
 	/* XOR the two */
@@ -1473,11 +1431,12 @@ static void encrypt(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	uint8_t *data = tcp_data(tcp);
 	int dlen = tcp_data_len(ip, tcp);
 	void *iv = NULL;
+	struct crypt *c = tc->tc_key_active->tc_alg_tx->cs_cipher;
 
 	iv = get_iv(tc, ip, tcp);
 
 	if (dlen)
-		crypto_encrypt(tc, iv, data, dlen);
+		crypt_encrypt(c, iv, data, dlen);
 }
 
 static int add_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
@@ -1558,7 +1517,7 @@ static void compress_options(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 
 static void do_rekey(struct tc *tc)
 {
-	assert(!tc->tc_key_next.tc_alg_rx.csm_sym.ca_ops);
+	assert(!tc->tc_key_next.tc_alg_rx);
 
 	tc->tc_keygen++;
 
@@ -1584,8 +1543,8 @@ static int rekey_complete(struct tc *tc)
 		return 0;
 	}
 
-	assert(tc->tc_key_current.tc_alg_tx.csm_sym.ca_ops);
-	assert(tc->tc_key_next.tc_alg_tx.csm_sym.ca_ops);
+	assert(tc->tc_key_current.tc_alg_tx);
+	assert(tc->tc_key_next.tc_alg_tx);
 
 	crypto_free_keyset(tc, &tc->tc_key_current);
 	memcpy(&tc->tc_key_current, &tc->tc_key_next,
@@ -1623,9 +1582,7 @@ static void rekey_output(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	    && tc->tc_keygentx == tc->tc_keygen)
 		tc->tc_key_active = &tc->tc_key_next;
 
-	crypto_switch(tc, &tc->tc_key_active->tc_alg_tx.csm_sym);
-	if (tc->tc_crypt_ops->co_crypt_prop)
-		rk = crypto_prop(tc)->cp_rekey;
+	/* XXX check if proto supports rekey */
 
 	if (!rk)
 		return;
@@ -1678,8 +1635,6 @@ static int do_output_encrypting(struct tc *tc, struct ip *ip,
 
 	tc->tc_key_active = &tc->tc_key_current;
 	rekey_output(tc, ip, tcp);
-
-	crypto_switch(tc, &tc->tc_key_active->tc_alg_tx.csm_sym);
 
 	profile_add(1, "do_output pre sym encrypt");
 	encrypt(tc, ip, tcp);
@@ -2125,10 +2080,11 @@ static void do_neg_sym(struct tc *tc, struct ciphers *c, struct tc_scipher *a)
 	c = c->c_next;
 
 	while (c) {
-		b = c->c_crypt->co_spec();
+		b = (struct tc_scipher*) c->c_spec;
 
 		if (b->sc_algo == a->sc_algo) {
-			tc->tc_crypt_sym = c->c_crypt;
+			tc->tc_crypt_sym = crypt_new(c->c_cipher->c_ctr);
+			tc->tc_cipher_sym.sc_algo = a->sc_algo;
 			break;
 		}
 
@@ -2153,12 +2109,6 @@ static int negotiate_sym_cipher(struct tc *tc, struct tc_scipher *a, int alen)
 
 		a++;
 	}
-
-	if (!rc)
-		tc->tc_crypt_sym = NULL;
-
-	a = tc->tc_crypt_sym->co_spec();
-	tc->tc_cipher_sym.sc_algo = a->sc_algo;
 
 	return rc;
 }
@@ -2425,10 +2375,10 @@ static int select_sym(struct tc *tc, struct tc_scipher *s)
 	/* select ciphers */
 	c = _ciphers_sym.c_next;
 	while (c) {
-		me = c->c_crypt->co_spec();
+		me = (struct tc_scipher*) c->c_spec;
 
 		if (me->sc_algo == s->sc_algo) {
-			tc->tc_crypt_sym = c->c_crypt;
+			tc->tc_crypt_sym = crypt_new(c->c_cipher->c_ctr);
 			break;
 		}
 
@@ -2572,11 +2522,12 @@ static int decrypt(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	uint8_t *data = tcp_data(tcp);
 	int dlen = tcp_data_len(ip, tcp);
 	void *iv = NULL;
+	struct crypt *c = tc->tc_key_active->tc_alg_rx->cs_cipher;
 
 	iv = get_iv(tc, ip, tcp);
 
 	if (dlen)
-		crypto_decrypt(tc, iv, data, dlen);
+		crypt_decrypt(c, iv, data, dlen);
 
 	return dlen;
 }
@@ -2605,7 +2556,6 @@ static struct tco_rekeystream *rekey_input(struct tc *tc, struct ip *ip,
 			void *iv = &tr->tr_seq;
 
 			/* XXX assuming stream, and seq as IV */
-			crypto_switch(tc, &tc->tc_key_next.tc_alg_rx.csm_sym);
 			crypto_decrypt(tc, iv, dummy, sizeof(dummy));
 		}
 
@@ -2658,7 +2608,6 @@ static int do_input_encrypting(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	tc->tc_key_active = &tc->tc_key_current;
 	tr = rekey_input(tc, ip, tcp);
 
-	crypto_switch(tc, &tc->tc_key_active->tc_alg_rx.csm_sym);
 	profile_add(1, "do_input pre check_mac");
 	if ((rc = check_mac(tc, ip, tcp))) {
 		/* XXX gross */
@@ -3368,43 +3317,35 @@ void tcpcrypt_register_cipher(struct cipher_list *c)
 	}
 }
 
-static int cipher_id(struct crypt_ops *c)
-{
-	struct tc_cipher_spec *pkey;
-	struct tc_scipher *sym;
-
-	switch (c->co_type()) {
-	case TYPE_PKEY:
-		pkey = c->co_spec();
-		return pkey->tcs_algo;
-
-	case TYPE_SYM:
-		sym = c->co_spec();
-		return sym->sc_algo;
-
-	case TYPE_MAC:
-		sym = c->co_spec();
-		return sym->sc_algo;
-
-	default:
-		assert(!"morte");
-	}
-
-	return -1;
-}
-
 static void init_cipher(struct ciphers *c)
 {
 	struct crypt_pub *cp;
+	struct crypt_sym *cs;
 	unsigned int spec = htonl(c->c_cipher->c_id);
 
-	if (c->c_cipher->c_type == TYPE_PKEY) {
+	switch (c->c_cipher->c_type) {
+	case TYPE_PKEY:
 		c->c_speclen = 3;
-		memcpy(c->c_spec, ((unsigned char*) &spec) + 1, c->c_speclen);
+
+		cp = c->c_cipher->c_ctr();
+		crypt_pub_destroy(cp);
+		break;
+	
+	case TYPE_SYM:
+		c->c_speclen = 4;
+
+		cs = crypt_new(c->c_cipher->c_ctr);
+		crypt_sym_destroy(cs);
+		break;
+
+	default:
+		assert(!"unknown type");
+		abort();
 	}
 
-	cp = c->c_cipher->c_ctr();
-	crypt_pub_destroy(cp);
+	memcpy(c->c_spec,
+	       ((unsigned char*) &spec) + sizeof(spec) - c->c_speclen,
+	       c->c_speclen);
 }
 
 static void do_init_ciphers(struct ciphers *c)
@@ -3416,7 +3357,8 @@ static void do_init_ciphers(struct ciphers *c)
 	c = c->c_next;
 
 	while (c) {
-		if (c->c_crypt && (cipher_id(c->c_crypt) == TC_DUMMY)) {
+		/* XXX */
+		if (c->c_crypt && (TC_DUMMY == TC_DUMMY)) {
 			if (!_conf.cf_dummy) {
 				/* kill dummy */
 				prev->c_next = c->c_next;
