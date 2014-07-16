@@ -93,7 +93,7 @@ struct stuff {
 };
 
 struct tc_sess {
-	struct crypt_alg	ts_prf;
+	struct crypt_pub	*ts_pub;
 	struct crypt_alg	ts_sym;
 	struct crypt_alg	ts_mac;
 	struct stuff		ts_sid;
@@ -154,7 +154,7 @@ struct tc {
 	int			tc_ciphers_sym_len;
 	struct tc_cipher_spec	tc_cipher_pkey;
 	struct tc_scipher	tc_cipher_sym;
-	struct crypt_ops	*tc_crypt_pkey;
+	struct crypt_pub	*tc_crypt_pub;
 	struct crypt_ops	*tc_crypt_sym;
 	int			tc_mac_size;
 	int			tc_mac_ivlen;
@@ -191,8 +191,6 @@ struct tc {
 	struct tc_keyset	tc_key_next;
 	struct tc_keyset	*tc_key_active;
 	int			tc_role;
-	struct crypt_alg	tc_alg_pkey;
-	struct crypt_alg	*tc_prf;
 	int			tc_sym_ivlen;
 	int			tc_sym_ivmode;
 	int			tc_dir;
@@ -299,12 +297,14 @@ struct tc_init2 {
 	uint8_t			i2_data[0];
 };
 
+struct cipher_list;
+
 extern int  tcpcrypt_packet(void *packet, int len, int flags);
 extern int  tcpcryptd_setsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
 			        unsigned int len);
 extern int  tcpcryptd_getsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
 			        unsigned int *len);
-extern void tcpcrypt_register_cipher(struct crypt_ops *ops);
+extern void tcpcrypt_register_cipher(struct cipher_list *c);
 extern void tcpcrypt_init(void);
 
 #endif /* __SRC_TCPCRYPT_H__ */

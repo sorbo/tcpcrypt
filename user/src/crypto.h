@@ -1,6 +1,8 @@
 #ifndef __TCPCRYPT_CRYPTO_H__
 #define __TCPCRYPT_CRYPTO_H__
 
+typedef void *(*crypt_ctr)(void);
+
 enum {
 	TYPE_PKEY = 0,
 	TYPE_SYM,
@@ -38,14 +40,15 @@ struct crypt_ops {
 	void		  (*co_mac_set_key)(struct tc *tc, void *key, int len);
 	void		  (*co_set_keys)(struct tc *tc, struct tc_keys *keys);
 	struct crypt_prop *(*co_crypt_prop)(struct tc *tc);
-	void	(*co_extract)(struct tc *c, struct iovec *iov, int num, void
-			     *out, int *outlen);
-	void	(*co_expand)(struct tc *c, uint8_t tag, int len, void *out);
 };
 
 struct cipher_list {
-	struct crypt_ops	*c_cipher;
+	unsigned int		c_id;
+	int			c_type;
+	crypt_ctr		c_ctr;
 	struct cipher_list	*c_next;
+
+	struct crypt_ops	*c_cipher;
 };
 
 extern void crypto_init(struct tc *tc);
@@ -81,7 +84,7 @@ struct crypt {
 	void	(*c_extract)(struct crypt *c, struct iovec *iov, int num,
 			     void *out, int *outlen);
 	void	(*c_expand)(struct crypt *c, uint8_t tag, int len, void *out);
-	void	(*c_encrypt)(struct crypt *c, void *iv, void *data, int len);
+	int     (*c_encrypt)(struct crypt *c, void *iv, void *data, int len);
 	int	(*c_decrypt)(struct crypt *c, void *iv, void *data, int len);
 };
 
@@ -90,6 +93,7 @@ extern struct crypt *crypt_HKDF_SHA256_new(void);
 extern struct crypt *crypt_RSA_new(void);
 
 extern struct crypt *crypt_init(int sz);
+extern void crypt_register(int type, unsigned int id, crypt_ctr ctr);
 
 static inline void crypt_destroy(struct crypt *c)
 {
@@ -129,14 +133,43 @@ static inline void crypt_expand(struct crypt *c, uint8_t tag, int len,
 	c->c_expand(c, tag, len, out);
 }
 
-static inline void crypt_encrypt(struct crypt *c, void *iv, void *data, int len)
+static inline int crypt_encrypt(struct crypt *c, void *iv, void *data, int len)
 {
-	c->c_encrypt(c, iv, data, len);
+	return c->c_encrypt(c, iv, data, len);
 }
 
 static inline int crypt_decrypt(struct crypt *c, void *iv, void *data, int len)
 {
 	return c->c_decrypt(c, iv, data, len);
+}
+
+static inline void *crypt_new(crypt_ctr ctr)
+{
+	crypt_ctr *r = ctr();
+
+	*r = ctr;
+
+	return r;
+}
+
+/* pub crypto */
+
+struct crypt_pub {
+	crypt_ctr    cp_ctr;		/* must be first */
+	struct crypt *cp_hkdf;
+	struct crypt *cp_pub;
+	int	     cp_n_c;
+	int	     cp_n_s;
+	int	     cp_k_len;
+	int	     cp_max_key;
+	int	     cp_cipher_len;
+};
+
+static inline void crypt_pub_destroy(struct crypt_pub *cp)
+{
+	crypt_destroy(cp->cp_hkdf);
+	crypt_destroy(cp->cp_pub);
+	free(cp);
 }
 
 #endif /* __TCPCRYPT_CRYPTO_H__ */

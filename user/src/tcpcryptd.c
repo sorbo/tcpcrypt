@@ -478,7 +478,7 @@ static void setup_tcpcrypt(void)
 	c = crypto_cipher_list();
 
 	while (c) {
-		tcpcrypt_register_cipher(c->c_cipher);
+		tcpcrypt_register_cipher(c);
 
 		c = c->c_next;
 	}

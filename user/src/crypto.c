@@ -106,6 +106,8 @@ void crypto_register(struct crypt_ops *ops)
 {
 	struct cipher_list *c = xmalloc(sizeof(*c));
 
+	memset(c, 0, sizeof(*c));
+
 	c->c_cipher     = ops;
 	c->c_next       = _ciphers.c_next;
 	_ciphers.c_next = c;
@@ -167,4 +169,15 @@ struct crypt *crypt_init(int sz)
 	}
 
 	return c;
+}
+
+void crypt_register(int type, unsigned int id, crypt_ctr ctr)
+{
+	struct cipher_list *c = xmalloc(sizeof(*c));
+
+	c->c_type	= type;
+	c->c_id		= id;
+	c->c_ctr	= ctr;
+	c->c_next       = _ciphers.c_next;
+	_ciphers.c_next = c;
 }

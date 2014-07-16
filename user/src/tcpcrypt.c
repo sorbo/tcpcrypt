@@ -36,8 +36,11 @@ struct retransmit {
 };
 
 struct ciphers {
-	struct crypt_ops *c_crypt;
-	struct ciphers	 *c_next;
+	struct crypt_ops 	*c_crypt;
+	struct cipher_list	*c_cipher;
+	unsigned char		c_spec[4];
+	int			c_speclen;
+	struct ciphers	 	*c_next;
 };
 
 static struct tc		*_sockopts[65536];
@@ -113,9 +116,11 @@ static void do_add_ciphers(struct ciphers *c, void *spec, int *speclen, int sz,
 	c = c->c_next;
 
 	while (c) {
+		unsigned char *sp = c->c_crypt ? c->c_crypt->co_spec() : c->c_spec;
+
 		assert(p + sz <= (uint8_t*) specend);
 
-		memcpy(p, c->c_crypt->co_spec(), sz);
+		memcpy(p, sp, sz);
 		p        += sz;
 		*speclen += sz;
 
@@ -190,7 +195,9 @@ static void crypto_free_keyset(struct tc *tc, struct tc_keyset *ks)
 
 static void tc_finish(struct tc *tc)
 {
-	crypto_free(tc, &tc->tc_alg_pkey);
+	if (tc->tc_crypt_pub)
+		crypt_pub_destroy(tc->tc_crypt_pub);
+
 	crypto_free_keyset(tc, &tc->tc_key_current);
 	crypto_free_keyset(tc, &tc->tc_key_next);
 
@@ -219,11 +226,11 @@ static struct tc *tc_dup(struct tc *tc)
 
 static void do_expand(struct tc *tc, uint8_t tag, struct stuff *out)
 {
-	int len = 32; /* XXX */
+	int len = tc->tc_crypt_pub->cp_k_len;
 
 	assert(len <= sizeof(out->s_data));
 
-	tc->tc_crypt_ops->co_expand(tc, tag, len, out->s_data);
+	crypt_expand(tc->tc_crypt_pub->cp_hkdf, tag, len, out->s_data);
 
 	out->s_len = len;
 }
@@ -242,6 +249,11 @@ static void compute_mk(struct tc *tc, struct stuff *out)
 static void compute_sid(struct tc *tc, struct stuff *out)
 {
 	do_expand(tc, CONST_SESSID, out);
+}
+
+static void set_expand_key(struct tc *tc, struct stuff *s)
+{
+	crypt_set_key(tc->tc_crypt_pub->cp_hkdf, s->s_data, s->s_len);
 }
 
 static void session_cache(struct tc *tc)
@@ -265,18 +277,11 @@ static void session_cache(struct tc *tc)
 		s->ts_role 	 = tc->tc_role;
 		s->ts_ip   	 = tc->tc_dst_ip;
 		s->ts_port 	 = tc->tc_dst_port;
-		s->ts_prf.ca_ops = tc->tc_crypt_pkey;
+		s->ts_pub	 = crypt_new(tc->tc_crypt_pub->cp_ctr);
 		s->ts_sym.ca_ops = tc->tc_crypt_sym;
+	}
 
-		crypto_switch(tc, &s->ts_prf);
-		crypto_init(tc);
-		s->ts_prf.ca_priv = tc->tc_crypt;
-	} else
-		crypto_switch(tc, &s->ts_prf);
-
-	tc->tc_prf = &s->ts_prf;
-
-	crypto_mac_set_key(tc, tc->tc_nk.s_data, tc->tc_nk.s_len);
+	set_expand_key(tc, &tc->tc_nk);
 	profile_add(1, "session_cache crypto_mac_set_key");
 
 	compute_sid(tc, &s->ts_sid);
@@ -304,7 +309,7 @@ static void init_algo(struct tc *tc, struct crypt_ops *ops,
 
 static void compute_asm_keys(struct tc *tc, struct tc_keys *tk)
 {
-	crypto_mac_set_key(tc, tk->tk_prk.s_data, tk->tk_prk.s_len);
+	set_expand_key(tc, &tk->tk_prk);
 
 	do_expand(tc, CONST_KEY_ENC, &tk->tk_enc);
 	do_expand(tc, CONST_KEY_MAC, &tk->tk_mac);
@@ -315,7 +320,8 @@ static void compute_keys(struct tc *tc, struct tc_keyset *out)
 {
 	struct crypt_sym_mac *tx, *rx;
 
-	crypto_mac_set_key(tc, tc->tc_mk.s_data, tc->tc_mk.s_len);
+	set_expand_key(tc, &tc->tc_mk);
+
 	profile_add(1, "compute keys mac set key");
 
 	do_expand(tc, CONST_KEY_C, &out->tc_client.tk_prk);
@@ -408,13 +414,13 @@ static int session_resume(struct tc *tc)
 	if (!s)
 		return 0;
 
-	crypto_switch(tc, &s->ts_prf);
 	copy_stuff(&tc->tc_sid, &s->ts_sid);
 	copy_stuff(&tc->tc_mk, &s->ts_mk);
 	copy_stuff(&tc->tc_nk, &s->ts_nk);
 
 	tc->tc_role	 = s->ts_role;
 	tc->tc_crypt_sym = s->ts_sym.ca_ops;
+	tc->tc_crypt_pub = crypt_new(s->ts_pub->cp_ctr);
 
 	return 1;
 }
@@ -426,10 +432,8 @@ static void enable_encryption(struct tc *tc)
 	tc->tc_state = STATE_ENCRYPTING;
 
 	if (!session_resume(tc)) {
-		tc->tc_alg_pkey.ca_ops  = tc->tc_crypt_pkey;
-		tc->tc_alg_pkey.ca_priv = tc->tc_crypt;
+		set_expand_key(tc, &tc->tc_ss);
 
-		crypto_mac_set_key(tc, tc->tc_ss.s_data, tc->tc_ss.s_len);
 		profile_add(1, "enable_encryption mac set key");
 
 		compute_sid(tc, &tc->tc_sid);
@@ -451,9 +455,6 @@ static void enable_encryption(struct tc *tc)
 	profile_add(1, "enable_encryption session cache");
 
 	scrub_sensitive(tc);
-
-	if (!tc->tc_prf)
-		tc->tc_prf = &tc->tc_alg_pkey;
 }
 
 static int conn_hash(uint16_t src, uint16_t dst)
@@ -1192,16 +1193,15 @@ static int do_output_pkconf_rcvd(struct tc *tc, struct ip *ip,
 	struct tc_init1 *init1;
 	void *key;
 	uint8_t *p;
-	struct crypt_prop *prop = crypto_prop(tc);
 
 	if (!retx)
-		generate_nonce(tc, prop->cp_noncelen);
+		generate_nonce(tc, tc->tc_crypt_pub->cp_n_c);
 
 	tcs = subopt_alloc(tc, ip, tcp, 1);
 	assert(tcs);
 	tcs->tcs_op = TCOP_INIT1;
 
-	klen = crypto_get_key(tc, &key);
+	klen = crypt_get_key(tc->tc_crypt_pub->cp_pub, &key);
 	len  = sizeof(*init1) 
 	       + tc->tc_ciphers_sym_len 
 	       + tc->tc_nonce_len
@@ -1562,8 +1562,6 @@ static void do_rekey(struct tc *tc)
 
 	tc->tc_keygen++;
 
-	assert(tc->tc_prf);
-	crypto_switch(tc, tc->tc_prf);
 	crypto_mac_set_key(tc, tc->tc_mk.s_data, tc->tc_mk.s_len);
 
 	compute_mk(tc, &tc->tc_mk);
@@ -2041,11 +2039,10 @@ static void init_pkey(struct tc *tc)
 	assert(tc->tc_cipher_pkey.tcs_algo);
 
 	while (c) {
-		s = c->c_crypt->co_spec();
+		s = (struct tc_cipher_spec*) c->c_spec;
 
 		if (s->tcs_algo == tc->tc_cipher_pkey.tcs_algo) {
-			tc->tc_crypt_ops = tc->tc_crypt_pkey = c->c_crypt;
-			crypto_init(tc);
+			tc->tc_crypt_pub = crypt_new(c->c_cipher->c_ctr);
 			return;
 		}
 
@@ -2175,10 +2172,10 @@ static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey, void *key,
 
 	/* check whether we know about the cipher */
 	while (c) {
-		spec = c->c_crypt->co_spec();
+		spec = (struct tc_cipher_spec*) c->c_spec;
 
 		if (spec->tcs_algo == pkey->tcs_algo) {
-			tc->tc_crypt_pkey = c->c_crypt;
+			tc->tc_crypt_pub = crypt_new(c->c_cipher->c_ctr);
 			break;
 		}
 
@@ -2190,8 +2187,7 @@ static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey, void *key,
 	profile_add(1, "pre pkey set key");
 
 	/* figure out key len */
-	tc->tc_crypt_ops = tc->tc_crypt_pkey;
-	if (crypto_set_key(tc, key, klen) == -1)
+	if (crypt_set_key(tc->tc_crypt_pub->cp_pub, key, klen) == -1)
 		return 0;
 
 	profile_add(1, "pkey set key");
@@ -2235,14 +2231,15 @@ static void compute_ss(struct tc *tc,
 	iov[4].iov_base = kxs;
 	iov[4].iov_len  = kxsl;
 
-	crypto_mac_set_key(tc, nc, ncl);
+	crypt_set_key(tc->tc_crypt_pub->cp_hkdf, nc, ncl);
 
 	profile_add(1, "compute ss mac set key");
 
 	tc->tc_ss.s_len = sizeof(tc->tc_ss.s_data);
-	tc->tc_crypt_ops->co_extract
-	(tc, iov, sizeof(iov) / sizeof(*iov), tc->tc_ss.s_data,
-	           &tc->tc_ss.s_len);
+
+	crypt_extract(tc->tc_crypt_pub->cp_hkdf, iov,
+		      sizeof(iov) / sizeof(*iov), tc->tc_ss.s_data,
+	              &tc->tc_ss.s_len);
 
 	assert(tc->tc_ss.s_len <= sizeof(tc->tc_ss.s_data));
 
@@ -2261,7 +2258,7 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	struct tc_cipher_spec *pkey;
 	void *key;
 	int klen;
-	struct crypt_prop *prop;
+	int cl;
 
 	tcs = find_subopt(tcp, TCOP_INIT1);
 	if (!tcs)
@@ -2300,26 +2297,26 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	if (!select_pkey(tc, pkey, key, klen))
 		return bad_packet("init1: bad public key");
 
-	prop = crypto_prop(tc);
-	if (nonce_len != prop->cp_noncelen)
+	if (nonce_len != tc->tc_crypt_pub->cp_n_c)
 		return bad_packet("init1: nonce length disagreement");
 
-	if (klen != prop->cp_keylen)
+	if (klen > tc->tc_crypt_pub->cp_max_key)
 		return bad_packet("init1: key length disagreement");
 
-	generate_nonce(tc, prop->cp_noncelen_s);
-
-	assert(prop->cp_cipherlen <= kxs_len);
+	generate_nonce(tc, tc->tc_crypt_pub->cp_n_s);
 
 	/* XXX fix crypto api to have from to args */
 	memcpy(kxs, tc->tc_nonce, tc->tc_nonce_len);
-	crypto_encrypt(tc, NULL, kxs, tc->tc_nonce_len);
+	cl = crypt_encrypt(tc->tc_crypt_pub->cp_pub,
+			   NULL, kxs, tc->tc_nonce_len);
+
+	assert(cl <= kxs_len); /* XXX too late to check */
 
 	compute_ss(tc,
 		   tc->tc_nonce, tc->tc_nonce_len,
 		   key, klen,
 		   nonce, nonce_len,
-		   kxs, prop->cp_cipherlen);
+		   kxs, cl);
 
 	tc->tc_state = STATE_INIT1_RCVD;
 
@@ -2346,8 +2343,8 @@ static int do_input_pkconf_sent(struct tc *tc, struct ip *ip,
 	struct ip *ip2;
 	struct tcphdr *tcp2;
 	struct tc_init2 *i2;
-	struct crypt_prop *cp;
 	uint8_t kxs[1024];
+	int cipherlen;
 
 	/* syn retransmission */
 	if (tcp->th_flags == TH_SYN)
@@ -2359,6 +2356,8 @@ static int do_input_pkconf_sent(struct tc *tc, struct ip *ip,
 		return DIVERT_ACCEPT;
 	}
 
+	cipherlen = tc->tc_crypt_pub->cp_cipher_len;
+
 	/* send init2 */
 	buf = alloc_retransmit(tc);
 	make_reply(buf, ip, tcp);
@@ -2369,16 +2368,15 @@ static int do_input_pkconf_sent(struct tc *tc, struct ip *ip,
 	assert(tcs);
 	tcs->tcs_op = TCOP_INIT2;
 
-	cp  = crypto_prop(tc);
-	len = sizeof(*i2) + cp->cp_cipherlen;
+	len = sizeof(*i2) + cipherlen;
 	i2  = data_alloc(tc, ip2, tcp2, len, 0);
 
 	i2->i2_len     = htonl(len);
 	i2->i2_magic   = htons(TC_INIT2);
-	i2->i2_clen    = htons(cp->cp_cipherlen);
+	i2->i2_clen    = htons(cipherlen);
 	i2->i2_scipher = tc->tc_cipher_sym;
 
-	memcpy(i2->i2_data, kxs, cp->cp_cipherlen);
+	memcpy(i2->i2_data, kxs, cipherlen);
 
 	if (_conf.cf_rsa_client_hack)
 		memcpy(i2->i2_data, tc->tc_nonce, tc->tc_nonce_len);
@@ -2487,9 +2485,9 @@ static int process_init2(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	memcpy(kxs, i2->i2_data, nlen);
 
 	nonce = i2->i2_data;
-	nlen  = crypto_decrypt(tc, NULL, nonce, nlen);
+	nlen  = crypt_decrypt(tc->tc_crypt_pub->cp_pub, NULL, nonce, nlen);
 
-	klen = crypto_get_key(tc, &key);
+	klen = crypt_get_key(tc->tc_crypt_pub->cp_pub, &key);
 	compute_ss(tc,
 		   nonce, nlen,
 		   key, klen,
@@ -3321,21 +3319,23 @@ static int get_pref(struct crypt_ops *ops)
 {
 	int pref = 0;
 
-	if (ops->co_crypt_prop)
+	if (ops && ops->co_crypt_prop)
 		pref = ops->co_crypt_prop(NULL)->cp_preference;
 
 	return pref;
 }
 
-static void do_register_cipher(struct ciphers *c, struct crypt_ops *ops)
+static void do_register_cipher(struct ciphers *c, struct cipher_list *cl)
 {
+	struct crypt_ops *ops = cl->c_cipher;
 	struct ciphers *x;
 	int pref;
-	
+
 	pref = get_pref(ops);
 
 	x = xmalloc(sizeof(*x));
-	x->c_crypt = ops;
+	x->c_crypt  = ops;
+	x->c_cipher = cl;
 
 	while (c->c_next) {
 		if (pref >= get_pref(c->c_next->c_crypt))
@@ -3348,15 +3348,18 @@ static void do_register_cipher(struct ciphers *c, struct crypt_ops *ops)
 	c->c_next  = x;
 }
 
-void tcpcrypt_register_cipher(struct crypt_ops *ops)
+void tcpcrypt_register_cipher(struct cipher_list *c)
 {
-	switch (ops->co_type()) {
+	struct crypt_ops *ops = c->c_cipher;
+	int type = ops ? ops->co_type() : c->c_type;
+
+	switch (type) {
 	case TYPE_PKEY:
-		do_register_cipher(&_ciphers_pkey, ops);
+		do_register_cipher(&_ciphers_pkey, c);
 		break;
 
 	case TYPE_SYM:
-		do_register_cipher(&_ciphers_sym, ops);
+		do_register_cipher(&_ciphers_sym, c);
 		break;
 
 	default:
@@ -3390,6 +3393,20 @@ static int cipher_id(struct crypt_ops *c)
 	return -1;
 }
 
+static void init_cipher(struct ciphers *c)
+{
+	struct crypt_pub *cp;
+	unsigned int spec = htonl(c->c_cipher->c_id);
+
+	if (c->c_cipher->c_type == TYPE_PKEY) {
+		c->c_speclen = 3;
+		memcpy(c->c_spec, ((unsigned char*) &spec) + 1, c->c_speclen);
+	}
+
+	cp = c->c_cipher->c_ctr();
+	crypt_pub_destroy(cp);
+}
+
 static void do_init_ciphers(struct ciphers *c)
 {
 	struct tc *tc = get_tc();
@@ -3399,7 +3416,7 @@ static void do_init_ciphers(struct ciphers *c)
 	c = c->c_next;
 
 	while (c) {
-		if (cipher_id(c->c_crypt) == TC_DUMMY) {
+		if (c->c_crypt && (cipher_id(c->c_crypt) == TC_DUMMY)) {
 			if (!_conf.cf_dummy) {
 				/* kill dummy */
 				prev->c_next = c->c_next;
@@ -3414,11 +3431,16 @@ static void do_init_ciphers(struct ciphers *c)
 			}
 		} else if (!_conf.cf_dummy) {
 			/* standard path */
-			tc->tc_crypt_ops = c->c_crypt;
-			tc->tc_crypt	 = NULL;
 
-			crypto_init(tc);
-			crypto_finish(tc);
+			if (c->c_cipher->c_ctr) {
+				init_cipher(c);
+			} else {
+				tc->tc_crypt_ops = c->c_crypt;
+				tc->tc_crypt	 = NULL;
+
+				crypto_init(tc);
+				crypto_finish(tc);
+			}
 		}
 
 		prev = c;

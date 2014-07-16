@@ -88,7 +88,7 @@ static void rsa_destroy(struct crypt *c)
 	free(c);
 }
 
-static void rsa_encrypt(struct crypt *c, void *iv, void *data, int len)
+static int rsa_encrypt(struct crypt *c, void *iv, void *data, int len)
 {
 	struct rsa_priv *tp = crypt_priv(c);
 	int sz = RSA_size(tp->r_rsa);
@@ -103,6 +103,8 @@ static void rsa_encrypt(struct crypt *c, void *iv, void *data, int len)
 	profile_add(1, "post pkey encrypt");
 
 	memcpy(data, out, sz);
+
+	return sz;
 }
 
 static int rsa_decrypt(struct crypt *c, void *iv, void *data, int len)
