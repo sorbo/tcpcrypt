@@ -45,6 +45,11 @@ void crypto_mac(struct tc *tc, struct iovec *iov, int num, void *iv, void *out,
 	tc->tc_crypt_ops->co_mac(tc, iov, num, iv, out, outlen);
 }
 
+void crypto_mac_ack(struct tc *tc, void *data, int len, void *out, int *olen)
+{
+	tc->tc_crypt_ops->co_mac_ack(tc, data, len, out, olen);
+}
+
 void crypto_encrypt(struct tc *tc, void *iv, void *data, int len)
 {
 	tc->tc_crypt_ops->co_encrypt(tc, iv, data, len);

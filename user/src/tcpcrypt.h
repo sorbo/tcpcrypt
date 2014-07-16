@@ -211,6 +211,8 @@ struct tc {
 	int			tc_optlen;
 	struct conn		*tc_conn;
 	int			tc_app_support;
+	int			tc_isn;
+	int			tc_isn_peer;
 };
 
 enum {  

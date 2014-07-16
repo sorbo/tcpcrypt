@@ -15,13 +15,15 @@
 #include "profile.h"
 
 #define BLEN	16
+#define MAC_LEN 20
 
 static struct tc_scipher _aes_spec =
 	{ TC_AES128_HMAC_SHA2 };
 
 struct aes_priv {
 	EVP_CIPHER_CTX		ap_ctx;
-	struct crypto_priv	*ap_hmac;
+	EVP_CIPHER_CTX		ap_mac;
+	struct tc		*ap_hmac;
 };
 
 static void aes_init(struct tc *tc)
@@ -29,11 +31,12 @@ static void aes_init(struct tc *tc)
 	struct aes_priv *ap = crypto_priv_init(tc, sizeof(*ap));
 
 	EVP_CIPHER_CTX_init(&ap->ap_ctx);
+	EVP_CIPHER_CTX_init(&ap->ap_mac);
 
 	/* XXX */
-	_hmac_ops.co_init(tc);
-	ap->ap_hmac  = tc->tc_crypt;
-	tc->tc_crypt = ap;
+	ap->ap_hmac = xmalloc(sizeof(*ap->ap_hmac));
+	ap->ap_hmac->tc_crypt_ops = &_hmac_ops;
+	crypto_init(ap->ap_hmac);
 }
 
 static void aes_finish(struct tc *tc)
@@ -44,9 +47,12 @@ static void aes_finish(struct tc *tc)
 		return;
 
 	EVP_CIPHER_CTX_cleanup(&ap->ap_ctx);
+	EVP_CIPHER_CTX_cleanup(&ap->ap_mac);
 
-	tc->tc_crypt = ap->ap_hmac;
-	_hmac_ops.co_finish(tc);
+	if (ap->ap_hmac) {
+		crypto_finish(ap->ap_hmac);
+		free(ap->ap_hmac);
+	}
 
 	free(ap);
 }
@@ -197,13 +203,20 @@ static void aes_next_iv(struct tc *tc, void *out, int *outlen)
 
 static void aes_set_keys(struct tc *tc, struct tc_keys *keys)
 {
+	struct aes_priv *ap = crypto_priv(tc);
+
 	aes_set_key(tc, keys->tk_enc.s_data, keys->tk_enc.s_len);
+	crypto_set_key(ap->ap_hmac, keys->tk_mac.s_data, keys->tk_mac.s_len);
+
+	assert(keys->tk_ack.s_len >= 16);
+	if (!EVP_EncryptInit(&ap->ap_mac, EVP_aes_128_ecb(),
+			     keys->tk_ack.s_data, NULL))
+		errssl(1, "EVP_EncryptInit()");
 }
 
 static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
                      void *out, int *outlen)
 {
-#define MAC_LEN 20
 	struct aes_priv *ap = crypto_priv(tc);
 	unsigned char lame[64];
 	int l = sizeof(lame);
@@ -213,12 +226,18 @@ static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
 		return;
 	}
 
-	tc->tc_crypt = ap->ap_hmac;
-	_hmac_ops.co_mac(tc, iov, num, iv, lame, &l);
-	tc->tc_crypt = ap;
-
+	crypto_mac(ap->ap_hmac, iov, num, iv, lame, &l);
 	memcpy(out, lame, MAC_LEN);
 	*outlen = MAC_LEN;
+}
+
+static void aes_mac_ack(struct tc *tc, void *data, int len, void *out,
+			int *olen)
+{
+	struct aes_priv *ap = crypto_priv(tc);
+
+	if (!EVP_EncryptUpdate(&ap->ap_mac, out, olen, data, len))
+		errssl(1, "EVP_EncryptUpdate()");
 }
 
 static struct crypt_ops _aes_ops = {
@@ -232,6 +251,7 @@ static struct crypt_ops _aes_ops = {
 	.co_set_key	= aes_set_key,
 	.co_next_iv	= aes_next_iv,
 	.co_set_keys	= aes_set_keys,
+	.co_mac_ack	= aes_mac_ack,
 };
 
 static void __aes_init(void) __attribute__ ((constructor));

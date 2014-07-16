@@ -1358,16 +1358,22 @@ static void compute_mac_opts(struct tc *tc, struct tcphdr *tcp,
 }
 
 static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
-			void *iv, void *out)
+			void *iv, void *out, int dir_in)
 {
 	struct mac_m m;
 	struct iovec iov[32];
 	int num = 0;
 	struct mac_a a;
 	uint8_t *outp;
-	uint8_t *mac = alloca(tc->tc_mac_size);
+	int maca_len = tc->tc_mac_size;
+	uint8_t *mac = alloca(maca_len);
 	int maclen;
 	uint32_t *p1, *p2;
+	uint64_t seq = tc->tc_seq + ntohl(tcp->th_seq);
+	uint64_t ack = tc->tc_ack + ntohl(tcp->th_ack);
+
+	seq -= dir_in ? tc->tc_isn_peer : tc->tc_isn;
+	ack -= dir_in ? tc->tc_isn : tc->tc_isn_peer;
 
 	assert(mac);
 	p2 = (uint32_t*) mac;
@@ -1378,8 +1384,8 @@ static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	m.mm_off   = tcp->th_off;
 	m.mm_flags = tcp->th_flags;
 	m.mm_urg   = tcp->th_urp;
-	m.mm_seqhi = htonl(tc->tc_seq >> 32);
-	m.mm_seq   = tcp->th_seq;
+	m.mm_seqhi = htonl(seq >> 32);
+	m.mm_seq   = htonl(seq & 0xFFFFFFFF);
 
 	iov[num].iov_base   = &m;
 	iov[num++].iov_len  = sizeof(m);
@@ -1414,13 +1420,12 @@ static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	profile_add(2, "compute_mac MACed M");
 
 	/* A struct */
-	a.ma_ackhi = htonl(tc->tc_ack >> 32);
-	a.ma_ack   = tcp->th_ack;
+	a.ma_ackhi = htonl(ack >> 32);
+	a.ma_ack   = htonl(ack & 0xFFFFFFFF);
 
-	iov[0].iov_base  = &a;
-	iov[0].iov_len = sizeof(a);
-
-	crypto_mac(tc, iov, 1, iv, mac, &maclen);
+	memset(mac, 0, maca_len);
+	crypto_mac_ack(tc, &a, sizeof(a), mac, &maca_len);
+	assert(maca_len <= tc->tc_mac_size);
 	profile_add(2, "compute_mac MACed A");
 
 	/* XOR the two */
@@ -1495,7 +1500,7 @@ static int add_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	tom->tom_kind = TCPOPT_MAC;
 	tom->tom_len  = len;
 
-	compute_mac(tc, ip, tcp, NULL, tom->tom_data);
+	compute_mac(tc, ip, tcp, NULL, tom->tom_data, 0);
 
 	return 0;
 }
@@ -1722,6 +1727,9 @@ static int sack_disable(struct tc *tc, struct tcphdr *tcp)
 static int do_tcp_output(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 {
 	int rc = DIVERT_ACCEPT;
+
+	if (tcp->th_flags & TH_SYN)
+		tc->tc_isn = ntohl(tcp->th_seq);
 
 	if (tcp->th_flags == TH_SYN) {
 		if (tc->tc_tcp_state == TCPSTATE_LASTACK) {
@@ -2558,7 +2566,8 @@ static int check_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 		return -1;
 	}
 
-	compute_mac(tc, ip, tcp, tc->tc_mac_ivlen ? tom->tom_data : NULL, mac);
+	compute_mac(tc, ip, tcp, tc->tc_mac_ivlen ? tom->tom_data : NULL,
+		    mac, 1);
 
 	if (memcmp(&tom->tom_data[tc->tc_mac_ivlen], mac, tc->tc_mac_size) != 0)
 		return -2;
@@ -2782,6 +2791,9 @@ static void check_retransmit(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 static int tcp_input_pre(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 {
 	int rc = DIVERT_ACCEPT;
+
+	if (tcp->th_flags & TH_SYN)
+		tc->tc_isn_peer = ntohl(tcp->th_seq);
 
 	if (tcp->th_flags == TH_SYN && tc->tc_tcp_state == TCPSTATE_LASTACK) {
 		tc_finish(tc);

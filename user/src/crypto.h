@@ -25,6 +25,8 @@ struct crypt_ops {
 	void		  (*co_next_iv)(struct tc *tc, void *out, int *outlen);
 	void		  (*co_mac)(struct tc *tc, struct iovec *iov, int num,
 				    void *iv, void *out, int *outlen);
+	void		  (*co_mac_ack)(struct tc *tc, void *data, int len, void
+					*out, int *olen);
 	void		  (*co_encrypt)(struct tc *tc, void *iv, void *data,
 					int len);
 	int		  (*co_decrypt)(struct tc *tc, void *iv, void *data,
@@ -50,6 +52,8 @@ extern void crypto_finish(struct tc *tc);
 extern void crypto_next_iv(struct tc *tc, void *out, int *outlen);
 extern void crypto_mac(struct tc *tc, struct iovec *iov, int num,
 		       void *iv, void *out, int *outlen);
+extern void crypto_mac_ack(struct tc *tc, void *data, int len, void *out,
+			   int *olen);
 extern void crypto_encrypt(struct tc *tc, void *iv, void *data, int len);
 extern int  crypto_decrypt(struct tc *tc, void *iv, void *data, int len);
 extern void crypto_register(struct crypt_ops *ops);
