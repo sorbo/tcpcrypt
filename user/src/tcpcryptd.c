@@ -451,19 +451,10 @@ void tcpcryptd(void)
 
 static void do_set_preference(int id, int type)
 {
-	struct crypt_ops *c;
-
 	if (!id)
 		return;
 
-	c = crypto_find_cipher(type, id);
-	if (!c)
-		err(1, "Unknown cipher/mac ID %d", id);
-
-	if (!c->co_crypt_prop)
-		err(1, "life sux");
-
-	c->co_crypt_prop(NULL)->cp_preference = 666;
+	assert(!"implement");
 }
 
 static void setup_tcpcrypt(void)
@@ -471,11 +462,10 @@ static void setup_tcpcrypt(void)
 	struct cipher_list *c;
 
 	/* set cipher preference */
-	do_set_preference(_conf.cf_mac, TYPE_MAC);
 	do_set_preference(_conf.cf_cipher, TYPE_SYM);
 
 	/* add ciphers */
-	c = crypto_cipher_list();
+	c = crypt_cipher_list();
 
 	while (c) {
 		tcpcrypt_register_cipher(c);

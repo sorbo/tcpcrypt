@@ -1344,7 +1344,8 @@ static void compute_mac(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	/* IV */
 	if (tc->tc_mac_ivlen) {
 		if (!iv) {
-			crypto_next_iv(tc, out, &tc->tc_mac_ivlen);
+			assert(!"implement");
+//			crypto_next_iv(tc, out, &tc->tc_mac_ivlen);
 			iv = out;
 			out = (void*) ((unsigned long) out + tc->tc_mac_ivlen);
 		}
@@ -1520,8 +1521,9 @@ static void do_rekey(struct tc *tc)
 	assert(!tc->tc_key_next.tc_alg_rx);
 
 	tc->tc_keygen++;
-
-	crypto_mac_set_key(tc, tc->tc_mk.s_data, tc->tc_mk.s_len);
+	
+	assert(!"implement");
+//	crypto_mac_set_key(tc, tc->tc_mk.s_data, tc->tc_mk.s_len);
 
 	compute_mk(tc, &tc->tc_mk);
 	compute_keys(tc, &tc->tc_key_next);
@@ -2552,11 +2554,12 @@ static struct tco_rekeystream *rekey_input(struct tc *tc, struct ip *ip,
 		tc->tc_rekey_seq = ntohl(tr->tr_seq);
 
 		if (tc->tc_rekey_seq != ntohl(tcp->th_seq)) {
-			unsigned char dummy[] = "a";
-			void *iv = &tr->tr_seq;
+			assert(!"implement");
+//			unsigned char dummy[] = "a";
+//			void *iv = &tr->tr_seq;
 
 			/* XXX assuming stream, and seq as IV */
-			crypto_decrypt(tc, iv, dummy, sizeof(dummy));
+//			crypto_decrypt(tc, iv, dummy, sizeof(dummy));
 		}
 
 		/* XXX assert that MAC checks out, else revert */
@@ -3268,22 +3271,17 @@ static int get_pref(struct crypt_ops *ops)
 {
 	int pref = 0;
 
-	if (ops && ops->co_crypt_prop)
-		pref = ops->co_crypt_prop(NULL)->cp_preference;
+	/* XXX implement */
 
 	return pref;
 }
 
 static void do_register_cipher(struct ciphers *c, struct cipher_list *cl)
 {
-	struct crypt_ops *ops = cl->c_cipher;
 	struct ciphers *x;
-	int pref;
-
-	pref = get_pref(ops);
+	int pref = 0;
 
 	x = xmalloc(sizeof(*x));
-	x->c_crypt  = ops;
 	x->c_cipher = cl;
 
 	while (c->c_next) {
@@ -3299,8 +3297,7 @@ static void do_register_cipher(struct ciphers *c, struct cipher_list *cl)
 
 void tcpcrypt_register_cipher(struct cipher_list *c)
 {
-	struct crypt_ops *ops = c->c_cipher;
-	int type = ops ? ops->co_type() : c->c_type;
+	int type = c->c_type;
 
 	switch (type) {
 	case TYPE_PKEY:
@@ -3373,16 +3370,7 @@ static void do_init_ciphers(struct ciphers *c)
 			}
 		} else if (!_conf.cf_dummy) {
 			/* standard path */
-
-			if (c->c_cipher->c_ctr) {
-				init_cipher(c);
-			} else {
-				tc->tc_crypt_ops = c->c_crypt;
-				tc->tc_crypt	 = NULL;
-
-				crypto_init(tc);
-				crypto_finish(tc);
-			}
+			init_cipher(c);
 		}
 
 		prev = c;

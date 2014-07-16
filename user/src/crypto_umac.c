@@ -14,6 +14,7 @@
 #include "crypto.h"
 #include "profile.h"
 
+#if 0
 #define MAC_SIZE	8
 
 static struct tc_scipher _umac_spec =
@@ -118,3 +119,4 @@ static void __umac_init(void)
 {
 //	crypto_register(&_umac_ops);
 }
+#endif

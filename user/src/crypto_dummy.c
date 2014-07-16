@@ -11,6 +11,7 @@
 #include "tcpcryptd.h"
 #include "crypto.h"
 
+#if 0
 #define MAC_SIZE	20
 
 static struct tc_cipher_spec _dummy_pkey_spec =
@@ -183,3 +184,4 @@ static void __dummy_init(void)
 	crypto_register(&_dummy_sym);
 	if (0) crypto_register(&_dummy_mac);
 }
+#endif
