@@ -636,7 +636,7 @@ static void run_network_test(struct network_test *t)
 
 static void test_network(void)
 {
-	struct hostent *he = gethostbyname("check.tcpcrypt.org");
+	struct hostent *he = gethostbyname(_conf.cf_test_server);
 	struct in_addr **addr;
 
 	if (!he)
@@ -965,6 +965,7 @@ static void usage(char *prog)
 	       "-R\tRSA client hack\n"
 	       "-i\tdisable timers\n"
 	       "-f\tdisable network test\n"
+	       "-s\t<network test server>\n"
 	       , prog);
 
 	printf("\nTests:\n");
@@ -982,11 +983,12 @@ int main(int argc, char *argv[])
 		errx(1, "WSAStartup()");
 #endif
 
-	_conf.cf_port = 666;
-	_conf.cf_ctl  = TCPCRYPT_CTLPATH;
-	_conf.cf_test = -1;
+	_conf.cf_port 	     = 666;
+	_conf.cf_ctl  	     = TCPCRYPT_CTLPATH;
+	_conf.cf_test 	     = -1;
+	_conf.cf_test_server = "check.tcpcrypt.org";
 
-	while ((ch = getopt(argc, argv, "hp:vdu:camnPt:T:S:Dx:NC:M:Rif"))
+	while ((ch = getopt(argc, argv, "hp:vdu:camnPt:T:S:Dx:NC:M:Rifs:"))
 	       != -1) {
 		switch (ch) {
 		case 'i':
@@ -1067,6 +1069,10 @@ int main(int argc, char *argv[])
 
 		case 'f':
 			_conf.cf_disable_network_test = 1;
+			break;
+
+		case 's':
+			_conf.cf_test_server = optarg;
 			break;
 
 		case 'h':

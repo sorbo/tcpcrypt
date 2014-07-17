@@ -68,6 +68,7 @@ struct conf {
 	int		cf_rsa_client_hack;
 	int		cf_disable_timers;
 	int		cf_disable_network_test;
+	char		*cf_test_server;
 };
 
 extern struct conf _conf;

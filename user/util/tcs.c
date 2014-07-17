@@ -201,6 +201,7 @@ static void pwn(void)
 	add_server(80);
 	add_server(7777);
 
+	tzset();
 	chroot("/tmp");
 	setgid(666);
 	setuid(666);
