@@ -9,7 +9,9 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <openssl/err.h>
+#include <netdb.h>
 
 #include "inc.h"
 #include "tcpcrypt_ctl.h"
@@ -40,6 +42,19 @@ struct timer {
 	int		t_id;
 };
 
+struct network_test {
+	int			nt_port;
+	int			nt_proto;
+	int			nt_req;
+	int			nt_s;
+	int			nt_state;
+	int			nt_err;
+	int			nt_last_state;
+	time_t			nt_start;
+	struct tcpcrypt_ctl	nt_ctl;
+	struct network_test	*nt_next;
+};
+
 static struct state {
 	struct backlog_ctl	s_backlog_ctl;
 	int			s_ctl;
@@ -52,6 +67,9 @@ static struct state {
 	int			s_time_set;
 	packet_hook		s_post_packet_hook;
 	packet_hook		s_pre_packet_hook;
+	struct network_test	s_network_tests;
+	void			*s_nt_timer;
+	struct in_addr		s_nt_ip;
 } _state;
 
 typedef void (*test_cb)(void);
@@ -373,12 +391,355 @@ static void dispatch_timers(void)
 	}
 }
 
+static void add_test(int port, int proto, int req)
+{
+	struct network_test *t = xmalloc(sizeof(*t));
+	struct network_test *cur = &_state.s_network_tests;
+
+	memset(t, 0, sizeof(*t));
+
+	t->nt_port  = port;
+	t->nt_proto = proto;
+	t->nt_req   = req;
+
+	while (cur->nt_next)
+		cur = cur->nt_next;
+
+	cur->nt_next = t;
+}
+
+static void test_port(int port)
+{
+	add_test(port, TEST_TCP, 0);
+	add_test(port, TEST_TCP, 1);
+	add_test(port, TEST_CRYPT, 2);
+}
+
+static void prepare_ctl(struct network_test *nt)
+{
+	struct sockaddr_in s_in;
+	struct tcpcrypt_ctl *ctl = &nt->nt_ctl;
+	int s = nt->nt_s;
+	socklen_t sl = sizeof(s_in);
+
+	memset(&s_in, 0, sizeof(s_in));
+	s_in.sin_family      = AF_INET;
+	s_in.sin_addr.s_addr = INADDR_ANY;
+	s_in.sin_port        = htons(0);
+
+	if (bind(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
+		err(1, "bind()");
+
+	if (getsockname(s, (struct sockaddr*) &s_in, &sl) == -1)
+		err(1, "getsockname()");
+
+	ctl->tcc_src   = s_in.sin_addr;
+	ctl->tcc_sport = s_in.sin_port;
+}
+
+static void test_connect(struct network_test *t)
+{
+	int s;
+	struct sockaddr_in s_in;
+	int flags;
+	socklen_t sl = sizeof(s_in);
+
+	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+		err(1, "socket()");
+
+	t->nt_s = s;
+
+	prepare_ctl(t);
+
+	if (t->nt_proto == TEST_TCP) {
+		int off = 0;
+
+		if (tcpcryptd_setsockopt(&t->nt_ctl, TCP_CRYPT_ENABLE, &off,
+					 sizeof(off)) == -1)
+			errx(1, "tcpcryptd_setsockopt()");
+	} else {
+		int one = 1;
+		assert(t->nt_proto == TEST_CRYPT);
+		if (tcpcryptd_setsockopt(&t->nt_ctl, TCP_CRYPT_NOCACHE, &one,
+					 sizeof(one)) == -1)
+			errx(1, "tcpcryptd_setsockopt()");
+	}
+
+	if ((flags = fcntl(s, F_GETFL, 0)) == -1)
+		err(1, "fcntl()");
+
+	if (fcntl(s, F_SETFL, flags | O_NONBLOCK) == -1)
+		err(1, "fcntl()");
+
+	memset(&s_in, 0, sizeof(s_in));
+
+	s_in.sin_family      = AF_INET;
+	s_in.sin_port        = htons(t->nt_port);
+	s_in.sin_addr        = _state.s_nt_ip;
+
+	if (connect(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1) {
+		if (errno != EINPROGRESS)
+			err(1, "connect()");
+	}
+
+	t->nt_ctl.tcc_dst   = s_in.sin_addr;
+	t->nt_ctl.tcc_dport = s_in.sin_port;
+
+	if (getsockname(s, (struct sockaddr*) &s_in, &sl) == -1)
+		err(1, "getsockname()");
+
+	t->nt_ctl.tcc_src = s_in.sin_addr;
+
+	t->nt_state = TEST_STATE_CONNECTING;
+	t->nt_start = time(NULL);
+}
+
+static void test_finish(struct network_test *t, int rc)
+{
+	t->nt_last_state = t->nt_state;
+	t->nt_err        = rc;
+	t->nt_state      = TEST_STATE_DONE;
+
+	close(t->nt_s);
+
+	printf("Test result: port %d crypt %d req %d state %d err %d\n",
+	       t->nt_port,
+	       t->nt_proto == TEST_CRYPT ? 1 : 0,
+	       t->nt_req,
+	       t->nt_last_state,
+	       t->nt_err);
+}
+
+static void test_success(struct network_test *t)
+{
+	t->nt_state = TEST_SUCCESS;
+	test_finish(t, 0);
+}
+
+static void test_connecting(struct network_test *t)
+{
+	int s = t->nt_s;
+	struct timeval tv;
+	fd_set fds;
+	int rc;
+	socklen_t sz = sizeof(rc);
+	char *buf = NULL;
+	unsigned char sid[1024];
+	unsigned int sidlen = sizeof(sid);
+
+	tv.tv_sec  = 0;
+	tv.tv_usec = 0;
+
+	FD_ZERO(&fds);
+	FD_SET(s, &fds);
+
+	if (select(s + 1, NULL, &fds, NULL, &tv) == -1)
+		err(1, "select()");
+
+	if (!FD_ISSET(s, &fds))
+		return;
+
+	if (getsockopt(s, SOL_SOCKET, SO_ERROR, &rc, &sz) == -1)
+		err(1, "getsockopt()");
+
+	if (rc != 0) {
+		test_finish(t, rc);
+		return;
+	}
+
+	rc = tcpcryptd_getsockopt(&t->nt_ctl, TCP_CRYPT_SESSID, sid, &sidlen);
+
+	if (rc == EBUSY)
+		return;
+
+	if (t->nt_proto == TEST_TCP && rc != -1) {
+		test_finish(t, TEST_ERR_UNEXPECTED_CRYPT);
+		return;
+	}
+
+	if (t->nt_proto == TEST_CRYPT && rc == -1) {
+		test_finish(t, TEST_ERR_NO_CRYPT);
+		return;
+	}
+
+	assert(t->nt_req < (sizeof(REQS) / sizeof(*REQS)));
+	buf = REQS[t->nt_req];
+
+	if (write(s, buf, strlen(buf)) != strlen(buf))
+		err(1, "write()");
+
+	t->nt_state = TEST_STATE_REQ_SENT;
+}
+
+static void test_req_sent(struct network_test *t)
+{
+	int s = t->nt_s;
+	fd_set fds;
+	struct timeval tv;
+	char buf[1024];
+	int rc;
+
+	FD_ZERO(&fds);
+	FD_SET(s, &fds);
+
+	tv.tv_sec  = 0;
+	tv.tv_usec = 0;
+
+	if (select(s + 1, &fds, NULL, NULL, &tv) == -1)
+		err(1, "select()");
+
+	if (!FD_ISSET(s, &fds))
+		return;
+
+	rc = read(s, buf, sizeof(buf) - 1);
+	if (rc == -1) {
+		test_finish(t, errno);
+		return;
+	}
+
+	if (rc == 0) {
+		test_finish(t, TEST_ERR_DISCONNECT);
+		return;
+	}
+
+	buf[rc] = 0;
+
+	if (strncmp(buf, TEST_REPLY, strlen(TEST_REPLY)) != 0) {
+		test_finish(t, TEST_ERR_BADINPUT);
+		return;
+	}
+
+	test_success(t);
+}
+
+static void run_network_test(struct network_test *t)
+{
+	if (t->nt_start && (time(NULL) - t->nt_start) > 5) {
+		test_finish(t, TEST_ERR_TIMEOUT);
+		return;
+	}
+
+	switch (t->nt_state) {
+	case TEST_STATE_START:
+		test_connect(t);
+		break;
+
+	case TEST_STATE_CONNECTING:
+		test_connecting(t);
+		break;
+
+	case TEST_STATE_REQ_SENT:
+		test_req_sent(t);
+		break;
+	}
+}
+
+static void test_network(void)
+{
+	struct hostent *he = gethostbyname("check.tcpcrypt.org");
+	struct in_addr **addr;
+
+	if (!he)
+		return;
+
+	addr = (struct in_addr**) he->h_addr_list;
+
+	if (!addr[0])
+		return;
+
+	_state.s_nt_ip = *addr[0];
+
+	xprintf(XP_ALWAYS, "Testing network via %s\n",
+		inet_ntoa(_state.s_nt_ip));
+
+	test_port(80);
+	test_port(7777);
+}
+
+static void retest_network(void* ignored)
+{
+	_conf.cf_disable = 0;
+	test_network();
+}
+
+static void test_results(void)
+{
+	struct network_test *t = _state.s_network_tests.nt_next;
+	int tot = 0;
+	int fail = 0;
+
+	xprintf(XP_ALWAYS, "Tests done!");
+
+	while (t) {
+		tot++;
+
+		if (t->nt_last_state != TEST_SUCCESS) {
+			fail++;
+			xprintf(XP_ALWAYS, " %d", tot);
+		}
+
+		t = t->nt_next;
+	}
+
+	if (fail) {
+		unsigned long mins = 30;
+		unsigned long timeout = 1000 * 1000 * 60 * mins;
+
+		xprintf(XP_ALWAYS, " failed [%d/%d]!\n", fail, tot);
+
+		t = _state.s_network_tests.nt_next;
+		if (t->nt_last_state == TEST_SUCCESS) {
+			xprintf(XP_ALWAYS,
+			        "Disabling tcpcrypt for %lu minutes\n", mins);
+
+			_conf.cf_disable = 1;
+			_state.s_nt_timer = add_timer(timeout, retest_network,
+					  	      NULL);
+		}
+	} else {
+		xprintf(XP_ALWAYS, " All passed\n");
+		/* XXX retest later? */
+	}
+}
+
+static int run_network_tests(void)
+{
+	struct network_test *t = _state.s_network_tests.nt_next;
+
+	while (t) {
+		if (t->nt_state != TEST_STATE_DONE) {
+			run_network_test(t);
+			return 1;
+		}
+
+		t = t->nt_next;
+	}
+
+	t = _state.s_network_tests.nt_next;
+	if (t) {
+		test_results();
+
+		while (t) {
+			struct network_test *next = t->nt_next;
+			free(t);
+			t = next;
+		}
+
+		_state.s_network_tests.nt_next = NULL;
+	}
+
+	return 0;
+}
+
 static void do_cycle(void)
 {
 	fd_set fds;
 	int max;
 	struct timer *t;
 	struct timeval tv, *tvp = NULL;
+	int testing = 0;
+
+	testing = run_network_tests();
 
 	FD_ZERO(&fds);
 	FD_SET(_state.s_divert, &fds);
@@ -399,6 +760,12 @@ static void do_cycle(void)
 		tvp = NULL;
 
 	_state.s_time_set = 0;
+
+	if (testing && !tvp) {
+		tv.tv_sec = 0;
+		tv.tv_usec = 1000;
+		tvp = &tv;
+	}
 
 	if (select(max + 1, &fds, NULL, NULL, tvp) == -1) {
 		if (errno == EINTR)
@@ -444,6 +811,9 @@ void tcpcryptd(void)
 	drop_privs();
 
 	printf("Running\n");
+
+	if (!_conf.cf_disable && !_conf.cf_disable_network_test)
+		test_network();
 
 	while (1)
 		do_cycle();
@@ -594,6 +964,7 @@ static void usage(char *prog)
 	       "-M\t<preferred MAC>\n"
 	       "-R\tRSA client hack\n"
 	       "-i\tdisable timers\n"
+	       "-f\tdisable network test\n"
 	       , prog);
 
 	printf("\nTests:\n");
@@ -615,7 +986,7 @@ int main(int argc, char *argv[])
 	_conf.cf_ctl  = TCPCRYPT_CTLPATH;
 	_conf.cf_test = -1;
 
-	while ((ch = getopt(argc, argv, "hp:vdu:camnPt:T:S:Dx:NC:M:Ri")) 
+	while ((ch = getopt(argc, argv, "hp:vdu:camnPt:T:S:Dx:NC:M:Rif"))
 	       != -1) {
 		switch (ch) {
 		case 'i':
@@ -692,6 +1063,10 @@ int main(int argc, char *argv[])
 
 		case 'v':
 			_conf.cf_verbose++;
+			break;
+
+		case 'f':
+			_conf.cf_disable_network_test = 1;
 			break;
 
 		case 'h':
