@@ -31,12 +31,15 @@ struct crypt {
 	void	(*c_expand)(struct crypt *c, uint8_t tag, int len, void *out);
 	int     (*c_encrypt)(struct crypt *c, void *iv, void *data, int len);
 	int	(*c_decrypt)(struct crypt *c, void *iv, void *data, int len);
+	int	(*c_compute_key)(struct crypt *c, void *out);
 };
 
 extern struct crypt *crypt_HMAC_SHA256_new(void);
 extern struct crypt *crypt_HKDF_SHA256_new(void);
-extern struct crypt *crypt_RSA_new(void);
 extern struct crypt *crypt_AES_new(void);
+extern struct crypt *crypt_RSA_new(void);
+extern struct crypt *crypt_ECDHE256_new(void);
+extern struct crypt *crypt_ECDHE521_new(void);
 
 extern struct crypt *crypt_init(int sz);
 extern void crypt_register(int type, unsigned int id, crypt_ctr ctr);
@@ -90,6 +93,11 @@ static inline int crypt_decrypt(struct crypt *c, void *iv, void *data, int len)
 	return c->c_decrypt(c, iv, data, len);
 }
 
+static inline int crypt_compute_key(struct crypt *c, void *out)
+{
+	return c->c_compute_key(c, out);
+}
+
 static inline void *crypt_new(crypt_ctr ctr)
 {
 	crypt_ctr *r = ctr();
@@ -110,6 +118,7 @@ struct crypt_pub {
 	int	     cp_k_len;
 	int	     cp_max_key;
 	int	     cp_cipher_len;
+	int	     cp_key_agreement;
 };
 
 static inline void crypt_pub_destroy(struct crypt_pub *cp)

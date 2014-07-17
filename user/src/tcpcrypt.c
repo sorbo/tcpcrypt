@@ -2159,12 +2159,12 @@ static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey, void *key,
 }
 
 static void compute_ss(struct tc *tc,
-		       void *ns, int nsl,
+		       void *pms, int pmsl,
 		       void *kc, int kcl,
 		       void *nc, int ncl,
 		       void *kxs, int kxsl)
 {
-	struct iovec iov[5];
+	struct iovec iov[6];
 
 	profile_add(1, "compute ss in");
 
@@ -2182,6 +2182,9 @@ static void compute_ss(struct tc *tc,
 
 	iov[4].iov_base = kxs;
 	iov[4].iov_len  = kxsl;
+
+	iov[5].iov_base = pms;
+	iov[5].iov_len  = pmsl;
 
 	crypt_set_key(tc->tc_crypt_pub->cp_hkdf, nc, ncl);
 
@@ -2211,6 +2214,8 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	void *key;
 	int klen;
 	int cl;
+	void *pms;
+	int pmsl;
 
 	tcs = find_subopt(tcp, TCOP_INIT1);
 	if (!tcs)
@@ -2264,8 +2269,18 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 
 	assert(cl <= kxs_len); /* XXX too late to check */
 
+	pms  = tc->tc_nonce;
+	pmsl = tc->tc_nonce_len;
+
+	if (tc->tc_crypt_pub->cp_key_agreement) {
+		pms = alloca(1024);
+		pmsl = crypt_compute_key(tc->tc_crypt_pub->cp_pub, pms);
+
+		assert(pmsl < 1024); /* XXX */
+	}
+
 	compute_ss(tc,
-		   tc->tc_nonce, tc->tc_nonce_len,
+		   pms, pmsl,
 		   key, klen,
 		   nonce, nonce_len,
 		   kxs, cl);

@@ -8,6 +8,8 @@
 
 enum {
 	TC_CIPHER_OAEP_RSA_3 = 0x0100,
+	TC_CIPHER_ECDHE_P256 = 0x0200,
+	TC_CIPHER_ECDHE_P521 = 0x0201,
 };
 
 enum {
