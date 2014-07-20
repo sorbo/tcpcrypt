@@ -91,7 +91,7 @@ struct tcphdr
     u_int16_t th_win;           /* window */
     u_int16_t th_sum;           /* checksum */
     u_int16_t th_urp;           /* urgent pointer */
-};
+} __attribute__ ((gcc_struct));
 
 # define TCPOPT_EOL             0
 # define TCPOPT_NOP             1
@@ -131,7 +131,7 @@ struct ip
     u_int8_t ip_p;                      /* protocol */
     u_short ip_sum;                     /* checksum */
     struct in_addr ip_src, ip_dst;      /* source and dest address */
-  };
+  } __attribute__ ((gcc_struct));
 
 struct iovec
   {

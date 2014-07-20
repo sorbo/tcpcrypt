@@ -11,8 +11,8 @@
 #include <err.h>
 #include <sys/uio.h>
 #else /* __WIN32__ */
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2tcpip.h>
 #include "contrib/win_port.h"
 #endif /* ! __WIN32__ */

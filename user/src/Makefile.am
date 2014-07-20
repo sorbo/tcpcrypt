@@ -18,7 +18,7 @@ endif
 
 if OS_MINGW
 tcpcryptd_SOURCES += mingw.c res.rc cygwin.c
-tcpcryptd_LDADD	  += -lwsock32 -liphlpapi
+tcpcryptd_LDADD	  += -lwsock32 -liphlpapi -lWinDivert
 else
 tcpcryptd_SOURCES += unix.c
 endif

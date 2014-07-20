@@ -94,11 +94,16 @@ static void set_ctl_sockaddr(union sockaddr_u *ss,
 	} else { // AF_INET6
 		if (IN6_IS_ADDR_V4COMPAT(&ss->in6.sin6_addr) ||
 		    IN6_IS_ADDR_V4MAPPED(&ss->in6.sin6_addr)) {
+#ifdef __WIN32__
+			assert(!"not implemented");
+			abort();
+#else
 #if !defined s6_addr32
 # define s6_addr32 __u6_addr.__u6_addr32
 #endif
 			*ctl_addr = ss->in6.sin6_addr.s6_addr32[3];
 			*ctl_port = ss->in6.sin6_port;
+#endif /* __WIN32__ */
 		} else {
 			/* TODO: add IPv6 support */
 			printf("Non-IPv4-compatible IPv6 addresses not supported."

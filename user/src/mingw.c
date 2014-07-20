@@ -3,14 +3,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "inc.h"
 #include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
 
-#define UINT8   unsigned char   // XXX: Mingw workaround
-#define UINT16  unsigned short
-#include <divert.h>
+#include <windivert.h>
 
 #define MAC_SIZE	14
 
@@ -74,7 +73,8 @@ int do_divert_open(void)
 		"((outbound and tcp.DstPort == 80) or "
 		" (inbound and tcp.SrcPort == 80)) and "
 		"ip.DstAddr != 127.0.0.1 and "
-		"ip.SrcAddr != 127.0.0.1");
+		"ip.SrcAddr != 127.0.0.1",
+		WINDIVERT_LAYER_NETWORK, 0, 0);
 
 	if (_h == INVALID_HANDLE_VALUE)
 		err(1, "DivertOpen()");

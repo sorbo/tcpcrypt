@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 
+#include <winsock2.h>
 #include <windows.h>
 #include <iphlpapi.h>
 
@@ -11,9 +13,7 @@
 #include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
 
-#define UINT8   unsigned char   // XXX: Mingw workaround
-#define UINT16  unsigned short
-#include <divert.h>
+#include <windivert.h>
 
 #define MAC_SIZE 14
 
@@ -55,7 +55,7 @@ static void do_divert_next_packet(unsigned char *buf, int rc)
 	if (rc < MAC_SIZE)
 		errx(1, "short read %d", rc);
 
-	if (addr->Direction == DIVERT_PACKET_DIRECTION_INBOUND)
+	if (addr->Direction == WINDIVERT_DIRECTION_INBOUND)
 		flags |= DF_IN;
 
 	// XXX ethernet padding on short packets?  (46 byte minimum)

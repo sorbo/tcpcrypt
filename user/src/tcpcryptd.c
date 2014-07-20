@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <stdint.h>
 #include <openssl/err.h>
 
 #include "inc.h"
