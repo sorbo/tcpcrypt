@@ -20,55 +20,21 @@
             <Component Id='tcpcrypt' Guid='6660071f-d011-4d68-b2ed-1e6c19b1ccdd'>
 	     <RemoveFolder Id='tcpcrypt' On='uninstall' />
               <File Id='tcpcryptd' Name='tcpcryptd.exe' DiskId='1'
-	            Source='tcpcryptd.exe' />
+	            Source='../../user/src/.libs/tcpcryptd.exe' />
 
               <File Id='tcnetstat' Name='tcnetstat.exe' DiskId='1'
-	      	Source='tcnetstat.exe' />
+	      	Source='../../user/util/.libs/tcnetstat.exe' />
 
-              <File Id='libcrypto_8' Name='libeay32.dll' DiskId='1' Source='libcrypto-8.dll' />
+              <File Id='libcrypto_8' Name='libeay32.dll' DiskId='1'
+	      	    Source='libeay32.dll' />
 
-              <File Id='zlib1' Name='zlib1.dll' DiskId='1' Source='zlib1.dll' />
+              <File Id='divert' Name='WinDivert.dll' DiskId='1'
+	      	    Source='WinDivert.dll'/>
 
-              <File Id='divert_dll' Name='divert.dll' DiskId='1' Source='divert/x86/divert.dll'/>
-
-              <File Id='divert_inf' Name='divert.inf' DiskId='1' Source='divert/divert.inf'/>
-
-              <File Id='WdfCoInstaller01009' Name='WdfCoInstaller01009.dll' DiskId='1' Source='divert/x86/WdfCoInstaller01009.dll'/>
-
+              <File Id='divert64' Name='WinDivert64.sys' DiskId='1'
+	      	    Source='WinDivert64.sys'/>
             </Component>
 
-            <Component Id='tcpcrypt_driver64' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc64'>
-	    	<Condition>VersionNT64</Condition>
-              <File Id='tcpcrypt64' Name='tcpcrypt.exe' DiskId='1'
-	      	    Source='tcpcrypt64.exe' KeyPath='yes'>
-			<Shortcut Id="start64" Directory="ProgramMenuDir"
-				  Name="tcpcrypt"
-				  WorkingDirectory='INSTALLDIR'
-				  Icon="tcpcrypt.exe" IconIndex="0"
-				  Advertise="yes" />
-	      </File>
-
-              <File Id='divert64' Name='divert.sys' DiskId='1'
-                    Source='divert/amd64/divert.sys'/>
-
-            </Component>
-
-            <Component Id='tcpcrypt_driver32' Guid='6660071f-d011-4d68-b2ed-1e6c19b1cc32'>
-	    	<Condition>NOT VersionNT64</Condition>
-
-              <File Id='tcpcrypt32' Name='tcpcrypt.exe' DiskId='1'
-	      	    Source='tcpcrypt32.exe' KeyPath='yes'>
-			<Shortcut Id="start32" Directory="ProgramMenuDir"
-				  Name="tcpcrypt"
-				  WorkingDirectory='INSTALLDIR'
-				  Icon="tcpcrypt.exe" IconIndex="0"
-				  Advertise="yes" />
-	      </File>
-
-              <File Id='divert32' Name='divert.sys' DiskId='1'
-                    Source='divert/x86/divert.sys'/>
-
-            </Component>
         </Directory>
       </Directory>
 
@@ -82,8 +48,6 @@
 
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id='tcpcrypt' />
-      <ComponentRef Id='tcpcrypt_driver64' />
-      <ComponentRef Id='tcpcrypt_driver32' />
     </Feature>
 
 	<Property Id='TCPCRYPT'>666</Property>
