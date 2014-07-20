@@ -21,6 +21,13 @@ rename `libeay32.dll` to `libcrypto.dll` in the root OpenSSL folder (that you
 just installed into). There's almost certainly a cleaner way to do this, but
 this is the quickest way.
 
+tcpcrypt depends on WinDivert:
+	
+	http://reqrypt.org/windivert.html
+
+You'll have to supply paths to header files and WinDivert.dll when compiling
+(modify CFLAGS and LDFLAGS as above).
+
 Optional: running `make install` will install `libtcpcrypt` and tcpcrypt
 headers, for building apps that use tcpcrypt's session ID.
 
@@ -28,21 +35,15 @@ headers, for building apps that use tcpcrypt's session ID.
 Installing
 ==========
 
-The Windows implementation of tcpcrypt has two components: the kernel divert
+The Windows implementation of tcpcrypt has two components: the third-party kernel divert
 socket driver and the userland daemon.
 
 Installing the kernel divert socket driver
 ------------------------------------------
 
-1. Open the Properties window of your network interface
-2. Click "Install..."
-3. Choose "Service", click "Add...", and then "Have Disk..."
-4. Browse to the tcpcrypt/kernel/win directory (with netsf.inf), click "Open", and
-   then click "OK"
-5. With "Passthru Driver" selected, click "OK"
+http://reqrypt.org/windivert.html
 
-Note: Installing this driver will disrupt existing connections. You can easily
-enable and disable it from your network interface's Properties window.
+Just place WinDivert32.sys and WinDirver64.sys in the directory of tcpcrypt.
 
 Getting the userland daemon
 ---------------------------
