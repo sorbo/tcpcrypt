@@ -8,7 +8,7 @@
 
 #include "inc.h"
 #include "tcpcrypt.h"
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "tcpcryptd.h"
 #include "crypto.h"
 #include "profile.h"

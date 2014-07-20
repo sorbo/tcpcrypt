@@ -10,7 +10,7 @@
 #include "tcpcryptd.h"
 #include "crypto.h"
 #include "profile.h"
-#include "divert.h"
+#include "tcpcrypt_divert.h"
 #include "test.h"
 
 static struct state {
