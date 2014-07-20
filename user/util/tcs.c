@@ -13,6 +13,8 @@
 #include "src/tcpcrypt.h"
 #include "src/tcpcrypt_ctl.h"
 
+static char *_bind_ip = "0.0.0.0";
+
 enum {
 	TYPE_CLIENT = 0,
 	TYPE_SERVER,
@@ -61,7 +63,7 @@ static void add_server(int port)
 
 	memset(&s_in, 0, sizeof(s_in));
 
-	s_in.sin_addr.s_addr = INADDR_ANY;
+	s_in.sin_addr.s_addr = inet_addr(_bind_ip);
 	s_in.sin_port        = htons(port);
 
 	if (bind(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1)
@@ -212,6 +214,12 @@ static void pwn(void)
 
 int main(int argc, char *argv[])
 {
+	if (argc > 1) {
+		_bind_ip = argv[1];
+
+		printf("Binding to %s\n", _bind_ip);
+	}
+
 	pwn();
 	exit(0);
 }
