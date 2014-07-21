@@ -974,6 +974,7 @@ static void usage(char *prog)
 	       "-i\tdisable timers\n"
 	       "-f\tdisable network test\n"
 	       "-s\t<network test server>\n"
+	       "-V\tshow version\n"
 	       , prog);
 
 	printf("\nTests:\n");
@@ -996,7 +997,7 @@ int main(int argc, char *argv[])
 	_conf.cf_test 	     = -1;
 	_conf.cf_test_server = "check.tcpcrypt.org";
 
-	while ((ch = getopt(argc, argv, "hp:vdu:camnPt:T:S:Dx:NC:M:Rifs:"))
+	while ((ch = getopt(argc, argv, "hp:vdu:camnPt:T:S:Dx:NC:M:Rifs:V"))
 	       != -1) {
 		switch (ch) {
 		case 'i':
@@ -1074,6 +1075,10 @@ int main(int argc, char *argv[])
 		case 'v':
 			_conf.cf_verbose++;
 			break;
+
+		case 'V':
+			printf("tcpcrypt version %s\n", TCPCRYPT_VERSION);
+			exit(0);
 
 		case 'f':
 			_conf.cf_disable_network_test = 1;

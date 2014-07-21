@@ -4,6 +4,8 @@
 #include <tcpcrypt/tcpcrypt.h>
 #include "tcpcrypt_ctl.h"
 
+#define TCPCRYPT_VERSION	"0.2"
+
 #define TC_DUMMY	0x69
 
 enum {
