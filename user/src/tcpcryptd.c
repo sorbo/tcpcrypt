@@ -552,6 +552,12 @@ static void test_connecting(struct network_test *t)
 	if (rc == EBUSY)
 		return;
 
+	assert(t->nt_req < (sizeof(REQS) / sizeof(*REQS)));
+	buf = REQS[t->nt_req];
+
+	if (write(s, buf, strlen(buf)) != strlen(buf))
+		err(1, "write()");
+
 	if (t->nt_proto == TEST_TCP && rc != -1) {
 		test_finish(t, TEST_ERR_UNEXPECTED_CRYPT);
 		return;
@@ -561,12 +567,6 @@ static void test_connecting(struct network_test *t)
 		test_finish(t, TEST_ERR_NO_CRYPT);
 		return;
 	}
-
-	assert(t->nt_req < (sizeof(REQS) / sizeof(*REQS)));
-	buf = REQS[t->nt_req];
-
-	if (write(s, buf, strlen(buf)) != strlen(buf))
-		err(1, "write()");
 
 	t->nt_state = TEST_STATE_REQ_SENT;
 }
