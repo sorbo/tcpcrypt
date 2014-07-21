@@ -50,6 +50,8 @@ struct network_test {
 	int			nt_state;
 	int			nt_err;
 	int			nt_last_state;
+	int			nt_flags;
+	int			nt_crypt;
 	time_t			nt_start;
 	struct tcpcrypt_ctl	nt_ctl;
 	struct network_test	*nt_next;
@@ -502,12 +504,14 @@ static void test_finish(struct network_test *t, int rc)
 
 	close(t->nt_s);
 
-	printf("Test result: port %d crypt %d req %d state %d err %d\n",
+	printf("Test result: " \
+	       "port %d crypt %d req %d state %d err %d flags %d\n",
 	       t->nt_port,
 	       t->nt_proto == TEST_CRYPT ? 1 : 0,
 	       t->nt_req,
 	       t->nt_last_state,
-	       t->nt_err);
+	       t->nt_err,
+	       t->nt_flags);
 }
 
 static void test_success(struct network_test *t)
@@ -552,21 +556,13 @@ static void test_connecting(struct network_test *t)
 	if (rc == EBUSY)
 		return;
 
+	t->nt_crypt = rc != -1;
+
 	assert(t->nt_req < (sizeof(REQS) / sizeof(*REQS)));
 	buf = REQS[t->nt_req];
 
 	if (write(s, buf, strlen(buf)) != strlen(buf))
 		err(1, "write()");
-
-	if (t->nt_proto == TEST_TCP && rc != -1) {
-		test_finish(t, TEST_ERR_UNEXPECTED_CRYPT);
-		return;
-	}
-
-	if (t->nt_proto == TEST_CRYPT && rc == -1) {
-		test_finish(t, TEST_ERR_NO_CRYPT);
-		return;
-	}
 
 	t->nt_state = TEST_STATE_REQ_SENT;
 }
@@ -606,6 +602,18 @@ static void test_req_sent(struct network_test *t)
 
 	if (strncmp(buf, TEST_REPLY, strlen(TEST_REPLY)) != 0) {
 		test_finish(t, TEST_ERR_BADINPUT);
+		return;
+	}
+
+	t->nt_flags = atoi(&buf[rc - 1]);
+
+	if (t->nt_proto == TEST_TCP && t->nt_crypt == 1) {
+		test_finish(t, TEST_ERR_UNEXPECTED_CRYPT);
+		return;
+	}
+
+	if (t->nt_proto == TEST_CRYPT && t->nt_crypt != 1) {
+		test_finish(t, TEST_ERR_NO_CRYPT);
 		return;
 	}
 
