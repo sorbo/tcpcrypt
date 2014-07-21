@@ -18,6 +18,11 @@ static char *_bind_ip = "0.0.0.0";
 enum {
 	TYPE_CLIENT = 0,
 	TYPE_SERVER,
+	TYPE_RAW,
+};
+
+enum {
+	FLAG_HELLO = 1,
 };
 
 struct sock {
@@ -27,8 +32,18 @@ struct sock {
 	time_t			added;
 	struct sockaddr_in	peer;
 	int			port;
+	int			flags;
 	struct sock  		*next;
 } _socks;
+
+struct client {
+	int		sport;
+	int		dport;
+	int		flags;
+	struct in_addr	ip;
+	time_t		added;
+	struct client	*next;
+} _clients;
 
 static struct sock *add_sock(int s)
 {
@@ -77,7 +92,66 @@ static void add_server(int port)
 	sock->port = port;
 }
 
-static void process_socket(struct sock *s)
+static void add_sniffer(void)
+{
+	int s;
+	struct sock *sock;
+
+	if ((s = socket(AF_INET, SOCK_RAW, IPPROTO_TCP)) == -1)
+		err(1, "socket()");
+
+	sock = add_sock(s);
+	sock->type = TYPE_RAW;
+}
+
+static void find_client(struct sock *s)
+{
+	struct client *c = &_clients;
+
+	while (c->next) {
+		struct client *next = c->next;
+		struct client *del  = NULL;
+
+		if (next->dport == s->port
+		    && next->sport == ntohs(s->peer.sin_port)) {
+		    	s->flags = next->flags;
+			del = next;
+		}
+
+		if ((time(NULL) - next->added) > 10)
+			del = next;
+
+		if (del) {
+			c->next = next->next;
+			free(del);
+		} else
+			c = next;
+	}
+}
+
+static void handle_server(struct sock *s)
+{
+	struct sockaddr_in s_in;
+	socklen_t len = sizeof(s_in);
+	int dude;
+	struct sock *d;
+	
+	dude = accept(s->s, (struct sockaddr*) &s_in, &len);
+
+	if (dude == -1) {
+		perror("accept()");
+		return;
+	}
+
+	d = add_sock(dude);
+
+	memcpy(&d->peer, &s_in, sizeof(d->peer));
+	d->port = s->port;
+
+	find_client(d);
+}
+
+static void handle_client(struct sock *s)
 {
 	char buf[1024];
 	int rc;
@@ -87,24 +161,6 @@ static void process_socket(struct sock *s)
 	unsigned int len;
 	struct tm *tm;
 	time_t t;
-
-	if (s->type == TYPE_SERVER) {
-		struct sockaddr_in s_in;
-		socklen_t len = sizeof(s_in);
-
-		int dude = accept(s->s, (struct sockaddr*) &s_in, &len);
-
-		if (dude == -1)
-			perror("accept()");
-		else {
-			struct sock *d = add_sock(dude);
-
-			memcpy(&d->peer, &s_in, sizeof(d->peer));
-			d->port = s->port;
-		}
-
-		return;
-	}
 
 	len = sizeof(buf);
 	rc = tcpcrypt_getsockopt(s->s, IPPROTO_TCP, TCP_CRYPT_SESSID, buf,
@@ -131,22 +187,127 @@ static void process_socket(struct sock *s)
 	if (got == -1)
 		return;
 
-	if (write(s->s, TEST_REPLY, rc) != rc)
+	snprintf(buf, sizeof(buf), "%s%d", TEST_REPLY, s->flags);
+	rc = strlen(buf);
+
+	if (write(s->s, buf, rc) != rc)
 		return;
 
 	t = time(NULL);
 	tm = localtime(&t);
 	strftime(buf, sizeof(buf), "%m/%d/%y %H:%M:%S", tm);
 
-	printf("[%s] GOT %s:%d - %d\t[MSG %d] crypt %d\n",
+	printf("[%s] GOT %s:%d - %d\t[MSG %d] crypt %d flags %d\n",
 	       buf,
 	       inet_ntoa(s->peer.sin_addr),
 	       ntohs(s->peer.sin_port),
 	       s->port,
 	       got,
-	       crypt);
+	       crypt,
+	       s->flags);
 
 	s->dead = 1;
+}
+
+static void found_crypt(struct ip *ip, struct tcphdr *th)
+{
+	struct client *c = malloc(sizeof(*c));
+
+	if (!c)
+		err(1, "malloc()");
+
+	memset(c, 0, sizeof(*c));
+
+	c->ip    = ip->ip_src;
+	c->sport = ntohs(th->th_sport);
+	c->dport = ntohs(th->th_dport);
+	c->added = time(NULL);
+	c->flags = FLAG_HELLO;
+	c->next  = _clients.next;
+
+	_clients.next = c;
+}
+
+static void handle_raw(struct sock *s)
+{
+	unsigned char buf[2048];
+	int rc;
+	struct ip *ip = (struct ip*) buf;
+	struct tcphdr *th;
+	unsigned char *end, *p;
+
+	if ((rc = read(s->s, buf, sizeof(buf))) <= 0)
+		err(1, "read()");
+
+	if (ip->ip_v != 4)
+		return;
+
+	if (ip->ip_p != IPPROTO_TCP)
+		return;
+
+	th = (struct tcphdr*) (((unsigned long) ip) + (ip->ip_hl << 2));
+
+	if ((unsigned long) th >= (unsigned long) (&buf[rc] - sizeof(*th)))
+		return;
+
+	p   = (unsigned char*) (th + 1);
+	end = (unsigned char*) (((unsigned long) th) + (th->th_off << 2));
+
+	if ((unsigned long) end > (unsigned long) &buf[rc])
+		return;
+
+	if (th->th_flags != TH_SYN)
+		return;
+
+	while (p < end) {
+		int opt = *p++;
+		int len;
+
+		switch (opt) {
+		case TCPOPT_EOL:
+		case TCPOPT_NOP:
+			continue;
+		}
+
+		if (p >= end)
+			break;
+
+		len = *p++ - 2;
+
+		if ((p + len) >= end)
+			break;
+
+		switch (opt) {
+		case TCPOPT_CRYPT:
+			found_crypt(ip, th);
+			break;
+		}
+
+		p += len;
+	}
+}
+
+static void process_socket(struct sock *s)
+{
+
+	switch (s->type) {
+	case TYPE_SERVER:
+		handle_server(s);
+		break;
+
+	case TYPE_RAW:
+		handle_raw(s);
+		break;
+
+	case TYPE_CLIENT:
+		handle_client(s);
+		break;
+
+	default:
+		printf("WTF %d\n", s->type);
+		abort();
+		break;
+	}
 }
 
 static void check_sockets(void)
@@ -200,6 +361,7 @@ static void check_sockets(void)
 
 static void pwn(void)
 {
+	add_sniffer();
 	add_server(80);
 	add_server(7777);
 
