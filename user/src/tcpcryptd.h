@@ -41,7 +41,8 @@ static char *REQS[] = {
 	"GHGHHGHGHGHREHEHGEHRGHERHGHERG",
 };
 
-#define TEST_REPLY  "yeah!"
+static char *TEST_REPLY = "HTTP/1.0 200 OK\r\n"
+			  "\r\n";
 
 struct params {
 	char	*p_params[MAX_PARAM];
