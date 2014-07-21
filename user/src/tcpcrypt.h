@@ -274,23 +274,23 @@ struct mac_a {
 };
 
 enum {
-	TC_INIT1 = 0x2911,
-	TC_INIT2 = 0x8310,
+	TC_INIT1 = 0x15101a0e,
+	TC_INIT2 = 0x097105e0,
 };
 
 struct tc_init1 {
+	uint32_t		i1_magic;
 	uint32_t		i1_len;
-	uint16_t		i1_magic;
+	uint8_t			i1_z0;
+	struct tc_cipher_spec	i1_pub;
+	uint16_t		i1_z1;
 	uint16_t		i1_num_ciphers;
-	uint16_t		i1_nonce_len;
-	uint16_t		i1_pkey_len;
 	struct tc_scipher	i1_ciphers[0];
-};
+} __attribute__ ((__packed__));
 
 struct tc_init2 {
+	uint32_t		i2_magic;
 	uint32_t		i2_len;
-	uint16_t		i2_magic;
-	uint16_t		i2_clen;
 	struct tc_scipher	i2_scipher;
 	uint8_t			i2_data[0];
 };

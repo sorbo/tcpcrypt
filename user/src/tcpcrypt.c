@@ -1157,17 +1157,15 @@ static int do_output_pkconf_rcvd(struct tc *tc, struct ip *ip,
 	len  = sizeof(*init1) 
 	       + tc->tc_ciphers_sym_len 
 	       + tc->tc_nonce_len
-	       + 1 + sizeof(tc->tc_cipher_pkey)
 	       + klen;
 
 	init1 = data_alloc(tc, ip, tcp, len, retx);
 
+	init1->i1_magic       = htonl(TC_INIT1);
 	init1->i1_len	      = htonl(len);
-	init1->i1_magic       = htons(TC_INIT1);
+	init1->i1_pub	      = tc->tc_cipher_pkey;
 	init1->i1_num_ciphers = htons(tc->tc_ciphers_sym_len /
 				      sizeof(*tc->tc_ciphers_sym));
-	init1->i1_nonce_len   = htons(tc->tc_nonce_len);
-	init1->i1_pkey_len    = htons(klen);
 
 	p = (uint8_t*) init1->i1_ciphers;
 	memcpy(p, tc->tc_ciphers_sym, tc->tc_ciphers_sym_len);
@@ -1179,10 +1177,6 @@ static int do_output_pkconf_rcvd(struct tc *tc, struct ip *ip,
 
 	memcpy(p, tc->tc_nonce, tc->tc_nonce_len);
 	p += tc->tc_nonce_len;
-
-	*p++ = 0;
-	memcpy(p, &tc->tc_cipher_pkey, sizeof(tc->tc_cipher_pkey));
-	p += sizeof(tc->tc_cipher_pkey);
 
 	memcpy(p, key, klen);
 
@@ -2115,8 +2109,7 @@ static int negotiate_sym_cipher(struct tc *tc, struct tc_scipher *a, int alen)
 	return rc;
 }
 
-static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey, void *key,
-		       int klen)
+static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey)
 {
 	struct tc_cipher_spec *spec;
 	struct ciphers *c = _ciphers_pkey.c_next;
@@ -2135,14 +2128,6 @@ static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey, void *key,
 	}
 	if (!c)
 		return 0;
-
-	profile_add(1, "pre pkey set key");
-
-	/* figure out key len */
-	if (crypt_set_key(tc->tc_crypt_pub->cp_pub, key, klen) == -1)
-		return 0;
-
-	profile_add(1, "pkey set key");
 
 	/* check whether we were willing to accept this cipher */
 	for (i = 0; i < tc->tc_ciphers_pkey_len / sizeof(*tc->tc_ciphers_pkey);
@@ -2215,7 +2200,6 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	uint8_t *nonce;
 	int nonce_len;
 	int num_ciphers;
-	struct tc_cipher_spec *pkey;
 	void *key;
 	int klen;
 	int cl;
@@ -2232,38 +2216,42 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	if (dlen < sizeof(*i1))
 		return bad_packet("short init1");
 
-	if (ntohs(i1->i1_magic) != TC_INIT1)
+	if (ntohl(i1->i1_magic) != TC_INIT1)
 		return bad_packet("bad magic");
-
-	nonce_len   = ntohs(i1->i1_nonce_len);
-	num_ciphers = ntohs(i1->i1_num_ciphers);
-	klen        = ntohs(i1->i1_pkey_len);
-
-	if (dlen != (sizeof(*i1)
-	    + num_ciphers * sizeof(*i1->i1_ciphers)
-	    + nonce_len
-	    + 1 + sizeof(tc->tc_cipher_pkey)
-	    + klen))
-	    	return bad_packet("bad init1 len");
 
 	if (dlen != ntohl(i1->i1_len))
 		return bad_packet("bad init1 lenn");
+
+	if (!select_pkey(tc, &i1->i1_pub))
+		return bad_packet("init1: bad public key");
+
+	nonce_len   = tc->tc_crypt_pub->cp_n_c;
+	num_ciphers = ntohs(i1->i1_num_ciphers);
+
+	klen = dlen 
+	       - sizeof(*i1)
+	       - num_ciphers * sizeof(*i1->i1_ciphers)
+	       - nonce_len;
+
+	if (klen <= 0)
+	    	return bad_packet("bad init1 len");
+
+	if (klen > tc->tc_crypt_pub->cp_max_key)
+		return bad_packet("init1: key length disagreement");
 
 	if (!negotiate_sym_cipher(tc, i1->i1_ciphers, num_ciphers))
 		return bad_packet("init1: can't negotiate");
 
 	nonce = (uint8_t*) &i1->i1_ciphers[num_ciphers];
-	pkey  = (struct tc_cipher_spec*) (nonce + nonce_len + 1);
-	key   = pkey + 1;
+	key   = nonce + nonce_len;
 
-	if (!select_pkey(tc, pkey, key, klen))
-		return bad_packet("init1: bad public key");
+	profile_add(1, "pre pkey set key");
 
-	if (nonce_len != tc->tc_crypt_pub->cp_n_c)
-		return bad_packet("init1: nonce length disagreement");
+	/* figure out key len */
+	if (crypt_set_key(tc->tc_crypt_pub->cp_pub, key, klen) == -1)
+		return 0;
 
-	if (klen > tc->tc_crypt_pub->cp_max_key)
-		return bad_packet("init1: key length disagreement");
+	profile_add(1, "pkey set key");
 
 	generate_nonce(tc, tc->tc_crypt_pub->cp_n_s);
 
@@ -2343,9 +2331,8 @@ static int do_input_pkconf_sent(struct tc *tc, struct ip *ip,
 	len = sizeof(*i2) + cipherlen;
 	i2  = data_alloc(tc, ip2, tcp2, len, 0);
 
+	i2->i2_magic   = htonl(TC_INIT2);
 	i2->i2_len     = htonl(len);
-	i2->i2_magic   = htons(TC_INIT2);
-	i2->i2_clen    = htons(cipherlen);
 	i2->i2_scipher = tc->tc_cipher_sym;
 
 	memcpy(i2->i2_data, kxs, cipherlen);
@@ -2439,11 +2426,11 @@ static int process_init2(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	if (len != ntohl(i2->i2_len))
 		return bad_packet("init2: bad lenn");
 
-	nlen = ntohs(i2->i2_clen);
-	if (len != (sizeof(*i2) + nlen))
+	nlen = len - sizeof(*i2);
+	if (nlen <= 0)
 		return bad_packet("init2: bad len");
 
-	if (ntohs(i2->i2_magic) != TC_INIT2)
+	if (ntohl(i2->i2_magic) != TC_INIT2)
 		return bad_packet("init2: bad magic");
 
 	if (!select_sym(tc, &i2->i2_scipher))
