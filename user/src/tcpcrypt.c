@@ -2149,8 +2149,10 @@ static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey, void *key,
 	     i++) {
 		spec = &tc->tc_ciphers_pkey[i];
 
-		if (spec->tcs_algo == pkey->tcs_algo)
+		if (spec->tcs_algo == pkey->tcs_algo) {
+			tc->tc_cipher_pkey = *pkey;
 			return 1;
+		}
 	}
 
 	/* XXX cleanup */
@@ -2164,7 +2166,7 @@ static void compute_ss(struct tc *tc,
 		       void *nc, int ncl,
 		       void *kxs, int kxsl)
 {
-	struct iovec iov[6];
+	struct iovec iov[7];
 
 	profile_add(1, "compute ss in");
 
@@ -2177,14 +2179,17 @@ static void compute_ss(struct tc *tc,
 	iov[2].iov_base = &tc->tc_cipher_sym;
 	iov[2].iov_len  = sizeof(tc->tc_cipher_sym);
 
-	iov[3].iov_base = kc;
-	iov[3].iov_len  = kcl;
+	iov[3].iov_base = &tc->tc_cipher_pkey;
+	iov[3].iov_len  = sizeof(tc->tc_cipher_pkey);
 
-	iov[4].iov_base = kxs;
-	iov[4].iov_len  = kxsl;
+	iov[4].iov_base = kc;
+	iov[4].iov_len  = kcl;
 
-	iov[5].iov_base = pms;
-	iov[5].iov_len  = pmsl;
+	iov[5].iov_base = kxs;
+	iov[5].iov_len  = kxsl;
+
+	iov[6].iov_base = pms;
+	iov[6].iov_len  = pmsl;
 
 	crypt_set_key(tc->tc_crypt_pub->cp_hkdf, nc, ncl);
 
