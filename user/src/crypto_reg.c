@@ -25,6 +25,7 @@ static struct crypt_pub *RSA_HKDF_new(void)
 	cp->cp_n_c        = 32;
 	cp->cp_n_s        = 48;
 	cp->cp_k_len      = 32;
+	cp->cp_min_key    = (2048 / 8);
 	cp->cp_max_key    = (4096 / 8);
 	cp->cp_cipher_len = (4096 / 8);
 

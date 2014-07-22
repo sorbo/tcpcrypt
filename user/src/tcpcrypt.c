@@ -2253,8 +2253,11 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 	if (klen <= 0)
 	    	return bad_packet("bad init1 len");
 
-	if (klen > tc->tc_crypt_pub->cp_max_key)
+	if (tc->tc_crypt_pub->cp_max_key && klen > tc->tc_crypt_pub->cp_max_key)
 		return bad_packet("init1: key length disagreement");
+
+	if (tc->tc_crypt_pub->cp_min_key && klen < tc->tc_crypt_pub->cp_min_key)
+		return bad_packet("init2: key length too short");
 
 	if (!negotiate_sym_cipher(tc, i1->i1_ciphers, num_ciphers))
 		return bad_packet("init1: can't negotiate");

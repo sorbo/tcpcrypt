@@ -117,6 +117,7 @@ struct crypt_pub {
 	int	     cp_n_c;
 	int	     cp_n_s;
 	int	     cp_k_len;
+	int	     cp_min_key;
 	int	     cp_max_key;
 	int	     cp_cipher_len;
 	int	     cp_key_agreement;
