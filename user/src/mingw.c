@@ -71,7 +71,10 @@ int do_divert_open(void)
 	_h = DivertOpen(
 		"ip and "
 		"((outbound and tcp.DstPort == 80) or "
-		" (inbound and tcp.SrcPort == 80)) and "
+		" (inbound and tcp.SrcPort == 80) or "
+		" (outbound and tcp.DstPort == 7777) or "
+		" (inbound and tcp.SrcPort == 7777)"
+		") and "
 		"ip.DstAddr != 127.0.0.1 and "
 		"ip.SrcAddr != 127.0.0.1",
 		WINDIVERT_LAYER_NETWORK, 0, 0);

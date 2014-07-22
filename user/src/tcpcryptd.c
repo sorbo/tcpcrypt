@@ -463,7 +463,6 @@ static void test_connect(struct network_test *t)
 {
 	int s;
 	struct sockaddr_in s_in;
-	socklen_t sl = sizeof(s_in);
 
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		err(1, "socket()");
@@ -506,11 +505,6 @@ static void test_connect(struct network_test *t)
 	t->nt_ctl.tcc_dst   = s_in.sin_addr;
 	t->nt_ctl.tcc_dport = s_in.sin_port;
 
-	if (getsockname(s, (struct sockaddr*) &s_in, &sl) == -1)
-		err(1, "getsockname()");
-
-	t->nt_ctl.tcc_src = s_in.sin_addr;
-
 	t->nt_state = TEST_STATE_CONNECTING;
 	t->nt_start = time(NULL);
 }
@@ -549,6 +543,8 @@ static void test_connecting(struct network_test *t)
 	char *buf = NULL;
 	unsigned char sid[1024];
 	unsigned int sidlen = sizeof(sid);
+	struct sockaddr_in s_in;
+	socklen_t sl = sizeof(s_in);
 
 	tv.tv_sec  = 0;
 	tv.tv_usec = 0;
@@ -569,6 +565,11 @@ static void test_connecting(struct network_test *t)
 		test_finish(t, rc);
 		return;
 	}
+
+	if (getsockname(s, (struct sockaddr*) &s_in, &sl) == -1)
+		err(1, "getsockname()");
+
+	t->nt_ctl.tcc_src = s_in.sin_addr;
 
 	rc = tcpcryptd_getsockopt(&t->nt_ctl, TCP_CRYPT_SESSID, sid, &sidlen);
 
