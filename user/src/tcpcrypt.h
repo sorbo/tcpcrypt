@@ -37,7 +37,7 @@ enum {
 struct tc_cipher_spec {
 	uint8_t  tcs_algo_top;
 	uint16_t tcs_algo;
-} __attribute__ ((__packed__));
+} __attribute__ ((gcc_struct, __packed__));
 
 struct tc_scipher {
 	uint32_t sc_algo;

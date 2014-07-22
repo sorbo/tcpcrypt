@@ -36,7 +36,6 @@ struct retransmit {
 };
 
 struct ciphers {
-	struct crypt_ops 	*c_crypt;
 	struct cipher_list	*c_cipher;
 	unsigned char		c_spec[4];
 	int			c_speclen;
@@ -3329,10 +3328,11 @@ static void do_register_cipher(struct ciphers *c, struct cipher_list *cl)
 	int pref = 0;
 
 	x = xmalloc(sizeof(*x));
+	memset(x, 0, sizeof(*x));
 	x->c_cipher = cl;
 
 	while (c->c_next) {
-		if (pref >= get_pref(c->c_next->c_crypt))
+		if (pref >= get_pref(NULL))
 			break;
 
 		c = c->c_next;
@@ -3402,7 +3402,7 @@ static void do_init_ciphers(struct ciphers *c)
 
 	while (c) {
 		/* XXX */
-		if (c->c_crypt && (TC_DUMMY == TC_DUMMY)) {
+		if (TC_DUMMY != TC_DUMMY) {
 			if (!_conf.cf_dummy) {
 				/* kill dummy */
 				prev->c_next = c->c_next;
