@@ -1,0 +1,6 @@
+#ifndef __SRC_TCPCRYPT_VERSION_H__
+#define __SRC_TCPCRYPT_VERSION_H__
+
+#define TCPCRYPT_VERSION	"0.2"
+
+#endif /* __SRC_TCPCRYPT_VERSION_H__ */

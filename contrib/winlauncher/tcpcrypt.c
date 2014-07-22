@@ -3,6 +3,7 @@
 #include <devguid.h>
 
 #include "resource.h"
+#include "../../user/src/tcpcrypt_version.h"
 
 #define COBJMACROS
 
@@ -271,7 +272,13 @@ static void setup_icons(void)
 
 static void do_init(void)
 {
+	char title[1024];
+
 	setup_icons();
+
+	snprintf(title, sizeof(title), "tcpcrypt v%s", TCPCRYPT_VERSION);
+
+	SetWindowText(_hwnd, title);
 }
 
 static void hof(void)
