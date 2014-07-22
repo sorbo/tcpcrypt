@@ -11764,6 +11764,8 @@ else
 fi
 
 
+CFLAGS="$CFLAGS -Wall -Wno-deprecated-declarations"
+
 # DEBUG
 # Check whether --enable-debug was given.
 if test "${enable_debug+set}" = set; then :

@@ -78,7 +78,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = tcnetstat$(EXEEXT)
+bin_PROGRAMS = tcnetstat$(EXEEXT) tcs$(EXEEXT)
 @OS_MINGW_TRUE@am__append_1 = -lwsock32 -liphlpapi
 subdir = util
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
@@ -108,6 +108,12 @@ am__v_lt_1 =
 tcnetstat_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcnetstat_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_tcs_OBJECTS = tcs-tcs.$(OBJEXT)
+tcs_OBJECTS = $(am_tcs_OBJECTS)
+tcs_DEPENDENCIES = $(top_builddir)/lib/libtcpcrypt.la
+tcs_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(tcs_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -142,8 +148,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(tcnetstat_SOURCES)
-DIST_SOURCES = $(tcnetstat_SOURCES)
+SOURCES = $(tcnetstat_SOURCES) $(tcs_SOURCES)
+DIST_SOURCES = $(tcnetstat_SOURCES) $(tcs_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -293,6 +299,9 @@ tcnetstat_SOURCES = tcnetstat.c
 tcnetstat_LDADD = $(top_builddir)/lib/libtcpcrypt.la $(AM_LDFLAGS) \
 	$(am__append_1)
 tcnetstat_CFLAGS = -I$(top_srcdir)/include/
+tcs_SOURCES = tcs.c
+tcs_LDADD = $(top_builddir)/lib/libtcpcrypt.la $(AM_LDFLAGS)
+tcs_CFLAGS = -I$(top_srcdir)/include/
 all: all-am
 
 .SUFFIXES:
@@ -381,6 +390,10 @@ tcnetstat$(EXEEXT): $(tcnetstat_OBJECTS) $(tcnetstat_DEPENDENCIES) $(EXTRA_tcnet
 	@rm -f tcnetstat$(EXEEXT)
 	$(AM_V_CCLD)$(tcnetstat_LINK) $(tcnetstat_OBJECTS) $(tcnetstat_LDADD) $(LIBS)
 
+tcs$(EXEEXT): $(tcs_OBJECTS) $(tcs_DEPENDENCIES) $(EXTRA_tcs_DEPENDENCIES) 
+	@rm -f tcs$(EXEEXT)
+	$(AM_V_CCLD)$(tcs_LINK) $(tcs_OBJECTS) $(tcs_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -388,6 +401,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcnetstat-tcnetstat.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcs-tcs.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -423,6 +437,20 @@ tcnetstat-tcnetstat.obj: tcnetstat.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tcnetstat.c' object='tcnetstat-tcnetstat.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcnetstat_CFLAGS) $(CFLAGS) -c -o tcnetstat-tcnetstat.obj `if test -f 'tcnetstat.c'; then $(CYGPATH_W) 'tcnetstat.c'; else $(CYGPATH_W) '$(srcdir)/tcnetstat.c'; fi`
+
+tcs-tcs.o: tcs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcs_CFLAGS) $(CFLAGS) -MT tcs-tcs.o -MD -MP -MF $(DEPDIR)/tcs-tcs.Tpo -c -o tcs-tcs.o `test -f 'tcs.c' || echo '$(srcdir)/'`tcs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tcs-tcs.Tpo $(DEPDIR)/tcs-tcs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tcs.c' object='tcs-tcs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcs_CFLAGS) $(CFLAGS) -c -o tcs-tcs.o `test -f 'tcs.c' || echo '$(srcdir)/'`tcs.c
+
+tcs-tcs.obj: tcs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcs_CFLAGS) $(CFLAGS) -MT tcs-tcs.obj -MD -MP -MF $(DEPDIR)/tcs-tcs.Tpo -c -o tcs-tcs.obj `if test -f 'tcs.c'; then $(CYGPATH_W) 'tcs.c'; else $(CYGPATH_W) '$(srcdir)/tcs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/tcs-tcs.Tpo $(DEPDIR)/tcs-tcs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tcs.c' object='tcs-tcs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tcs_CFLAGS) $(CFLAGS) -c -o tcs-tcs.obj `if test -f 'tcs.c'; then $(CYGPATH_W) 'tcs.c'; else $(CYGPATH_W) '$(srcdir)/tcs.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

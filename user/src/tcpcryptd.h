@@ -10,6 +10,40 @@ enum {
 	XP_NOISY,
 };
 
+enum {
+        TEST_CRYPT = 0,
+        TEST_TCP,
+};
+
+enum { 
+        TEST_STATE_START = 0,
+        TEST_STATE_CONNECTING,
+        TEST_STATE_REQ_SENT,
+        TEST_SUCCESS,
+        TEST_STATE_DONE,
+};
+
+enum { 
+        TEST_ERR_TIMEOUT 		= 666,
+        TEST_ERR_DISCONNECT		= 667,
+        TEST_ERR_BADINPUT		= 668,
+        TEST_ERR_UNEXPECTED_CRYPT	= 669,
+        TEST_ERR_NO_CRYPT		= 670,
+};
+
+static char *REQS[] = {
+	"GET /check HTTP/1.0\r\n"
+        "Host: check.tcpcrypt.org\r\n"
+        "\r\n",
+
+	"MORTEasldkfjasldkfjaslkfjaslfkjasdlfkjas",
+
+	"GHGHHGHGHGHREHEHGEHRGHERHGHERG",
+};
+
+static char *TEST_REPLY = "HTTP/1.0 200 OK\r\n"
+			  "\r\n";
+
 struct params {
 	char	*p_params[MAX_PARAM];
 	int	p_paramc;
@@ -34,6 +68,8 @@ struct conf {
 	int		cf_mac;
 	int		cf_rsa_client_hack;
 	int		cf_disable_timers;
+	int		cf_disable_network_test;
+	char		*cf_test_server;
 };
 
 extern struct conf _conf;

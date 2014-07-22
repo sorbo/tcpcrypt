@@ -13,48 +13,34 @@
 #include "crypto.h"
 #include "profile.h"
 
-#define MAC_SIZE	20
-
-static struct tc_scipher _hmac_spec =
-	{ 0, TC_ANY, 0, TC_HMAC_SHA1_128 };
+#define MAC_SIZE	32
 
 struct hmac_priv {
 	HMAC_CTX hp_ctx;
 	int	 hp_fresh;
 };
 
-static void hmac_init(struct tc *tc)
+static void hmac_destroy(struct crypt *c)
 {
-	struct hmac_priv *hp;
-
-	hp = crypto_priv_init(tc, sizeof(*hp));
-	HMAC_CTX_init(&hp->hp_ctx);
-	HMAC_Init_ex(&hp->hp_ctx, "a", 1, EVP_sha1(), NULL);
-}
-
-static void hmac_finish(struct tc *tc)
-{
-	struct hmac_priv *hp = crypto_priv(tc);
+	struct hmac_priv *hp = crypt_priv(c);
 
 	if (!hp)
 		return;
 
 	HMAC_cleanup(&hp->hp_ctx);
 	free(hp);
+	free(c);
 }
 
-static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
+static void hmac_mac(struct crypt *c, struct iovec *iov, int num,
 	             void *out, int *outlen)
 {
-	struct hmac_priv *hp = crypto_priv(tc);
-
-	if (*outlen < MAC_SIZE) {
-		*outlen = MAC_SIZE;
-		return;
-	}
+	struct hmac_priv *hp = crypt_priv(c);
+	void *o = out;
+	unsigned int olen = MAC_SIZE;
 
 	profile_add(3, "hmac_mac in");
-	
+
 	if (!hp->hp_fresh)
 		HMAC_Init_ex(&hp->hp_ctx, NULL, 0, NULL, NULL);
 	else
@@ -66,23 +52,21 @@ static void hmac_mac(struct tc *tc, struct iovec *iov, int num, void *iv,
 		iov++;
 	}
 
-	HMAC_Final(&hp->hp_ctx, out, (unsigned int*) outlen);
+	if (*outlen < MAC_SIZE)
+		o = alloca(MAC_SIZE);
+
+	HMAC_Final(&hp->hp_ctx, o, &olen);
 	profile_add(3, "hmac_mac final");
+
+	if (*outlen < MAC_SIZE)
+		memcpy(out, o, *outlen);
+	else
+		*outlen = olen;
 }
 
-static void *hmac_spec(void)
+static int hmac_set_key(struct crypt *c, void *key, int len)
 {
-	return &_hmac_spec;
-}
-
-static int hmac_type(void)
-{
-	return TYPE_MAC;
-}
-
-static int hmac_set_key(struct tc *tc, void *key, int len)
-{
-	struct hmac_priv *hp = crypto_priv(tc);
+	struct hmac_priv *hp = crypt_priv(c);
 
 	HMAC_Init_ex(&hp->hp_ctx, key, len, NULL, NULL);
 	hp->hp_fresh = 1;
@@ -90,18 +74,20 @@ static int hmac_set_key(struct tc *tc, void *key, int len)
 	return 0;
 }
 
-struct crypt_ops _hmac_ops = {
-	.co_init	= hmac_init,
-	.co_finish	= hmac_finish,
-	.co_mac		= hmac_mac,
-	.co_spec	= hmac_spec,
-	.co_type	= hmac_type,
-	.co_set_key	= hmac_set_key,
-};
-
-static void __hmac_init(void) __attribute__ ((constructor));
-
-static void __hmac_init(void)
+struct crypt *crypt_HMAC_SHA256_new(void)
 {
-	crypto_register(&_hmac_ops);
+	struct hmac_priv *hp;
+	struct crypt *c;
+
+	c = crypt_init(sizeof(*hp));
+	c->c_destroy = hmac_destroy;
+	c->c_set_key = hmac_set_key;
+	c->c_mac     = hmac_mac;
+
+	hp = crypt_priv(c);
+
+	HMAC_CTX_init(&hp->hp_ctx);
+	HMAC_Init_ex(&hp->hp_ctx, "a", 1, EVP_sha256(), NULL);
+
+	return c;
 }

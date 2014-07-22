@@ -4,17 +4,18 @@
 #include <tcpcrypt/tcpcrypt.h>
 #include "tcpcrypt_ctl.h"
 
+#define TCPCRYPT_VERSION	"0.2"
+
 #define TC_DUMMY	0x69
 
 enum {
-	TC_CIPHER_RABIN_WILLIAMS = 0x01,
-	TC_CIPHER_OAEP_RSA_3,
+	TC_CIPHER_OAEP_RSA_3 = 0x0100,
+	TC_CIPHER_ECDHE_P256 = 0x0200,
+	TC_CIPHER_ECDHE_P521 = 0x0201,
 };
 
 enum {
-	TC_ANY			= 0x00,
-	TC_AES128_CTR_SEQIV,
-	TC_RC4,
+	TC_AES128_HMAC_SHA2 = 0x00000100,
 };
 
 enum {
@@ -22,29 +23,24 @@ enum {
 	TC_UMAC,
 };
 
-typedef uint32_t tag_t;
-
 enum {
-	TAG_SESSID	= 0x00,
-	TAG_NEXTK,
-	TAG_REKEY,
-	TAG_KEY_C_ENC,
-	TAG_KEY_C_MAC,
-	TAG_KEY_S_ENC,
-	TAG_KEY_S_MAC,
+	CONST_NEXTK	= 0x01,
+	CONST_SESSID	= 0x02,
+	CONST_REKEY	= 0x03,
+	CONST_KEY_C	= 0x04,
+	CONST_KEY_S	= 0x05,
+	CONST_KEY_ENC	= 0x06,
+	CONST_KEY_MAC	= 0x07,
+	CONST_KEY_ACK	= 0x08,
 };
 
 struct tc_cipher_spec {
-        uint8_t tcs_algo;
-        uint8_t tcs_key_min;
-        uint8_t tcs_key_max;
-};
+	uint8_t  tcs_algo_top;
+	uint16_t tcs_algo;
+} __attribute__ ((__packed__));
 
 struct tc_scipher {
-	uint8_t	sc_z1;
-	uint8_t sc_cipher;
-	uint8_t sc_z2;
-	uint8_t	sc_mac;
+	uint32_t sc_algo;
 };
 
 enum {
@@ -101,8 +97,8 @@ struct stuff {
 };
 
 struct tc_sess {
-	struct crypt_alg	ts_prf;
-	struct crypt_alg	ts_sym;
+	struct crypt_pub	*ts_pub;
+	struct crypt_sym	*ts_sym;
 	struct crypt_alg	ts_mac;
 	struct stuff		ts_sid;
 	struct stuff		ts_nk;
@@ -121,12 +117,7 @@ struct tc_sid {
 
 #define TC_MTU		1500
 #define MAX_CIPHERS	8
-#define MAX_NONCE	16
-
-struct crypt_sym_mac {
-	struct crypt_alg	csm_sym;
-	struct crypt_alg	csm_mac;
-};
+#define MAX_NONCE	48
 
 enum {
 	IVMODE_NONE	= 0,
@@ -139,13 +130,18 @@ enum {
 	DIR_OUT,
 };
 
+struct tc_keys {
+	struct stuff	tk_prk;
+	struct stuff	tk_enc;
+	struct stuff	tk_mac;
+	struct stuff	tk_ack;
+};
+
 struct tc_keyset {
-	struct stuff		tc_kec;
-	struct stuff		tc_kac;
-	struct stuff		tc_kes;
-	struct stuff		tc_kas;
-	struct crypt_sym_mac	tc_alg_tx;
-	struct crypt_sym_mac	tc_alg_rx;
+	struct tc_keys		tc_client;
+	struct tc_keys		tc_server;
+	struct crypt_sym	*tc_alg_tx;
+	struct crypt_sym	*tc_alg_rx;
 };
 
 struct conn;
@@ -158,9 +154,8 @@ struct tc {
 	int			tc_ciphers_sym_len;
 	struct tc_cipher_spec	tc_cipher_pkey;
 	struct tc_scipher	tc_cipher_sym;
-	struct crypt_ops	*tc_crypt_pkey;
-	struct crypt_ops	*tc_crypt_sym;
-	struct crypt_ops	*tc_crypt_mac;
+	struct crypt_pub	*tc_crypt_pub;
+	struct crypt_sym	*tc_crypt_sym;
 	int			tc_mac_size;
 	int			tc_mac_ivlen;
 	int			tc_mac_ivmode;
@@ -196,8 +191,6 @@ struct tc {
 	struct tc_keyset	tc_key_next;
 	struct tc_keyset	*tc_key_active;
 	int			tc_role;
-	struct crypt_alg	tc_alg_pkey;
-	struct crypt_alg	*tc_prf;
 	int			tc_sym_ivlen;
 	int			tc_sym_ivmode;
 	int			tc_dir;
@@ -216,18 +209,26 @@ struct tc {
 	int			tc_optlen;
 	struct conn		*tc_conn;
 	int			tc_app_support;
+	int			tc_isn;
+	int			tc_isn_peer;
+	unsigned char		tc_init1[1500];
+	int			tc_init1_len;
+	unsigned char		tc_init2[1500];
+	int			tc_init2_len;
+	unsigned char		tc_pms[128];
+	int			tc_pms_len;
 };
 
 enum {  
-        TCOP_NONE               = 0x0,
-        TCOP_HELLO,
-	TCOP_HELLO_SUPPORT,
-	TCOP_NEXTK2		= 0x04,
-	TCOP_NEXTK2_SUPPORT,
-	TCOP_INIT1		= 0x06,
-	TCOP_INIT2,
+        TCOP_NONE               = 0x00,
+        TCOP_HELLO		= 0x01,
+	TCOP_HELLO_SUPPORT	= 0x02,
+	TCOP_NEXTK2		= 0x05,
+	TCOP_NEXTK2_SUPPORT	= 0x06,
+	TCOP_INIT1		= 0x07,
+	TCOP_INIT2		= 0x08,	
         TCOP_PKCONF             = 0x41,
-        TCOP_PKCONF_SUPPORT,
+        TCOP_PKCONF_SUPPORT	= 0x42,
 	TCOP_REKEY		= 0x83,
         TCOP_NEXTK1		= 0x84,
         TCOP_NEXTK1_SUPPORT,
@@ -281,31 +282,35 @@ struct mac_a {
 };
 
 enum {
-	TC_INIT1 = 0x0001,
-	TC_INIT2,
+	TC_INIT1 = 0x15101a0e,
+	TC_INIT2 = 0x097105e0,
 };
 
 struct tc_init1 {
-	uint16_t		i1_op;
+	uint32_t		i1_magic;
+	uint32_t		i1_len;
+	uint8_t			i1_z0;
+	struct tc_cipher_spec	i1_pub;
+	uint16_t		i1_z1;
 	uint16_t		i1_num_ciphers;
-	uint16_t		i1_nonce_len;
-	uint16_t		i1_pkey_len;
 	struct tc_scipher	i1_ciphers[0];
-};
+} __attribute__ ((__packed__));
 
 struct tc_init2 {
-	uint16_t		i2_op;
-	uint16_t		i2_clen;
+	uint32_t		i2_magic;
+	uint32_t		i2_len;
 	struct tc_scipher	i2_scipher;
 	uint8_t			i2_data[0];
 };
+
+struct cipher_list;
 
 extern int  tcpcrypt_packet(void *packet, int len, int flags);
 extern int  tcpcryptd_setsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
 			        unsigned int len);
 extern int  tcpcryptd_getsockopt(struct tcpcrypt_ctl *s, int opt, void *val,
 			        unsigned int *len);
-extern void tcpcrypt_register_cipher(struct crypt_ops *ops);
+extern void tcpcrypt_register_cipher(struct cipher_list *c);
 extern void tcpcrypt_init(void);
 
 #endif /* __SRC_TCPCRYPT_H__ */

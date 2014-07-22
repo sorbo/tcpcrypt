@@ -11,19 +11,20 @@
 #include "tcpcryptd.h"
 #include "crypto.h"
 
+#if 0
 #define MAC_SIZE	20
 
 static struct tc_cipher_spec _dummy_pkey_spec =
-        { TC_DUMMY, 4, 5 };
+        { 0, TC_DUMMY };
 
 static struct crypt_prop _dummy_pkey_prop =
 	{ 0, IVMODE_NONE, MAC_SIZE, 256 };
 
 static struct tc_scipher _dummy_mac_spec =
-        { 0, TC_ANY, 0, TC_DUMMY };
+        { TC_DUMMY };
 
 static struct tc_scipher _dummy_sym_spec =
-        { 0, TC_DUMMY, 0, TC_ANY };
+        { TC_DUMMY };
 
 static void dummy_init(struct tc *tc)
 {
@@ -102,7 +103,7 @@ static int dummy_pkey_type(void)
 
 static int dummy_set_key(struct tc *tc, void *key, int len)
 {
-	return _dummy_pkey_spec.tcs_key_min;
+	return 4;
 }
 
 static void dummy_mac_set_key(struct tc *tc, void *key, int len)
@@ -181,5 +182,6 @@ static void __dummy_init(void)
 {
 	crypto_register(&_dummy_pkey);
 	crypto_register(&_dummy_sym);
-	crypto_register(&_dummy_mac);
+	if (0) crypto_register(&_dummy_mac);
 }
+#endif

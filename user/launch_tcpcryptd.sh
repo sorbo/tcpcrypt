@@ -20,7 +20,7 @@ ee() {
 }
 
 linux_set_iptables() {
-    echo Tcpcrypting port 80 and local traffic on port 7777...
+    echo Tcpcrypting port 80 and 7777...
     ee iptables -I INPUT  -p tcp --sport $PORT -j NFQUEUE --queue-num $DIVERT_PORT
     ee iptables -I OUTPUT -p tcp --dport $PORT -j NFQUEUE --queue-num $DIVERT_PORT
     ee iptables -I INPUT  -p tcp --dport $PORT2 -j NFQUEUE --queue-num $DIVERT_PORT
@@ -41,11 +41,11 @@ linux_unset_iptables() {
 }
 
 bsd_set_ipfw() {
-    echo Tcpcrypting port 80 and local traffic on port 7777...
+    echo Tcpcrypting port 80 and 7777...
     ipfw 02 add divert $DIVERT_PORT tcp from any to any $PORT
     ipfw 03 add divert $DIVERT_PORT tcp from any $PORT to any
-    ipfw 04 add divert $DIVERT_PORT tcp from any to any $PORT2 via lo0
-    ipfw 05 add divert $DIVERT_PORT tcp from any $PORT2 to any via lo0
+    ipfw 04 add divert $DIVERT_PORT tcp from any to any $PORT2
+    ipfw 05 add divert $DIVERT_PORT tcp from any $PORT2 to any
 }
 
 bsd_unset_ipfw() {

@@ -16,35 +16,14 @@
 
 #define BLEN	16
 
-static struct tc_scipher _aes_spec =
-	{ 0, TC_AES128_CTR_SEQIV, 0, TC_ANY };
-
 struct aes_priv {
-	EVP_CIPHER_CTX ap_ctx;
+	EVP_CIPHER_CTX		ap_ctx;
 };
 
-static void aes_init(struct tc *tc)
+/* XXX move CTR / ASM mode outside of AES-specific implementation */
+static void do_aes(struct crypt *c, void *iv, void *data, int len, int enc)
 {
-	struct aes_priv *ap = crypto_priv_init(tc, sizeof(*ap));
-
-	EVP_CIPHER_CTX_init(&ap->ap_ctx);
-}
-
-static void aes_finish(struct tc *tc)
-{
-	struct aes_priv *ap = crypto_priv(tc);
-
-	if (!ap)
-		return;
-
-	EVP_CIPHER_CTX_cleanup(&ap->ap_ctx);
-
-	free(ap);
-}
-
-static void do_aes(struct tc *tc, void *iv, void *data, int len, int enc)
-{
-	struct aes_priv *ap = crypto_priv(tc);
+	struct aes_priv *ap = crypt_priv(c);
 	int blen;
 	uint8_t *blocks;
 	uint64_t ctr;
@@ -105,8 +84,8 @@ static void do_aes(struct tc *tc, void *iv, void *data, int len, int enc)
 		*pd++ ^= *pb++;
 		len   -= 4;
 
-		tc->tc_csum += *csum++;
-		tc->tc_csum += *csum++;
+//		tc->tc_csum += *csum++;
+//		tc->tc_csum += *csum++;
 	}
 
 	profile_add(3, "do_aes XOR words");
@@ -120,7 +99,7 @@ static void do_aes(struct tc *tc, void *iv, void *data, int len, int enc)
 		len--;
 		
 		if (i == 1) {
-			tc->tc_csum += *csum++;
+//			tc->tc_csum += *csum++;
 			i = 0;
 		} else
 			i++;
@@ -135,35 +114,27 @@ static void do_aes(struct tc *tc, void *iv, void *data, int len, int enc)
 	if (i) {
 		i = 0;
 		*((uint8_t*) &i) = *((uint8_t*) csum);
-		tc->tc_csum += i;
+//		tc->tc_csum += i;
 	}
 }
 
-static void aes_encrypt(struct tc *tc, void *iv, void *data, int len)
+static int aes_encrypt(struct crypt *c, void *iv, void *data, int len)
 {
-	do_aes(tc, iv, data, len, 1);
-}
-
-static int aes_decrypt(struct tc *tc, void *iv, void *data, int len)
-{
-	do_aes(tc, iv, data, len, 0);
+	do_aes(c, iv, data, len, 1);
 
 	return len;
 }
 
-static void *aes_spec(void)
+static int aes_decrypt(struct crypt *c, void *iv, void *data, int len)
 {
-	return &_aes_spec;
+	do_aes(c, iv, data, len, 0);
+
+	return len;
 }
 
-static int aes_type(void)
+static int aes_set_key(struct crypt *c, void *key, int len)
 {
-	return TYPE_SYM;
-}
-
-static int aes_set_key(struct tc *tc, void *key, int len)
-{
-	struct aes_priv *ap = crypto_priv(tc);
+	struct aes_priv *ap = crypt_priv(c);
 
 	assert(len >= 16);
 	if (!EVP_EncryptInit(&ap->ap_ctx, EVP_aes_128_ecb(), key, NULL))
@@ -172,27 +143,47 @@ static int aes_set_key(struct tc *tc, void *key, int len)
 	return 0;
 }
 
-static void aes_next_iv(struct tc *tc, void *out, int *outlen)
+static void aes_ack_mac(struct crypt *c, struct iovec *iov, int num, void *out,
+                        int *outlen)
 {
-	assert(*outlen == 0);
+	struct aes_priv *ap = crypt_priv(c);
+	unsigned char block[BLEN];
 
-	*outlen = -IVMODE_SEQ;
+	assert(num == 1);
+	assert(iov->iov_len <= sizeof(block));
+
+	memset(block, 0, sizeof(block));
+	memcpy(block, iov->iov_base, iov->iov_len);
+
+	if (!EVP_EncryptUpdate(&ap->ap_ctx, out, outlen, block, sizeof(block)))
+		errssl(1, "EVP_EncryptUpdate()");
 }
 
-static struct crypt_ops _aes_ops = {
-	.co_init	= aes_init,
-	.co_finish	= aes_finish,
-	.co_encrypt	= aes_encrypt,
-	.co_decrypt	= aes_decrypt,
-	.co_spec	= aes_spec,
-	.co_type	= aes_type,
-	.co_set_key	= aes_set_key,
-	.co_next_iv	= aes_next_iv,
-};
-
-static void __aes_init(void) __attribute__ ((constructor));
-
-static void __aes_init(void)
+static void aes_destroy(struct crypt *c)
 {
-	crypto_register(&_aes_ops);
+	struct aes_priv *p = crypt_priv(c);
+
+	EVP_CIPHER_CTX_cleanup(&p->ap_ctx);
+
+	free(p);
+	free(c);
+}
+
+struct crypt *crypt_AES_new(void)
+{
+        struct aes_priv *p;
+        struct crypt *c;
+
+        c = crypt_init(sizeof(*p));
+        c->c_destroy = aes_destroy;
+	c->c_set_key = aes_set_key;
+	c->c_mac     = aes_ack_mac;
+	c->c_encrypt = aes_encrypt;
+	c->c_decrypt = aes_decrypt;
+
+        p = crypt_priv(c);
+
+	EVP_CIPHER_CTX_init(&p->ap_ctx);
+
+        return c;
 }

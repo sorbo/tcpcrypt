@@ -20,41 +20,35 @@ static struct state {
 	int	s_drop_hook;
 } _state;
 
-static struct tc *create_tc(void)
+static struct crypt *setup_cipher(int type, int id, int mac)
 {
-	struct tc *tc = xmalloc(sizeof(*tc));
-
-	return tc;
-}
-
-static void destroy_tc(struct tc *tc)
-{
-	if (tc->tc_crypt_ops)
-		crypto_finish(tc);
-
-	free(tc);
-}
-
-static struct tc *setup_cipher(int type, int id)
-{
-	struct tc *tc = create_tc();
+	struct cipher_list *c;
 	int klen = 20;
 	void *key;
+	struct crypt_sym *cs;
+	struct crypt *ci;
 
-	tc->tc_crypt_ops = crypto_find_cipher(type, id);
-	if (!tc->tc_crypt_ops)
+	c = crypt_find_cipher(type, id);
+	if (!c)
 		errx(1, "Can't find cipher %d (type %d)", id, type);
 
-	crypto_init(tc);
+	cs = crypt_new(c->c_ctr);
+
+	if (mac)
+		ci = cs->cs_mac;
+	else
+		ci = cs->cs_cipher;
 
 	key = alloca(klen);
 	assert(key);
 
 	memset(key, 0, klen);
 
-	crypto_set_key(tc, key, klen);
+	crypt_set_key(ci, key, klen);
 
-	return tc;
+	/* XXX cs is leaked */
+
+	return ci;
 }
 
 static unsigned int cipher_throughput(float sample, unsigned int avg)
@@ -72,13 +66,13 @@ static unsigned int cipher_throughput(float sample, unsigned int avg)
 
 void test_sym_throughput(void)
 {
-	struct tc *tc;
-	int id	    = TC_AES128_CTR_SEQIV;
+	struct crypt *c; 
+	int id	    = TC_AES128_HMAC_SHA2;
 	uint64_t iv = 0;
 	int dlen    = 1420;
 	void *data;
 
-	tc   	      = setup_cipher(TYPE_SYM, id);
+	c   	      = setup_cipher(TYPE_SYM, id, 0);
 	data	      = alloca(dlen);
 	_state.s_dlen = dlen;
 	memset(data, 0, dlen);
@@ -88,11 +82,11 @@ void test_sym_throughput(void)
 	speed_start(cipher_throughput);
 
 	while (1) {
-		crypto_encrypt(tc, &iv, data, dlen);
+		crypt_encrypt(c, &iv, data, dlen);
 		speed_add(1);
 	}
 
-	destroy_tc(tc);
+	crypt_destroy(c);
 }
 
 static int get_test_param(int idx, int def)
@@ -107,7 +101,7 @@ static int get_test_param(int idx, int def)
 
 void test_mac_throughput(void)
 {
-	struct tc *tc;
+	struct crypt *c;
 	int id = TC_HMAC_SHA1_128;
 	int len = get_test_param(0, 8);
 	int num = get_test_param(1, 1);
@@ -116,7 +110,7 @@ void test_mac_throughput(void)
 	unsigned char out[1024];
 	int outlen = sizeof(out);
 
-	tc = setup_cipher(TYPE_MAC, id);
+	c = setup_cipher(TYPE_SYM, id, 1);
 
 	iov = alloca(sizeof(*iov) * num);
 
@@ -131,11 +125,11 @@ void test_mac_throughput(void)
 	speed_start(cipher_throughput);
 
 	while (1) {
-		crypto_mac(tc, iov, num, NULL, out, &outlen);
+		crypt_mac(c, iov, num, out, &outlen);
 		speed_add(1);
 	}
 
-	destroy_tc(tc);
+	crypt_destroy(c);
 }
 
 void print_packet(struct ip *ip, struct tcphdr *tcp, int flags, struct tc *tc)
