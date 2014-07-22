@@ -211,6 +211,12 @@ struct tc {
 	int			tc_app_support;
 	int			tc_isn;
 	int			tc_isn_peer;
+	unsigned char		tc_init1[1500];
+	int			tc_init1_len;
+	unsigned char		tc_init2[1500];
+	int			tc_init2_len;
+	unsigned char		tc_pms[128];
+	int			tc_pms_len;
 };
 
 enum {  

@@ -1183,6 +1183,11 @@ static int do_output_pkconf_rcvd(struct tc *tc, struct ip *ip,
 	tc->tc_state = STATE_INIT1_SENT;
 	tc->tc_role  = ROLE_CLIENT;
 
+	assert(len <= sizeof(tc->tc_init1));
+
+	memcpy(tc->tc_init1, init1, len);
+	tc->tc_init1_len = len;
+
 	return DIVERT_MODIFY;
 }
 
@@ -2145,38 +2150,34 @@ static int select_pkey(struct tc *tc, struct tc_cipher_spec *pkey)
 	return 0;
 }
 
-static void compute_ss(struct tc *tc,
-		       void *pms, int pmsl,
-		       void *kc, int kcl,
-		       void *nc, int ncl,
-		       void *kxs, int kxsl)
+static void compute_ss(struct tc *tc)
 {
-	struct iovec iov[7];
+	struct iovec iov[5];
+	unsigned char num;
 
 	profile_add(1, "compute ss in");
 
-	iov[0].iov_base = tc->tc_pub_cipher_list;
-	iov[0].iov_len  = tc->tc_pub_cipher_list_len;
+	assert((tc->tc_pub_cipher_list_len % 3) == 0);
 
-	iov[1].iov_base = tc->tc_sym_cipher_list;
-	iov[1].iov_len  = tc->tc_sym_cipher_list_len;
+	num = tc->tc_pub_cipher_list_len / 3;
 
-	iov[2].iov_base = &tc->tc_cipher_sym;
-	iov[2].iov_len  = sizeof(tc->tc_cipher_sym);
+	iov[0].iov_base = &num;
+	iov[0].iov_len  = 1;
 
-	iov[3].iov_base = &tc->tc_cipher_pkey;
-	iov[3].iov_len  = sizeof(tc->tc_cipher_pkey);
+	iov[1].iov_base = tc->tc_pub_cipher_list;
+	iov[1].iov_len  = tc->tc_pub_cipher_list_len;
 
-	iov[4].iov_base = kc;
-	iov[4].iov_len  = kcl;
+	iov[2].iov_base = tc->tc_init1;
+	iov[2].iov_len  = tc->tc_init1_len;
 
-	iov[5].iov_base = kxs;
-	iov[5].iov_len  = kxsl;
+	iov[3].iov_base = tc->tc_init2;
+	iov[3].iov_len  = tc->tc_init2_len;
 
-	iov[6].iov_base = pms;
-	iov[6].iov_len  = pmsl;
+	iov[4].iov_base = tc->tc_pms;
+	iov[4].iov_len  = tc->tc_pms_len;
 
-	crypt_set_key(tc->tc_crypt_pub->cp_hkdf, nc, ncl);
+	crypt_set_key(tc->tc_crypt_pub->cp_hkdf,
+		      tc->tc_nonce, tc->tc_nonce_len);
 
 	profile_add(1, "compute ss mac set key");
 
@@ -2272,11 +2273,18 @@ static int process_init1(struct tc *tc, struct ip *ip, struct tcphdr *tcp,
 		assert(pmsl < 1024); /* XXX */
 	}
 
-	compute_ss(tc,
-		   pms, pmsl,
-		   key, klen,
-		   nonce, nonce_len,
-		   kxs, cl);
+	assert(dlen <= sizeof(tc->tc_init1));
+
+	memcpy(tc->tc_init1, i1, dlen);
+	tc->tc_init1_len = dlen;
+
+	assert(pmsl <= sizeof(tc->tc_pms));
+	memcpy(tc->tc_pms, pms, pmsl);
+	tc->tc_pms_len = pmsl;
+
+	assert(nonce_len <= sizeof(tc->tc_nonce));
+	memcpy(tc->tc_nonce, nonce, nonce_len);
+	tc->tc_nonce_len = nonce_len;
 
 	tc->tc_state = STATE_INIT1_RCVD;
 
@@ -2340,6 +2348,11 @@ static int do_input_pkconf_sent(struct tc *tc, struct ip *ip,
 	if (_conf.cf_rsa_client_hack)
 		memcpy(i2->i2_data, tc->tc_nonce, tc->tc_nonce_len);
 
+	assert(len <= sizeof(tc->tc_init2));
+
+	memcpy(tc->tc_init2, i2, len);
+	tc->tc_init2_len = len;
+
 	checksum_packet(tc, ip2, tcp2);
 	divert_inject(ip2, ntohs(ip2->ip_len));
 
@@ -2350,6 +2363,8 @@ static int do_input_pkconf_sent(struct tc *tc, struct ip *ip,
 
 	tc->tc_rseq_off = dlen;
 	tc->tc_role     = ROLE_SERVER;
+
+	compute_ss(tc);
 
 #if 1
 	return DIVERT_MODIFY;
@@ -2439,6 +2454,11 @@ static int process_init2(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	if (nlen > sizeof(kxs))
 		return bad_packet("init2: big nonce kxs");
 
+	assert(len <= sizeof(tc->tc_init2));
+
+	memcpy(tc->tc_init2, i2, len);
+	tc->tc_init2_len = len;
+
 	/* XXX fix crypto api to use to / from */
 	kxs_len = nlen;
 	memcpy(kxs, i2->i2_data, nlen);
@@ -2447,11 +2467,12 @@ static int process_init2(struct tc *tc, struct ip *ip, struct tcphdr *tcp)
 	nlen  = crypt_decrypt(tc->tc_crypt_pub->cp_pub, NULL, nonce, nlen);
 
 	klen = crypt_get_key(tc->tc_crypt_pub->cp_pub, &key);
-	compute_ss(tc,
-		   nonce, nlen,
-		   key, klen,
-		   tc->tc_nonce, tc->tc_nonce_len,
-		   kxs, kxs_len);
+
+	assert(nlen <= sizeof(tc->tc_pms));
+	memcpy(tc->tc_pms, nonce, nlen);
+	tc->tc_pms_len = nlen;
+
+	compute_ss(tc);
 
 	return 1;
 }
