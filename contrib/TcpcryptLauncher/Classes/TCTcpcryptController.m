@@ -129,7 +129,7 @@
 }
 
 - (IBAction)openTestPage:(id)sender {
-	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://tcpcrypt.org/test.php"]];
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://tcpcrypt.org/fame.php"]];
 }
 
 @end
