@@ -1,14 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <err.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <string.h>
-#include <sys/select.h>
 #include <time.h>
 #include <unistd.h>
-#include <arpa/inet.h>
+#include <stdint.h>
 
+#include "src/inc.h"
 #include "src/tcpcryptd.h"
 #include "src/tcpcrypt.h"
 #include "src/tcpcrypt_ctl.h"
@@ -366,9 +363,12 @@ static void pwn(void)
 	add_server(7777);
 
 	tzset();
+
+#ifndef __WIN32__
 	chroot("/tmp");
 	setgid(666);
 	setuid(666);
+#endif
 
 	while (1)
 		check_sockets();

@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <openssl/err.h>
-#include <netdb.h>
 
 #include "inc.h"
 #include "tcpcrypt_ctl.h"
@@ -440,11 +439,30 @@ static void prepare_ctl(struct network_test *nt)
 	ctl->tcc_sport = s_in.sin_port;
 }
 
+#ifdef __WIN32__
+static void set_nonblocking(int s)
+{
+	u_long mode = 1;
+
+	ioctlsocket(s, FIONBIO, &mode);
+}
+#else
+static void set_nonblocking(int s)
+{
+	int flags;
+
+	if ((flags = fcntl(s, F_GETFL, 0)) == -1)
+		err(1, "fcntl()");
+
+	if (fcntl(s, F_SETFL, flags | O_NONBLOCK) == -1)
+		err(1, "fcntl()");
+}
+#endif
+
 static void test_connect(struct network_test *t)
 {
 	int s;
 	struct sockaddr_in s_in;
-	int flags;
 	socklen_t sl = sizeof(s_in);
 
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -468,11 +486,7 @@ static void test_connect(struct network_test *t)
 			errx(1, "tcpcryptd_setsockopt()");
 	}
 
-	if ((flags = fcntl(s, F_GETFL, 0)) == -1)
-		err(1, "fcntl()");
-
-	if (fcntl(s, F_SETFL, flags | O_NONBLOCK) == -1)
-		err(1, "fcntl()");
+	set_nonblocking(s);
 
 	memset(&s_in, 0, sizeof(s_in));
 
@@ -481,7 +495,11 @@ static void test_connect(struct network_test *t)
 	s_in.sin_addr        = _state.s_nt_ip;
 
 	if (connect(s, (struct sockaddr*) &s_in, sizeof(s_in)) == -1) {
+#ifdef __WIN32__
+		if (WSAGetLastError() != WSAEWOULDBLOCK)
+#else
 		if (errno != EINPROGRESS)
+#endif
 			err(1, "connect()");
 	}
 
@@ -562,8 +580,8 @@ static void test_connecting(struct network_test *t)
 	assert(t->nt_req < (sizeof(REQS) / sizeof(*REQS)));
 	buf = REQS[t->nt_req];
 
-	if (write(s, buf, strlen(buf)) != strlen(buf))
-		err(1, "write()");
+	if (send(s, buf, strlen(buf), 0) != strlen(buf))
+		err(1, "send()");
 
 	t->nt_state = TEST_STATE_REQ_SENT;
 }
@@ -588,7 +606,7 @@ static void test_req_sent(struct network_test *t)
 	if (!FD_ISSET(s, &fds))
 		return;
 
-	rc = read(s, buf, sizeof(buf) - 1);
+	rc = recv(s, buf, sizeof(buf) - 1, 0);
 	if (rc == -1) {
 		test_finish(t, errno);
 		return;
