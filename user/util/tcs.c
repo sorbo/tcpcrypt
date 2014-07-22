@@ -194,7 +194,7 @@ static void handle_client(struct sock *s)
 	tm = localtime(&t);
 	strftime(buf, sizeof(buf), "%m/%d/%y %H:%M:%S", tm);
 
-	printf("[%s] GOT %s:%d - %d\t[MSG %d] crypt %d flags %d\n",
+	printf("[%s] GOT %s:%d - %4d [MSG %d] crypt %d flags %d\n",
 	       buf,
 	       inet_ntoa(s->peer.sin_addr),
 	       ntohs(s->peer.sin_port),
