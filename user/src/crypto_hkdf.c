@@ -49,7 +49,8 @@ static void hkdf_extract(struct crypt *c, struct iovec *iov, int num,
 	crypt_mac(hk->hk_hmac, iov, num, out, outlen);
 }
 
-static void hkdf_expand(struct crypt *c, uint8_t tag, int len, void *out)
+static void hkdf_expand(struct crypt *c, void *tag, int taglen, void *out,
+			int len)
 {
 	struct hkdf_priv *hk = crypt_priv(c);
 	unsigned char *p = out;
@@ -57,8 +58,8 @@ static void hkdf_expand(struct crypt *c, uint8_t tag, int len, void *out)
 	struct iovec iov[2];
 	int outlen = MAC_LEN;
 
-	iov[0].iov_base = &tag;
-	iov[0].iov_len  = sizeof(tag);
+	iov[0].iov_base = tag;
+	iov[0].iov_len  = taglen;
 
 	iov[1].iov_base = &ctr;
 	iov[1].iov_len  = sizeof(ctr);

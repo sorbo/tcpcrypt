@@ -221,7 +221,8 @@ static void do_expand(struct tc *tc, uint8_t tag, struct stuff *out)
 
 	assert(len <= sizeof(out->s_data));
 
-	crypt_expand(tc->tc_crypt_pub->cp_hkdf, tag, len, out->s_data);
+	crypt_expand(tc->tc_crypt_pub->cp_hkdf, &tag, sizeof(tag), out->s_data,
+		     len);
 
 	out->s_len = len;
 }
@@ -233,8 +234,23 @@ static void compute_nextk(struct tc *tc, struct stuff *out)
 
 static void compute_mk(struct tc *tc, struct stuff *out)
 {
-	/* we assume MAC key is set */
-	do_expand(tc, CONST_REKEY, out);
+	int len = tc->tc_crypt_pub->cp_k_len;
+	unsigned char tag[2];
+	unsigned char app_support = 0;
+	int pos = tc->tc_role == ROLE_SERVER ? 1 : 0;
+
+	assert(len <= sizeof(out->s_data));
+
+	app_support |= (tc->tc_app_support & 1)	<< pos;
+	app_support |= (tc->tc_app_support >> 1) << (!pos);
+
+	tag[0] = CONST_REKEY;
+	tag[1] = app_support;
+
+	crypt_expand(tc->tc_crypt_pub->cp_hkdf, tag, sizeof(tag), out->s_data,
+		     len);
+
+	out->s_len = len;
 }
 
 static void compute_sid(struct tc *tc, struct stuff *out)

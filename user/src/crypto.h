@@ -28,7 +28,8 @@ struct crypt {
 		         int *outlen);
 	void	(*c_extract)(struct crypt *c, struct iovec *iov, int num,
 			     void *out, int *outlen);
-	void	(*c_expand)(struct crypt *c, uint8_t tag, int len, void *out);
+	void	(*c_expand)(struct crypt *c, void *tag, int taglen,
+			    void *out, int outlen);
 	int     (*c_encrypt)(struct crypt *c, void *iv, void *data, int len);
 	int	(*c_decrypt)(struct crypt *c, void *iv, void *data, int len);
 	int	(*c_compute_key)(struct crypt *c, void *out);
@@ -77,10 +78,10 @@ static inline void crypt_extract(struct crypt *c, struct iovec *iov, int num,
 	c->c_extract(c, iov, num, out, outlen);
 }
 
-static inline void crypt_expand(struct crypt *c, uint8_t tag, int len,
-				void *out)
+static inline void crypt_expand(struct crypt *c, void *tag, int taglen,
+				void *out, int outlen)
 {
-	c->c_expand(c, tag, len, out);
+	c->c_expand(c, tag, taglen, out, outlen);
 }
 
 static inline int crypt_encrypt(struct crypt *c, void *iv, void *data, int len)
