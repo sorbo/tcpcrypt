@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <fcntl.h>
+#include <time.h>
 #include <openssl/err.h>
 
 #include "inc.h"
@@ -662,20 +663,35 @@ static void run_network_test(struct network_test *t)
 	}
 }
 
-static void test_network(void)
+static int resolve_server(void)
 {
 	struct hostent *he = gethostbyname(_conf.cf_test_server);
 	struct in_addr **addr;
 
+	_state.s_nt_ip.s_addr = INADDR_ANY;
+
 	if (!he)
-		return;
+		return 0;
 
 	addr = (struct in_addr**) he->h_addr_list;
 
 	if (!addr[0])
-		return;
+		return 0;
 
 	_state.s_nt_ip = *addr[0];
+
+	return 1;
+}
+
+static void test_network(void)
+{
+	resolve_server();
+
+	if (_state.s_nt_ip.s_addr == INADDR_ANY) {
+		xprintf(XP_ALWAYS, "Won't test network - can't resolve %s\n",
+			_conf.cf_test_server);
+		return;
+	}
 
 	xprintf(XP_ALWAYS, "Testing network via %s\n",
 		inet_ntoa(_state.s_nt_ip));
@@ -1115,6 +1131,8 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
+
+	resolve_server();
 
 	if (signal(SIGINT, sig) == SIG_ERR)
 		err(1, "signal()");
