@@ -1,7 +1,7 @@
 CC	= $(PREFIX)gcc
 CXX	= $(PREFIX)g++
 
-WIX	= wine $(HOME)/.wine/drive_c/Program\ Files/Windows\ Installer\ XML\ v3/bin/
+WIX	= wine $(HOME)/.wine/drive_c/Program\ Files\ \(x86\)/Windows\ Installer\ XML\ v3/bin/
 CANDLE	= $(WIX)candle
 LIGHT	= $(WIX)light
 
