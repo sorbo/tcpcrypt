@@ -20,8 +20,8 @@ void setup_ipfw_rules() {
 	static char *ipfw_cmds[] = {
 		"/sbin/ipfw 60 add divert 666 tcp from any to any 80",
 		"/sbin/ipfw 61 add divert 666 tcp from any 80 to any",
-		"/sbin/ipfw 62 add divert 666 tcp from any to any 7777 via lo0",
-		"/sbin/ipfw 63 add divert 666 tcp from any 7777 to any via lo0",
+		"/sbin/ipfw 62 add divert 666 tcp from any to any 7777",
+		"/sbin/ipfw 63 add divert 666 tcp from any 7777 to any",
 		NULL
 	};
 	int i;
