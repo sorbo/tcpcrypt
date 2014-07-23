@@ -31,19 +31,6 @@ enum {
         TEST_ERR_NO_CRYPT		= 670,
 };
 
-static char *REQS[] = {
-	"GET /check HTTP/1.0\r\n"
-        "Host: check.tcpcrypt.org\r\n"
-        "\r\n",
-
-	"MORTEasldkfjasldkfjaslkfjaslfkjasdlfkjas",
-
-	"GHGHHGHGHGHREHEHGEHRGHERHGHERG",
-};
-
-static char *TEST_REPLY = "HTTP/1.0 200 OK\r\n"
-			  "\r\n";
-
 struct params {
 	char	*p_params[MAX_PARAM];
 	int	p_paramc;

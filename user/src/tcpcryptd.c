@@ -22,6 +22,7 @@
 #include "profile.h"
 #include "test.h"
 #include "crypto.h"
+#include "tcpcrypt_strings.h"
 
 #define ARRAY_SIZE(n)	(sizeof(n) / sizeof(*n))
 #define MAX_TIMERS 1024

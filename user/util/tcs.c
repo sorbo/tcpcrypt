@@ -9,6 +9,7 @@
 #include "src/tcpcryptd.h"
 #include "src/tcpcrypt.h"
 #include "src/tcpcrypt_ctl.h"
+#include "src/tcpcrypt_strings.h"
 
 static char *_bind_ip = "0.0.0.0";
 
