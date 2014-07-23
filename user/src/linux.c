@@ -28,7 +28,7 @@ static int packet_input(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg,
               		struct nfq_data *nfa, void *data)
 {
 	divert_cb cb = (divert_cb) data;
-	char *d;
+	unsigned char *d;
 	int len;
 	int rc;
 	unsigned int id;
