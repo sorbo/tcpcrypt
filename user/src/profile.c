@@ -65,9 +65,13 @@ int time_diff(struct timeval *a, struct timeval *now)
 
 static inline uint64_t do_get_tsc(void)
 {       
-        uint64_t t;
+        uint64_t t = 0;
 
+#if defined(__amd64__) || defined(__i386__)
         __asm__ volatile (".byte 0x0f, 0x31" : "=A" (t));
+#else
+	abort();
+#endif
 
         return t;
 }
