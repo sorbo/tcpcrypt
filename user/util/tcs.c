@@ -11,7 +11,7 @@
 #include "src/tcpcrypt_ctl.h"
 #include "src/tcpcrypt_strings.h"
 
-static char *_bind_ip = "0.0.0.0";
+static const char *_bind_ip = "0.0.0.0";
 
 enum {
 	TYPE_CLIENT = 0,
@@ -375,7 +375,7 @@ static void pwn(void)
 		check_sockets();
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	if (argc > 1) {
 		_bind_ip = argv[1];
