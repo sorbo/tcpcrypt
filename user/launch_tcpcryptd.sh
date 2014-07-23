@@ -6,7 +6,7 @@ PORT2=${2:-7777}
 
 TCPCRYPTD=`dirname $0`/src/tcpcryptd
 DIVERT_PORT=666
-PIDFILE=/tmp/tcpcrypt.pid
+PIDFILE=/var/run/tcpcrypt.pid
 
 start_tcpcryptd() {
     LD_LIBRARY_PATH=lib/ $TCPCRYPTD $OPTS -p $DIVERT_PORT &

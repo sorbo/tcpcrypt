@@ -1,5 +1,5 @@
 #!/bin/sh
-PIDFILE=/tmp/tcpcrypt.pid
+PIDFILE=/var/run/tcpcrypt.pid
 
 `dirname $0`/../launch_tcpcryptd.sh &
 sleep 2
