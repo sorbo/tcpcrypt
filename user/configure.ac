@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 
 AC_PREREQ([2.65])
-AC_INIT([tcpcrypt], [0.1], [tcpcrypt-users@lists.stanford.edu])
+AC_INIT([tcpcrypt], [0.2], [tcpcrypt-users@lists.stanford.edu])
 AC_CONFIG_SRCDIR([src/tcpcryptd.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(config)
