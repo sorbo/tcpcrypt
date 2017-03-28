@@ -18,7 +18,7 @@ Dependencies
 Ubuntu and Debian packages
 --------------------------
     apt-get install iptables libcap-dev libssl-dev \
-                    libnfnetlink-dev libnetfilter-queue-dev
+                    libnfnetlink-dev libnetfilter-queue-dev libnetfilter-conntrack-dev
 
 
 Kernel divert sockets (NFQUEUE)
