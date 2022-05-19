@@ -15,7 +15,7 @@ For more information, see [tcpcrypt.org](http://tcpcrypt.org).
 Installing tcpcrypt
 -------------------
 
-    git clone git://github.com/sorbo/tcpcrypt.git
+    git clone https://github.com/sorbo/tcpcrypt.git
     cd tcpcrypt/user
     ./configure
     make
